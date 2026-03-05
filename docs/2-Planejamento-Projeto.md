@@ -82,10 +82,10 @@ Os papéis abaixo são apenas para organização do time.
 
 ##  Definição dos Papéis – Sprint 1
 
-- 👨‍💻 Tech Lead:
-- 🗄️ Arquiteto de Dados:
-- 🧪 Gerente de Qualidade:
-- 📋 Facilitador Ágil:
+- 👨‍💻 Tech Lead: Nitai
+- 🗄️ Arquiteto de Dados: Carol
+- 🧪 Gerente de Qualidade: Nitai
+- 📋 Facilitador Ágil: Isaque
 
 > Caso os papéis mudem nas próximas Sprints, atualizar neste documento.
 
@@ -135,10 +135,14 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|             |        | Preencher Visão do Produto, ODS e Backlog no README | 12/03 | 15/03 | ❌ |
-|             |        | Criar instância do Banco de Dados | 12/03 | 16/03 | ❌ |
-|             |        | Criar repositório e estruturar pastas | 12/03 | 18/03 | ❌ |
-|             |        | Criar tela Hello World conectada à API | 15/03 | 20/03 | ❌ |
+|   Nitai     |        | Preencher Readme | 12/03 | 12/03 | ❌ |
+|  Nitai, Isaque, Carol |  Conjunto | Preencher arquivo 1-Contexto | 12/03 | 12/03 | ❌ |
+|  Nitai, Isaque, Carol | Conjunto | Divisao de papeis | 12/03 | 18/03 | ❌ |
+|             |        | Configurar Firebase | --/-- | 12/03 | ❌ |
+|  Nitai      |        | Configurar Base React-Native | --/-- | 12/03 | ❌ |
+|       |        | Implementar Página Log-in | --/-- | 12/03 | ❌ |
+|       |        | Conectar Log-in com a API firebase | --/-- | 12/03 | ❌ |
+|       |        | Implementar a Home Page | --/-- | 12/03 | ❌ |
 
 ---
 
