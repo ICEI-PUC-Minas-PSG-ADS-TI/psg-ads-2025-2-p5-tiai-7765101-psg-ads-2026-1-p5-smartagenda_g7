@@ -14,6 +14,7 @@ ODS Alinhados: 8.2
 
 * Isaque Caetano Nascimento
 * Nitai Nandi Rodrigues da Silva
+* Maria Caroline Alves Silva
 
 ## Orientador
 
