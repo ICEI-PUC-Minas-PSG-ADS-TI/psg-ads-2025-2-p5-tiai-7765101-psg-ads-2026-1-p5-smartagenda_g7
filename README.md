@@ -1,25 +1,23 @@
-# TÍTULO DO PROJETO
+# SmartAgenda
 
-`CURSO`
+`Tecnologia em Análise e Desenvolv. Sistemas`
 
-`DISCIPLINA`
+`Trabalho Interdiciplinar: Aplicações Inovadoras`
 
-`SEMESTRE`
+`5° SEMESTRE`
 
-Descrever resumidamente, em um ou dois parágrafos, o projeto que está sendo desenvolvido.
+O Projeto SmartAgenda é um aplicativo mobile desenvolvido para organização de calendário, tarefas com datas determinadas, e designando um agente de IA para escolher a carga de trabalho diária para completar as tarefas no prazo esperado.
 
-ODS Alinhados:
+ODS Alinhados: 8.2
 
 ## Integrantes
 
-* Nome completo do aluno 1
-* Nome completo do aluno 2
-* Nome completo do aluno 3
-* Nome completo do aluno 4
+* Isaque Caetano Nascimento
+* Nitai Nandi Rodrigues da Silva
 
 ## Orientador
 
-* Nome completo do professor 1
+* Juliana Padilha
 
 ## Instruções de utilização
 
