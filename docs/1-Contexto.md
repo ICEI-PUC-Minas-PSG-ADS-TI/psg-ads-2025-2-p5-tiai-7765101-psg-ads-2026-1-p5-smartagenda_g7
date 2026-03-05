@@ -1,37 +1,35 @@
 # 1. Introdução
 
-Nesta seção, você vai apresentar **o contexto e a motivação do seu projeto**, explicando o problema que ele resolve, o que pretende alcançar e para quem ele é útil.
-
+O SmartAgenda é um aplicativo que deseja aumentar a produtividade do usuário, com um gerenciamento personalizado de suas tarefas, e grande interatividade através da sua integração com a Inteligência Artificial.
 ---
 
 ## 1.1 Problema  
 Descreva **claramente** o problema que o sistema vai resolver.  
 - Qual situação precisa ser melhorada?  
-- Onde e por quem essa solução será usada?  
+- Onde e por quem essa solução será usada
 
-> 💡 *Exemplo:*  
-> "Pequenos hortifrutis enfrentam dificuldades para controlar estoques e evitar desperdícios, pois usam planilhas manuais que geram erros e    retrabalho."
+O problema principal a se tratar é a procrastinação, e o atraso de entregas.
 
 ---
 
 ## 1.2 Objetivos  
 Defina o **objetivo geral** (o que o projeto como um todo pretende) e pelo menos **2 objetivos específicos** (detalhes ou etapas importantes).
 
->💡 *Exemplo:*  
-- **Geral:** Criar um sistema web para controle de estoque de hortifruti.  
-- **Específicos:**  
-  - Implementar controle de validade com alertas automáticos.  
-  - Gerar relatórios mensais de perdas e vendas.
+Geral: Aumentar a produtivide do usuário, e incentivar o planejamento de tarefas de maneira prática.
+Objetivos Específicos:
+  - Integração da Inteligência Artifical de maneira completa.
+  - Implementar o gerenciamento de tarefas com alertas automáticos.
 
 ---
 
 ## 1.3 Justificativa  
 Explique **por que** vale a pena desenvolver este projeto.  
 - Quais benefícios trará?  
-- Quais dados ou fatos comprovam que o problema existe?  
+- Quais dados ou fatos comprovam que o problema existe?
 
->💡 *Exemplo:*  
-"Segundo dados da FAO, 30% dos alimentos se perdem no transporte e armazenamento. Nosso sistema ajudará a reduzir perdas e desperdícios."
+> Dados a pesquisar
+As agendas tradicionais costumam focar somente na data limite de execução da tarefa, geralmente com poucos lembretes, onde é fácil de uma tarefa ser esquecida até sua data de expiração estar próxima. Além de serem muito manuais no registro de datas. Com a aplicação o usuário seria lembrado constantemente das tarefas, mesmo longe da data limite, para a produção constante e incremental da tarefa.
+
 
 ---
 
@@ -40,7 +38,6 @@ Descreva quem vai usar a solução.
 - Perfil: idade, profissão, familiaridade com tecnologia.  
 - Contexto: onde e como vai usar.
 
->💡 *Exemplo:*  
-"Pequenos comerciantes de hortifrutis, com conhecimentos básicos de informática, que precisam de uma ferramenta simples e rápida para controle de estoque."
+Pessoas de qualquer idade, que se interessam em gerenciar sua rotina, evitando procrastinação, de forma personalizada em base em sua rotina.
 
 ---
