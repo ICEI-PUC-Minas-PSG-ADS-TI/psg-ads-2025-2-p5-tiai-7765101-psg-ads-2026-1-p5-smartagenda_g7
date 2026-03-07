@@ -1,0 +1,8 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    "types": ["jest"]
+  },
+  "include": ["**/*.ts", "**/*.tsx", "services/GENAIService.ts"],
+  "exclude": ["**/node_modules", "**/Pods"]
+}
