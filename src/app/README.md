@@ -1,3 +1,36 @@
+TL;DR
+
+Tenha node.js e npm
+instale o JDK versão 21 (64bit) (essa versão do java tem maior compatibilidade com os serviços usados)
+(https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
+Instale o SDK Platform-Tools https://developer.android.com/tools/releases/platform-tools
+Extraia em um local
+
+Abra a janela de Propriedades do Sistema (Execute sysdm.cpl)
+Vá para a aba "Avançado" e selecione "Variáveis de ambiente"
+Encontre a variável "Path" nas variáveis do sistema, e clique duas vezes nela
+Copie o endereço da pasta extraida de platform-tools
+No menu aberto, clique em "Novo", e cole o endereço copiado
+clique OK
+
+* Opcional: Instale o Android Studio (https://developer.android.com/studio?hl=pt-br)
+* Caso queira testar o aplicativo em sua máquina desktop. Mas é possível fazer testes com seu próprio dispositivo mobile se desejar.
+
+Re-abra o VS-Code ou seu IDE
+Re-Abra o terminal 
+Navegue para esta pasta (cd src/app)
+Rode o comando "npm install"
+
+teste java -version > deve retornar versão 21.x.x
+teste adb devices > deve ser reconhecido, e rodar daemon (mas não precisa proceguir)
+
+Configure e deixe aberto seu ambiente mobile, seja local conectado ao USB (Você precisa habilitar opções de depuração no dispositivo) ou Emulador de Android como o Android Studio.
+Rode "npx react-native run-android"
+
+(Demora bem mais na primeira vez)
+
+
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
