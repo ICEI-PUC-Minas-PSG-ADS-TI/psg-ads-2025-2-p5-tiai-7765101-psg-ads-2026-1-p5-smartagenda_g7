@@ -1,4 +1,4 @@
-TL;DR
+# Instalação para desenvolvimento
 
 Tenha node.js e npm
 instale o JDK versão 21 (64bit) (essa versão do java tem maior compatibilidade com os serviços usados)
@@ -20,6 +20,18 @@ clique OK
 
 * Caso queira testar o aplicativo em sua máquina desktop, o Android Studio tem um emulador de Android. Mas é possível fazer testes com seu próprio dispositivo mobile se desejar.
 
+Vá para /android/app/build.gradle e procure pela seção
+
+```js
+cmake {
+    arguments
+}
+```
+
+Certifique que o caminho que está na linha que contem está correto. (Aponta corretamente para o ninja.exe)
+
+Após isto, instale a versão mais atualizada do ninja em https://github.com/ninja-build/ninja/releases (ninja-win.zip), pegue o ninja.exe que vem dentro do ZIP e depois coloque ele no mesmo caminho anterior, substituindo o ninja.exe que já estava lá dentro.
+
 Re-abra o VS-Code ou seu IDE
 Re-Abra o terminal 
 Navegue para esta pasta (cd src/app)
@@ -30,13 +42,17 @@ teste "adb devices" > deve ser reconhecido.
 
 Configure e deixe aberto seu ambiente mobile, seja local conectado ao USB (Você precisa habilitar opções de depuração no dispositivo) ou Emulador de Android como o Android Studio.
 Se foi configurado corretamente, rodar "adb devices" deve mostrar o(s) dispositivo(s) conectados a sua máquina.
-Rode "npx react-native run-android"
+Rode "npx react-native run-android". (A execução demora bem mais na primeira vez)
 
-(Demora bem mais na primeira vez)
+Talvez seja necessário rodar o seguinte comando no Powershell, caso não dê certo:
 
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+```powershell
+"New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force"
+```
 
 # Getting Started
+
+This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
