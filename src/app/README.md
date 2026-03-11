@@ -20,6 +20,8 @@ clique OK
 
 * Caso queira testar o aplicativo em sua máquina desktop, o Android Studio tem um emulador de Android. Mas é possível fazer testes com seu próprio dispositivo mobile se desejar.
 
+Após a instalação do Android Studio, vá para https://reactnative.dev/docs/set-up-your-environment (traduza a página) e siga as instruções 1 e 2 na seção "Ambiente de desenvolvimento Android"
+
 Vá para /android/app/build.gradle e procure pela seção
 
 ```js
