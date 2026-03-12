@@ -6,6 +6,8 @@ O SmartAgenda é um aplicativo que deseja aumentar a produtividade do usuário, 
 ## 1.1 Problema  
 O problema principal a se tratar é a procrastinação, e o atraso de entregas, seja tarefas de trabalho, faculdade, escola, projetos pessoais ou hábitos. 
 
+​As ferramentas de gestão de tempo atuais dependem da disciplina do usuário para a inserção manual de dados e a consulta constante de prazos. Isto contribui para a procrastinação e o atraso de entregas, por conta que o esforço burocrático de registro desanima o usuário a usar a ferramenta para compromissos. Além disso, a falta de uma estrutura que auxilie na organização de grandes volumes de trabalho gera fadiga de decisão, onde o usuário se sente sobrecarregado por tarefas extensas, que poderiam ser decompostas em etapas acionáveis.
+
 ---
 
 ## 1.2 Objetivos  
