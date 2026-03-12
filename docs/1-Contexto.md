@@ -1,6 +1,7 @@
 # 1. Introdução
 
 O SmartAgenda é um aplicativo que deseja aumentar a produtividade do usuário, com um gerenciamento personalizado de suas tarefas, e grande interatividade através da sua integração com a Inteligência Artificial.
+
 ---
 
 ## 1.1 Problema   
@@ -28,5 +29,7 @@ Estudos demonstram que cerca de 20% dos adultos são procrastinadores crônicos 
 ---
 
 ## 1.4 Público-Alvo  
+
 O publico alvo abrange pessoas de qualquer idade, gênero, conhecimento, que se interessam em gerenciar sua rotina, de forma personalizada, buscando  evitar a procrastinação, a evitar o esquecimento e tornar o dia a dia mais produtivo
+
 ---
