@@ -135,14 +135,14 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|   Nitai     |        | Preencher Readme | 12/03 | 12/03 | ❌ |
-|  Nitai, Isaque, Carol |  Conjunto | Preencher arquivo 1-Contexto | 12/03 | 12/03 | ❌ |
-|  Nitai, Isaque, Carol | Conjunto | Divisao de papeis | 12/03 | 18/03 | ❌ |
-|             |        | Configurar Firebase | --/-- | 12/03 | ❌ |
-|  Nitai      |        | Configurar Base React-Native | --/-- | 12/03 | ❌ |
-|       |        | Implementar Página Log-in | --/-- | 12/03 | ❌ |
-|       |        | Conectar Log-in com a API firebase | --/-- | 12/03 | ❌ |
-|       |        | Implementar a Home Page | --/-- | 12/03 | ❌ |
+|   Nitai     |  Tech Lead  | Preencher Readme | 05/03 | 12/03 | ✔️ |
+|  Nitai, Isaque, Carol |  Conjunto | Preencher arquivo 1-Contexto | 05/03 | 12/03 | ✔️ |
+|  Nitai, Isaque, Carol | Conjunto | Divisao de papeis | 05/03 | 12/03 | ✔️ |
+|   Carol          | Arquiteto de Dados       | Configurar Firebase | 09/03 | 12/03 | 📝 |
+|  Nitai      |   Tech Lead     | Configurar Base React-Native | 02/03 | 12/03 | ✔️ |
+|  Isaque     | Facilitador Ágil       | Implementar Página Log-in | 07/03 | 12/03 | ✔️ |
+|  Isaque, Carol     |  Conjunto      | Conectar Log-in com a API firebase | 12/03 | 12/03 | 📝 |
+|  Isaque     |   Facilitador Ágil     | Implementar a Home Page | 07/03 | 12/03 | ✔️  |
 
 ---
 
