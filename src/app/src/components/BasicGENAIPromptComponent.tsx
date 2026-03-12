@@ -10,7 +10,7 @@ import {
   StyleSheet,
 } from 'react-native';
 
-import { localGenerateText } from './services/GENAIService';
+import { localGenerateText } from '../services/GENAIService';
 
 export default function AIScreen() {
   const [prompt, setPrompt] = useState('');

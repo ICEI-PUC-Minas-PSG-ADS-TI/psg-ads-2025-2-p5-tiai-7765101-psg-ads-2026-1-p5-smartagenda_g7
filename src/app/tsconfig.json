@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": ["jest"]
   },
-  "include": ["**/*.ts", "**/*.tsx", "services/GENAIService.ts"],
+  "include": ["**/*.ts", "**/*.tsx", "src/services/GENAIService", "src/pages/Login.jsx"],
   "exclude": ["**/node_modules", "**/Pods"]
 }
