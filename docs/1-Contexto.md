@@ -19,9 +19,9 @@ Objetivos Específicos:
 ---
 
 ## 1.3 Justificativa  
-As agendas tradicionais costumam focar somente na data limite de execução da tarefa, geralmente com poucos lembretes, onde é fácil de uma tarefa ser esquecida até sua data de expiração estar próxima. Além da inserção de tarefas ser muito manual, os usuários se sentem menos motivados por conta da necessidade de esforço para organização.
+As agendas tradicionais costumam focar somente na data limite de execução da tarefa , geralmente com poucos lembretes, onde é fácil de uma tarefa ser esquecida até sua data de expiração estar próxima. Além da inserção de tarefas ser muito manual, os usuários se sentem menos motivados por conta da necessidade de esforço para organização.
 
-Estudos demonstram que cerca de 20% dos adultos são procrastinadores crônicos. No ambiente acadêmico, esse cenário é pior ainda: estatísticas da American Psychological Association indicam que entre 80% e 95% dos estudantes universitários procrastinam de forma consistente, especialmente no que tange às atividades extraclasse. Em âmbito nacional, pesquisas realizadas com universitários brasileiros confirmam essa tendência, revelando que aproximadamente 82% dos discentes admitem adiar compromissos e tarefas acadêmicas com frequência.
+Estudos demonstram que cerca de 20% dos adultos são procrastinadores crônicos e que, de modo geral, uma pessoa comum chega a gastar em média 218 minutos por dia adiando tarefas, o que equivale a cerca de 55 dias inteiros perdidos por ano. No ambiente acadêmico, esse cenário é pior ainda: estatísticas da American Psychological Association indicam que entre 80% e 95% dos estudantes universitários procrastinam de forma consistente, especialmente no que tange às atividades extraclasse. Em âmbito nacional, pesquisas realizadas com universitários brasileiros confirmam essa tendência, revelando que aproximadamente 82% dos discentes admitem adiar compromissos e tarefas acadêmicas com frequência.
 
 <br> Com a aplicação o usuário seria lembrado constantemente das tarefas, mesmo longe da data limite, para a produção constante e incremental de tarefas. A integração com IA torna a agenda mais conveniente e motiva os usuários a usarem e se organizarem. Esta agenda seria acessível para pessoas de qualquer idade, é um avanço em relação às agendas tradicionais.
 
