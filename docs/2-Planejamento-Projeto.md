@@ -138,11 +138,11 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 |   Nitai     |  Tech Lead  | Preencher Readme | 05/03 | 12/03 | ✔️ |
 |  Nitai, Isaque, Carol |  Conjunto | Preencher arquivo 1-Contexto | 05/03 | 12/03 | ✔️ |
 |  Nitai, Isaque, Carol | Conjunto | Divisao de papeis | 05/03 | 12/03 | ✔️ |
-|   Carol          | Arquiteto de Dados       | Configurar Firebase | 09/03 | 12/03 | 📝 |
+|   Carol          | Arquiteto de Dados       | Configurar Firebase | 09/03 | 12/03 | ✔️ |
 |  Nitai      |   Tech Lead     | Configurar Base React-Native | 02/03 | 12/03 | ✔️ |
 |  Isaque     | Facilitador Ágil       | Implementar Página Log-in | 07/03 | 12/03 | ✔️ |
-|  Isaque, Carol     |  Conjunto      | Conectar Log-in com a API firebase | 12/03 | 12/03 | 📝 |
-|  Isaque     |   Facilitador Ágil     | Implementar a Home Page | 07/03 | 12/03 | ✔️  |
+|  Isaque, Carol     |  Conjunto      | Conectar Log-in com a API firebase | 12/03 | 12/03 | ✔️ |
+|  Isaque     |  Facilitador Ágil  | Exportação do APK | 12/03 | 12/03 | ✔️ |
 
 ---
 
