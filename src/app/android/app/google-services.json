@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "977871139258",
+    "project_id": "smartagenda-fc3be",
+    "storage_bucket": "smartagenda-fc3be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:977871139258:android:3498d2d0707f5ea80aad83",
+        "android_client_info": {
+          "package_name": "com.localaiproof"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHfCwRor1QiP4ZZz8RK8j53oiJRqKnqCU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
