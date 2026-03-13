@@ -1,5 +1,6 @@
 // Esse componente é somente para teste. Funções podem ser encontradas em services/GENAIService.ts
 import React, { useState } from 'react';
+import { getAuth, signOut } from '@react-native-firebase/auth';
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
+  Alert
 } from 'react-native';
 
 import { localGenerateText } from '../services/GENAIService';
@@ -40,6 +42,15 @@ export default function AIScreen() {
     setLoading(false);
   };
 
+  const handleLogout = async() => {
+    const user = getAuth();
+    signOut(user).then(() => {
+      Alert.alert("Desconectado com sucesso.", "Faça login novamente!");
+    }).catch((err) => {
+      Alert.alert("Erro ao desconectar", err);
+    })
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Local LLM Test</Text>
@@ -53,6 +64,9 @@ export default function AIScreen() {
       />
 
       <Button title="Send" onPress={handleSend} />
+      <View style={styles.logoutButton}>
+        <Button title="Logout" color="red" onPress={handleLogout} />
+      </View>
 
       <Text style={styles.loadingText}>{loadingText}</Text>
       {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
@@ -97,4 +111,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
   },
+  logoutButton: {
+    marginTop: 15
+  }
 });

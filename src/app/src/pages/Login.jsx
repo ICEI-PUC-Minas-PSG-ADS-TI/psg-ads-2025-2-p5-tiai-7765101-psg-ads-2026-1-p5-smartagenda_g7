@@ -30,7 +30,7 @@ export default function LoginPage({ onSuccess }) {
 
       <TextInput
         style={styles.input}
-        placeholder="E-mail"
+        placeholder="E-mail - (admin@gmail.com)"
         placeholderTextColor="gray"
         value={email}
         onChangeText={setEmail}
@@ -40,7 +40,7 @@ export default function LoginPage({ onSuccess }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Senha"
+        placeholder="Senha - (admin123)"
         placeholderTextColor="gray"
         value={password}
         onChangeText={setPassword}
