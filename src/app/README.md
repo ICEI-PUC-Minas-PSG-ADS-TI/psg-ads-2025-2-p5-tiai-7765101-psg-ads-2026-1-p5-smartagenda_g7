@@ -1,3 +1,25 @@
+# SmartAgenda
+
+## Instalação Rápida (Para avaliação do app)
+
+Se você deseja apenas instalar e testar o aplicativo no seu celular Android sem configurar o ambiente de desenvolvimento, siga estas instruções:
+
+1. **Onde encontrar o APK:**
+
+   Colocamos o APK do app em [src/apk/SmartAgenda.apk](../apk/SmartAgenda.apk)
+   *(Você pode baixar este arquivo diretamente para o seu celular).*
+
+2. **Como instalar no dispositivo:**
+   * Transfira ou baixe o arquivo `SmartAgenda.apk` para o seu dispositivo Android.
+   * Abra o gerenciador de arquivos do celular, encontre o APK e toque no arquivo para iniciar a instalação.
+
+3. **Avisos de Segurança (Play Protect):**
+   * Como este é um projeto acadêmico e não foi publicado na Google Play Store, o Android exibirá um aviso de segurança do Play Protect.
+   * Para prosseguir, toque em **"Mais detalhes"** e depois selecione **"Instalar assim mesmo"**, caso seja uma verificação de segurança, não há problema em verificar.
+   * Caso o sistema peça permissão para "Instalar apps desconhecidos" ou "Fontes desconhecidas", conceda a permissão para o seu navegador ou gerenciador de arquivos concluir a instalação.
+
+---
+
 # Instalação para desenvolvimento
 
 Tenha node.js e npm
@@ -51,101 +73,3 @@ Talvez seja necessário rodar o seguinte comando no Powershell, caso não dê ce
 ```powershell
 "New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force"
 ```
-
-# Getting Started
-
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
-
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
-
-## Step 1: Start Metro
-
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
