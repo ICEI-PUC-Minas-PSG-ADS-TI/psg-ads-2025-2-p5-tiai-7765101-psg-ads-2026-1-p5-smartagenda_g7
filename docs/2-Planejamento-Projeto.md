@@ -150,10 +150,12 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|             |        | Gerar Script do Banco de Dados | 21/03 | 24/03 | ❌ |
-|             |        | Desenvolver Fatia 1 (BD + API + Tela) | 22/03 | 30/03 | ❌ |
-|             |        | Documentar Requisitos do MVP | 25/03 | 02/04 | ❌ |
-|             |        | Revisão técnica e Merge | 02/04 | 05/04 | ❌ |
+|             |        | Requisitos Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
+|             |        | Requisitos Não Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
+|             |        | Documentação das Tabelas do Banco de Dados | --/03 | 06/04 | ❌ |
+|             |        | Diagrama de Arquitetura (Doc-4) | --/03 | 06/04 | ❌ |
+|             |        | WireFrame/Mockup da Página de Log-in e Cadastro | --/03 | 06/04 | ❌ |
+|             |        | WireFrame/Mockup da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
 
 ---
 
