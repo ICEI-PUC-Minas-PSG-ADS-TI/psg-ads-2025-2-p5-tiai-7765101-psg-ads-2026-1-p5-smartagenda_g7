@@ -29,9 +29,9 @@ Os **Requisitos Funcionais (RF)** descrevem o que o sistema deve fazer.
 
 | ID    | Descrição do Requisito | Prioridade |
 |-------|------------------------|------------|
-| RF-01 | O sistema deve permitir que os usuários criem uma conta informando nome, e-mail, senha e endereço. | 🔴 ALTA |
-| RF-02 | O sistema deve permitir que os usuários adicionem produtos ao carrinho de compras. | 🟡 MÉDIA |
-| RF-03 | (Descreva aqui o requisito funcional 3 do seu sistema) | (Alta/Média/Baixa) |
+| RF-01 | O sistema deve permitir que os usuários gerenciem tarefas, com Título, Data de Criação, Data de Validade, Categoria(s) (tags), Descrição geral | 🔴 ALTA |
+| RF-02 | O sistema deve permitir que os usuários Visualizem as tarefas registradas em forma de lista, ordenado pela data de validade mais próxima | 🔴 ALTA |
+| RF-03 | O sistema deve permitir que os usuários Visualizem as tarefas registradas em forma de Calendário, onde as tarefas são exibidas nos dias de sua data de vencimento | 🔴 ALTA |
 | RF-04 | (Descreva aqui o requisito funcional 4 do seu sistema) | (Alta/Média/Baixa) |
 | RF-05 | (Descreva aqui o requisito funcional 5 do seu sistema) | (Alta/Média/Baixa) |
 | RF-06 | (Descreva aqui o requisito funcional 6 do seu sistema) | (Alta/Média/Baixa) |
@@ -46,9 +46,11 @@ Os **Requisitos Funcionais (RF)** descrevem o que o sistema deve fazer.
 
 Cada história deve seguir o padrão ensinado na disciplina:
 
-> **Como** [persona],  
-> **eu quero** [funcionalidade],  
-> **para que** [benefício].
+> Eu como Usuário desejo visualizar minhas tarefas, e todos seus detalhes, para não me esquecer de meus afazeres.
+
+> Eu como Usuário desejo criar, editar, atualizar e excluir tarefas, para poder me programar e me relembrar de meus afazeres.
+
+> Eu como Usuário desejo visualizar minhas tarefas em um calendário, em suas datas de validade, para ter uma visão mais ampla de seus vencimentos e quantidade durante o mês
 
 ⚠️ **ATENÇÃO:**  
 Cada História de Usuário deve estar associada a um Requisito Funcional específico (RF-XX).
