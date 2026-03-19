@@ -154,8 +154,14 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 |             |        | Requisitos Não Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
 |             |        | Documentação das Tabelas do Banco de Dados | --/03 | 06/04 | ❌ |
 |             |        | Diagrama de Arquitetura (Doc-4) | --/03 | 06/04 | ❌ |
-|             |        | WireFrame/Mockup da Página de Log-in e Cadastro | --/03 | 06/04 | ❌ |
 |             |        | WireFrame/Mockup da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
+|             |        | Desenvolvimento da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
+|             |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
+|             |        | Desenvolvimento da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
+|  Nitai           |  Tech Lead      | WireFrame/Mockup da Página de Gerenciamento de Tarefa | --/03 | 06/04 | ❌ |
+|  Nitai           |  Tech Lead      | Desenvolvimento da Página de Gerenciamento de Tarefa | --/03 | 06/04 | ❌ |
+|             |        | WireFrame/Mockup da Página de Calendário | --/03 | 06/04 | ❌ |
+|             |        | Desenvolvimento da Página de Calendário | --/03 | 06/04 | ❌ |
 
 ---
 
