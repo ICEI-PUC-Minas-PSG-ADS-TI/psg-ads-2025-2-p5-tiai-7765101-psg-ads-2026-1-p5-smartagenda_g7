@@ -150,8 +150,9 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|             |        | Requisitos Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
+|  Nitai            |  Tech Lead   | Requisitos Funcionais (01-03) | 19/03 | 06/04 | ✔️ |
 |             |        | Requisitos Não Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
+|  Nitai, Isaque, Carol           |  Conjunto      | Histórias de Usuário (01-03) | 19/03 | 06/04 |  ✔️ |
 |             |        | Documentação das Tabelas do Banco de Dados | --/03 | 06/04 | ❌ |
 |             |        | Diagrama de Arquitetura (Doc-4) | --/03 | 06/04 | ❌ |
 |             |        | WireFrame/Mockup da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
