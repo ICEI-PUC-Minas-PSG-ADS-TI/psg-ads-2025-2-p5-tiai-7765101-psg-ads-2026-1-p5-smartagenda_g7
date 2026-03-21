@@ -160,7 +160,7 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 |             |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
 |             |        | Desenvolvimento da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
 |  Nitai           |  Tech Lead      | WireFrame/Mockup da Página de Gerenciamento de Tarefa | --/03 | 06/04 | ❌ |
-|  Nitai           |  Tech Lead      | Desenvolvimento da Página de Gerenciamento de Tarefa | --/03 | 06/04 | ❌ |
+|  Nitai           |  Tech Lead      | Desenvolvimento da Página de Gerenciamento de Tarefa | 20/03 | 06/04 | 📝 |
 |             |        | WireFrame/Mockup da Página de Calendário | --/03 | 06/04 | ❌ |
 |             |        | Desenvolvimento da Página de Calendário | --/03 | 06/04 | ❌ |
 
