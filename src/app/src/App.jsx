@@ -6,13 +6,18 @@ import auth from '@react-native-firebase/auth';
 import { preloadModel } from './services/GENAIService';
 import BasicGENAIPromptComponent from './components/BasicGENAIPromptComponent';
 import LoginScreen from './pages/Login';
+import ListaTarefas from './pages/ListaTarefas';
+
+import StorageAPI from './services/LocalStorageService';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    preloadModel();
+    //preloadModel(); Desativado pois não vamos testar a IA agora
+
+    StorageAPI.Iniciar(); // CARREGAMENTO DE DADOS LOCAIS
     
     try {
       const subscriber = auth().onAuthStateChanged(setUser);
@@ -29,7 +34,7 @@ function App() {
 
       <View style={styles.container}>
         {user ? (
-          <BasicGENAIPromptComponent />
+          <ListaTarefas />
         ) : (
           <LoginScreen onSuccess={() => console.log('Logado com sucesso!')} />
         )}
