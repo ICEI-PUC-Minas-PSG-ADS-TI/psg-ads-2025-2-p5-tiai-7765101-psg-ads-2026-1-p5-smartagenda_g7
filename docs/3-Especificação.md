@@ -29,13 +29,13 @@ Os **Requisitos Funcionais (RF)** descrevem o que o sistema deve fazer.
 
 | ID    | Descrição do Requisito | Prioridade |
 |-------|------------------------|------------|
-| RF-01 | O sistema deve permitir que os usuários gerenciem tarefas, com Título, Data de Criação, Data de Validade, Categoria(s) (tags), Descrição geral | 🔴 ALTA |
-| RF-02 | O sistema deve permitir que os usuários Visualizem as tarefas registradas em forma de lista, ordenado pela data de validade mais próxima | 🔴 ALTA |
-| RF-03 | O sistema deve permitir que os usuários Visualizem as tarefas registradas em forma de Calendário, onde as tarefas são exibidas nos dias de sua data de vencimento | 🔴 ALTA |
-| RF-04 | (Descreva aqui o requisito funcional 4 do seu sistema) | (Alta/Média/Baixa) |
-| RF-05 | (Descreva aqui o requisito funcional 5 do seu sistema) | (Alta/Média/Baixa) |
-| RF-06 | (Descreva aqui o requisito funcional 6 do seu sistema) | (Alta/Média/Baixa) |
-| RF-07 | (Descreva aqui o requisito funcional 7 do seu sistema) | (Alta/Média/Baixa) |
+| RF-01 | O sistema deve permitir que os usuários gerenciem tarefas, com Título, Data de Criação, Data de Validade, Categoria(s) (tags), Descrição geral. | 🔴 ALTA |
+| RF-02 | O sistema deve permitir que os usuários Visualizem as tarefas registradas em forma de lista, ordenado pela data de validade mais próxima. | 🔴 ALTA |
+| RF-03 | O sistema deve permitir que os usuários Visualizem as tarefas registradas em forma de Calendário, onde as tarefas são exibidas nos dias de sua data de vencimento. | 🔴 ALTA |
+| RF-04 | O sistema deve permitir que os usuários selecionem as tarefas, tanto em listas quanto em calendários, exibindo mais detalhes sobre elas. | 🔴 ALTA |
+| RF-05 | O sistema deve permitir que os usuários possam selecionar a tarefa especifica ao selecionar um dia onde mais de uma tarefa tem seu vencimento, ao exibir uma lista com as tarefas que expiram naquele dia | 🔴 ALTA |
+| RF-06 | O sistema deve permitir que o usuário vá para a página de gerenciamento da tarefa a partir da página de detalhes da tarefa | 🟡 Média |
+| RF-07 | O sistema deve permitir que o usuário marque uma tarefa como completa, com um menu de confirmação, na listagem de tarefas e em sua página de detalhes | 🔴 ALTA |
 | RF-08 | (Descreva aqui o requisito funcional 8 do seu sistema) | (Alta/Média/Baixa) |
 | RF-09 | (Descreva aqui o requisito funcional 9 do seu sistema) | (Alta/Média/Baixa) |
 | RF-10 | (Descreva aqui o requisito funcional 10 do seu sistema) | (Alta/Média/Baixa) |
