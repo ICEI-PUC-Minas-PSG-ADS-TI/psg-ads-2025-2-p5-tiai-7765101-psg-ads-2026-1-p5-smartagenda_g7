@@ -58,6 +58,46 @@ export default function TaskManager({ tarefa, onClose }: Props)
         }));
     };
 
+    /**
+     * Altera o estado da tarefa entre as 3 possíveis. Se requireConfirm for true, exibe um alerta de confirmação antes de alterar o estado.
+     * @param state O estado para o qual a tarefa deve ser alterada. Deve ser "NaoIniciado", "EmProgresso" ou "Finalizado".
+     * @param requireConfirm Se true, exibe um alerta de confirmação antes de alterar o estado.
+     * @param confirmText Texto a ser exibido na descrição do alerta de confirmação. Ignorado se requireConfirm for false.
+     */
+    const ChangeState = (state: string, requireConfirm?: boolean, confirmText?: string) => {
+        if (requireConfirm)
+        {
+            Alert.alert("Confirmação", confirmText || "Tem certeza que deseja alterar o estado da tarefa?", [
+                {
+                    text: "Cancelar",
+                    style: "cancel"
+                },
+                {
+                    text: "Confirmar",
+                    onPress: () => {
+                        ChangeState(state, false);
+                    }
+                }
+            ]);
+        }
+        else
+        {
+            if (state === "Finalizado" && !task.data_finalizado)
+            {
+                var timern = Date.now();
+                updateField('data_finalizado', timern);
+                setTextDates(prev => ({...prev, data_finalizado: new Date(timern).toLocaleString()}));
+            }
+            else
+            {
+                updateField('data_finalizado', undefined);
+                setTextDates(prev => ({...prev, data_finalizado: ''}));
+            }
+            updateField('estado', state);
+        }
+
+    }
+
     const Exit = async () => 
         {
             let data = await StorageAPI.CarregarTarefas() || {};
@@ -96,6 +136,23 @@ export default function TaskManager({ tarefa, onClose }: Props)
                 onChangeText={text => tryUpdateDate('data_vencimento', text)}
                 style={styles.input}
             />
+
+            <Text style={styles.label}>{task.estado}</Text>
+
+            {task.data_finalizado &&(
+                <View>
+                    <Text style={styles.secondarytext}>Finalizado em {textDates.data_finalizado}</Text>
+                    <TouchableOpacity style={styles.buttonsmall} onPress={()=> ChangeState("EmProgresso", true, "Tem certeza que deseja reabrir a tarefa?")} >
+                        <Text style={styles.label}>Reabrir Tarefa</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+            {!creating && !task.data_finalizado &&(
+                <TouchableOpacity style={styles.buttonsmall} onPress={()=> ChangeState("Finalizado", true, "Tem certeza que deseja finalizar a tarefa?")} >
+                    <Text style={styles.label}>Finalizar Tarefa</Text>
+                </TouchableOpacity>
+            )}
+
             <Button title={creating ? "Criar Tarefa" : "Salvar Alterações"} onPress={Exit} />
         </View>
     )
@@ -126,5 +183,16 @@ const styles = StyleSheet.create({
   },
   label: {
     color: 'white'
+  },
+  secondarytext: {
+    color: '#aaa'
+  },
+  buttonsmall: {
+    marginVertical: 10,
+    marginHorizontal: 50,
+    backgroundColor: '#1E90FF',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center'
   }
 });
