@@ -26,6 +26,9 @@ export default function TaskManager({ tarefa, onClose }: Props) {
             Date.now() + 7 * 24 * 60 * 60 * 1000) // Data vencimento
     );
     const [textDates, setTextDates] = useState<Record<string, string>>({});
+    const [categoriesString, setCategoriesString] = useState("");
+
+    const [descriptionHeight, setDescriptionHeight] = useState(40);
 
     useEffect(() => {
         setTextDates({
@@ -33,6 +36,7 @@ export default function TaskManager({ tarefa, onClose }: Props) {
             data_vencimento: new Date(task.data_vencimento).toLocaleString(),
             data_finalizado: task.data_finalizado ? new Date(task.data_finalizado).toLocaleString() : '',
         });
+        setCategoriesString(task.categorias ? task.categorias.join(", ") : "");
         console.log(Date.parse(textDates.data_vencimento));
     }, [])
 
@@ -42,13 +46,30 @@ export default function TaskManager({ tarefa, onClose }: Props) {
         //  O formato esperado é "dd/MM/yyyy HH:mm:ss", que tem exatamente 19 caracteres.
 
         const timestamp = LocaleStringToTimestamp(value);
-        console.log(timestamp);
+        //console.log(timestamp);
         if (timestamp !== null) {
             updateField(field, timestamp);
             console.log("ACTUALLY SAVING TIME!");
         }
     }
 
+    const tryUpdateCategories = (value: string) => {
+        try {
+            let parsedCategories = value.split(",").map(s => s.trim());
+            updateField("categorias", parsedCategories);
+        }
+        catch (e)
+        {
+            console.log(e);
+        }
+        
+    }
+
+    /**
+     * Atualiza qualquer atributo do objeto Tarefa, você passa o nome do atributo e o valor a ser atualizado
+     * @param field nome do atributo
+     * @param value valor a ser registrado
+     */
     const updateField = (field: keyof Tarefa, value: any) => {
         setTask(prev => ({
             ...prev,
@@ -93,6 +114,21 @@ export default function TaskManager({ tarefa, onClose }: Props) {
     }
 
     const Exit = async () => {
+        let errcamp = "";
+        if (!task.titulo) errcamp = "Título";
+        else if (!task.data_vencimento) errcamp = "Data de Vencimento";
+
+        if (errcamp != "")
+        {
+            Alert.alert("Preencha os campos", `Preencha o campo "${errcamp}"`, [
+                {
+                    text: "Ok",
+                    style: "cancel"
+                }
+            ]);
+            return;
+        }
+
         let data = await StorageAPI.CarregarTarefas() || {};
         if (data) {
             data[task.id] = task;
@@ -108,7 +144,7 @@ export default function TaskManager({ tarefa, onClose }: Props) {
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Título:</Text>
                     <TextInput
-                        placeholder="Tarefa Exemplo"
+                        placeholder="Tarefa Exemplo" placeholderTextColor={"#999"}
                         value={task.titulo}
                         inputMode={'text'}
                         onChangeText={text => updateField('titulo', text)}
@@ -118,20 +154,33 @@ export default function TaskManager({ tarefa, onClose }: Props) {
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Descrição Geral:</Text>
                     <TextInput
-                        placeholder="Realizar um dever de casa"
+                        placeholder="Realizar um dever de casa" placeholderTextColor={"#999"}
                         value={task.descricao_geral}
                         inputMode={'text'}
                         onChangeText={text => updateField('descricao_geral', text)}
-                        style={styles.input}
+                        style={[styles.input, {height: descriptionHeight}]}
+                        multiline
+                        onContentSizeChange={(e) => setDescriptionHeight(e.nativeEvent.contentSize.height)}
                     />
                 </View>
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Data de Vencimento:</Text>
                     <TextInput
-                        placeholder="01/01/1970 00:00:00"
+                        placeholder="01/01/1970 00:00:00" placeholderTextColor={"#999"}
                         value={textDates.data_vencimento}
                         inputMode={'text'}
                         onChangeText={text => tryUpdateDate('data_vencimento', text)}
+                        style={styles.input}
+                    />
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Categorias: {"("}Separado por vírgula{")"}</Text>
+                    <TextInput
+                        placeholder="Trabalho, Hobby" placeholderTextColor={"#999"}
+                        value={categoriesString}
+                        inputMode={'text'}
+                        onChangeText={text => { setCategoriesString(text); tryUpdateCategories(text); }}
                         style={styles.input}
                     />
                 </View>
