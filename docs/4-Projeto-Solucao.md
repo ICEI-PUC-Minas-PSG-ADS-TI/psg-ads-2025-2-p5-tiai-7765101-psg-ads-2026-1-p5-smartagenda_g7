@@ -64,15 +64,15 @@ Cada Wireframe ou Mockups devem estar associados a pelo menos:
 - Uma História de Usuário
 
 
-## 📌 Exemplo Ilustrativo – Tela de Cadastro (RF-01)
+## Tela de Gerenciamento de Tarefa (RF-01)
 
-**História associada:** Como usuário, quero criar uma conta para acessar o sistema.
+**História associada:** Eu como Usuário desejo criar, editar, atualizar e excluir tarefas, para poder me programar e me relembrar de meus afazeres.
 
 Representação simplificada do Wireframe:
 
-<img src="images/TelaCadastro.png" width="80%">
+<img src="images/mockup_gerenciamento.png" width="30%">
 
-**Descrição:** A interface contempla todos os campos exigidos pelo RF-01 e permite persistência no banco após validação no backend.
+**Descrição:** Página ou Modal que permite a alteração das informações de uma tarefa, a serem salvas no AsyncStorage, depois salvas no dispositivo local, depois salvas como backup no Firebase.
 
 ---
 🔧 **Ferramentas sugeridas:**
