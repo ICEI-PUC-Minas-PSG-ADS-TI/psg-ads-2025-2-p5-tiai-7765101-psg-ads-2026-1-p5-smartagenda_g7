@@ -26,11 +26,11 @@ O objetivo é organizar claramente as funcionalidades, qualidades e limites da s
 | RF-06 | Visualização | O sistema deve permitir que os usuários selecionem as tarefas, em listas ou calendários, exibindo mais detalhes sobre elas. | 🔴 ALTA |
 | RF-07 | Visualização | O sistema deve permitir que os usuários visualizem as tarefas registradas em forma de calendário, onde as tarefas são exibidas nos dias de sua data de vencimento. | 🔴 ALTA |
 | RF-08 | Visualização | O sistema deve permitir que os usuários selecionem uma tarefa específica ao clicar em um dia do calendário onde mais de uma tarefa tem seu vencimento, exibindo uma lista agrupada. | 🔴 ALTA |
-| RF-09 | IA | O sistema deve permitir a criação de tarefas através de inserção de texto em linguagem natural (ex: "Estudar IA sexta às 14h"), interpretando a data e título automaticamente. | 🔴 ALTA |
-| RF-10 | IA | O sistema deve disponibilizar uma função de IA que sugira e realize a decomposição de tarefas em subtarefas menores e gerenciáveis. | 🔴 ALTA |
+| RF-09 | IA | O sistema deve permitir a criação de tarefas através de inserção de texto em linguagem natural (ex: "Estudar IA sexta às 14h"), utilizando um Motor de IA Local para extrair a data e título mesmo sem conexão. | 🔴 ALTA |
+| RF-10 | IA | O sistema deve disponibilizar uma função de IA em nuvem que sugira e realize a decomposição de tarefas em subtarefas menores e gerenciáveis. | 🔴 ALTA |
 | RF-11 | Sistema | O sistema deve garantir a operação base offline, salvando tarefas no banco de dados local e agendando a sincronização com a nuvem/IA quando houver conectividade. | 🔴 ALTA |
 | RF-12 | Sistema | O sistema deve disparar alertas automáticos baseados em regras de antecedência para lembrar o usuário de iniciar ou finalizar seus afazeres. | 🔴 ALTA |
-
+| RF-13 | Visualização | O sistema deve exibir um indicador visual do status de conectividade, informando ao usuário quando as funcionalidades avançadas de IA em nuvem estiverem temporariamente indisponíveis. | 🟡 MÉDIA |
 ---
 
 # 3.2 Histórias de Usuário
@@ -64,6 +64,9 @@ Como usuário, eu quero poder registrar e consultar minha agenda mesmo sem acess
 ### História 9 (relacionada ao RF-12)
 Como usuário, eu quero receber notificações automáticas sobre minhas tarefas e seus prazos, para que eu não precise checar o aplicativo constantemente para me lembrar do que preciso fazer.
 
+### História 10 (relacionada ao RF-13)
+Como usuário, eu quero visualizar um aviso claro na interface quando meu celular estiver sem internet, para que eu entenda o motivo da opção decompor com IA estar desabilitada naquele momento.
+
 # 3.3 Requisitos Não Funcionais
 
 ## Tabela de Requisitos Não Funcionais
@@ -72,10 +75,11 @@ Como usuário, eu quero receber notificações automáticas sobre minhas tarefas
 |--------|------------------------|------------|
 | RNF-01 | O sistema deve proteger as informações e credenciais dos usuários utilizando criptografia para senhas e comunicação segura via protocolo HTTPS para sincronização. | 🔴 ALTA |
 | RNF-02 | As funções de leitura e gravação no banco de dados devem funcionar de forma ininterrupta, garantindo a manipulação de dados localmente sem depender de rede. | 🔴 ALTA |
-| RNF-03 | O aplicativo deve carregar sua interface inicial e a listagem local de tarefas em um tempo máximo de 2 segundos. | 🟡 MÉDIA |
-| RNF-04 | As requisições assíncronas enviadas para a API de IA devem ter um tempo limite máximo de 10 segundos, fornecendo feedback visual ao usuário, para não travar a interface. | 🟡 MÉDIA |
-| RNF-05 | A interface do sistema deve seguir as heurísticas de design para dispositivos móveis, como áreas de toque com tamanho mínimo adequado e contraste de cores legível. | 🟡 MÉDIA |
-| RNF-06 | O banco de dados local deve ser otimizado para suportar o armazenamento de até 200 tarefas ativas simultaneamente sem degradação de performance do calendário ou das listas. | 🟢 BAIXA |
+| RNF-03 | O modelo de Inteligência Artificial processado localmente deve garantir que seu tamanho de armazenamento não ultrapasse 2GB na memória interna do dispositivo. | 🔴 ALTA |
+| RNF-04 | O aplicativo deve carregar sua interface inicial e a listagem local de tarefas em um tempo máximo de 2 segundos. | 🟡 MÉDIA |
+| RNF-05 | As requisições assíncronas enviadas para a API de IA devem ter um tempo limite máximo de 10 segundos, fornecendo feedback visual ao usuário, para não travar a interface. | 🟡 MÉDIA |
+| RNF-06 | A interface do sistema deve seguir as heurísticas de design para dispositivos móveis, como áreas de toque com tamanho mínimo adequado e contraste de cores legível. | 🟡 MÉDIA |
+| RNF-07 | O banco de dados local deve ser otimizado para suportar o armazenamento de até 200 tarefas ativas simultaneamente sem degradação de performance do calendário ou das listas. | 🟢 BAIXA |
 
 ## Tabela de Restrições
 
@@ -97,4 +101,5 @@ Como usuário, eu quero receber notificações automáticas sobre minhas tarefas
 | RN-02  | Se o usuário marcar uma tarefa principal como "Concluída", então todas as subtarefas vinculadas a ela devem ser marcadas como concluídas automaticamente. |
 | RN-03  | Se a data e hora atuais ultrapassarem a data de validade de uma tarefa incompleta, então seu status deve ser alterado para "Atrasada" e ela deve ser fixada com prioridade máxima.  |
 | RN-04  | Se uma tarefa já for classificada como uma "Subtarefa", então a opção de decompor com IA deverá ser desabilitada para aquele item específico. |
-| RN-05  | Se uma tarefa principal possuir subtarefas pendentes, então ela só poderá ser excluída mediante a exibição e aceitação de um alerta adicional de confirmação em duas etapas. |
+| RN-05 | Se o dispositivo estiver offline, a opção de decompor com IA deverá ser desabilitada, enquanto a criação de tarefas com inserção de texto natural funcionará localmente. |
+| RN-06  | Se uma tarefa principal possuir subtarefas pendentes, então ela só poderá ser excluída mediante a exibição e aceitação de um alerta adicional de confirmação em duas etapas. |

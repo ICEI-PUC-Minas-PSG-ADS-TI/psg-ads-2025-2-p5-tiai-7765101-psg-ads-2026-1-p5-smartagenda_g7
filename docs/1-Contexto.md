@@ -14,7 +14,7 @@ O SmartAgenda é um aplicativo que deseja aumentar a produtividade do usuário, 
 **Geral:** O objetivo é desenvolver uma agenda pessoal inteligente que otimize o planejamento da rotina e reduza a procrastinação por meio da automação de registros e da análise contextual de tempo, ou seja, aumentar a produtividade do usuário e incentivá-lo a planejar tarefas de maneira prática e contínua.
 
 **Objetivos Específicos:**
-  - Integrar uma API de Inteligência Artificial Generativa para interpretar entradas em linguagem natural e decompor automaticamente projetos complexos em subtarefas menores e acionáveis.
+  - Integrar uma arquitetura de Inteligência Artificial Híbrida, utilizando o processamento local para garantir a extração de intenções e datas mesmo sem internet, e delegação de tarefas de alto custo para uma API Generativa em nuvem.
   - Implementar o gerenciamento local de tarefas (offline-first) com e sem datas finais definidas.
   - Desenvolver um sistema proativo de alertas automáticos e notificações locais baseados em regras de antecedência para combater o esquecimento.
 
@@ -42,7 +42,7 @@ Como dito na justificativa, este é o nicho demográfico que apresenta os índic
 Para atender aos objetivos e solucionar o problema proposto, o sistema é tem os seguintes módulos principais:
 
 * **Autenticação e Sincronização:** Cadastro e login de usuários, com suporte ao armazenamento de dados seguindo a abordagem offline-first e sincronização em background.
-* **Motor de Inteligência Artificial:** Processamento de inputs em linguagem natural para criação de tarefas e também decomposição de tarefas complexas em subtarefas.
+* **Motor de Inteligência Artificial:** Processamento de inputs em linguagem natural rodando localmente caso esteja offline. Caso esteja online, processamento em nuvem com funcionalidades mais complexas, como a decomposição avançada de tarefas complexas em subtarefas.
 * **Gerenciador de Tarefas (CRUD):** Criação, edição, exclusão e conclusão de tarefas e subtarefas, permitindo o uso de tags, descrições e controle de status.
 * **Visualização de tarefas:** Interface interativa contendo listagem de prioridades (ordenada por urgência) e calendário mensal para visão panorâmica de prazos.
 * **Alertas e Notificações:** Automatização de lembretes locais preventivos para o usuário antes do vencimento das atividades.
