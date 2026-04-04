@@ -81,45 +81,20 @@ Como usuário, eu quero receber notificações automáticas sobre minhas tarefas
 
 | ID  | Restrição |
 |-----|-----------|
-| R-01 | O projeto deverá ser entregue até o final do semestre. |
-| R-02 | O sistema deve funcionar apenas dentro da rede interna da empresa. |
-| R-03 | O software deve ser compatível com Windows e Linux. |
-| R-04 | (Descreva aqui a restrição 4 do seu projeto) |
-| R-05 | (Descreva aqui a restrição 5 do seu projeto) |
-| R-06 | (Descreva aqui a restrição 6 do seu projeto) |
-| R-07 | (Descreva aqui a restrição 7 do seu projeto) |
-| R-08 | (Descreva aqui a restrição 8 do seu projeto) |
+| R-01 | O projeto deverá ser entregue de forma funcional e documentada até o final do semestre letivo. |
+| R-02 | O aplicativo será desenvolvido para execução e distribuição exclusivamente no sistema operacional Android. |
+| R-03 | O desenvolvimento da interface mobile deve ser feito utilizando o React Native. |
+| R-04 | O projeto não deverá gerar custos financeiros para a equipe, limitando o uso de serviços em nuvem e Inteligência Artificial aos pacotes gratuitos das APIs utilizadas. |
+| R-05 | A persistência primária de dados deve ocorrer obrigatoriamente de forma local, sendo a arquitetura restrita a abordagem offline-first. |
+| R-06 | O escopo das funcionalidades de Inteligência Artificial será restrito ao processamento de linguagem natural, não abrangendo processamento de imagem ou áudio. |
 
 ---
 ## 3.5 Regras de Negócio
 
-> Regras de Negócio definem as condições e políticas que o sistema deve seguir para garantir o correto funcionamento alinhado ao negócio.  
->  
-> Elas indicam **quando** e **como** certas ações devem ocorrer, usando o padrão:  
->  
-> **Se (condição) for verdadeira, então (ação) deve ser tomada.**  
->  
-> Exemplo:  
-> - "Um usuário só poderá finalizar um cadastro se todos os dados forem inseridos e validados com sucesso."  
->  
-> Também pode ser escrito assim (if/then):  
-> - "Se o usuário tem saldo acima de X, então a opção de empréstimo estará liberada."
-
----
-
- A tabela abaixo deve ser preenchida com as regras de negócio que **impactam seu projeto**. Os textos no quadro são apenas ilustrativos.
-
-|ID    | Regra de Negócio                                                       |
-|-------|-----------------------------------------------------------------------|
-|RN-01 | Usuário só pode cadastrar até 10 tarefas por dia.                      |
-|RN-02 | Apenas administradores podem alterar permissões de usuários.           |
-|RN-03 | Tarefas vencidas devem ser destacadas em vermelho no sistema.          |
-|RN-04 | *(Descreva aqui a restrição 4 do seu projeto)*                         |
-|RN-05 | *(Descreva aqui a restrição 5 do seu projeto)*                         |
-
-💡 **Dica:** Explique sempre o motivo ou impacto da regra no sistema.
-
----
-> **Links Úteis**:
-> - [O que são Requisitos Funcionais e Requisitos Não Funcionais?](https://codificar.com.br/requisitos-funcionais-nao-funcionais/)
-> - [O que são requisitos funcionais e requisitos não funcionais?](https://analisederequisitos.com.br/requisitos-funcionais-e-requisitos-nao-funcionais-o-que-sao/)
+| ID | Regra de Negócio |
+|--------|--------|
+| RN-01  | Se o dispositivo estiver sem conexão à internet no momento da criação ou edição de uma tarefa, então os dados devem ser salvos com o status pendente e sincronizados automaticamente quando a rede retornar. |
+| RN-02  | Se o usuário marcar uma tarefa principal como "Concluída", então todas as subtarefas vinculadas a ela devem ser marcadas como concluídas automaticamente. |
+| RN-04  | Se a data e hora atuais ultrapassarem a data de validade de uma tarefa incompleta, então seu status deve ser alterado para "Atrasada" e ela deve ser fixada com prioridade máxima.  |
+| RN-05  | Se uma tarefa já for classificada como uma "Subtarefa", então a opção de decompor com IA deverá ser desabilitada para aquele item específico. |
+| RN-06  | Se uma tarefa principal possuir subtarefas pendentes, então ela só poderá ser excluída mediante a exibição e aceitação de um alerta adicional de confirmação em duas etapas. |
