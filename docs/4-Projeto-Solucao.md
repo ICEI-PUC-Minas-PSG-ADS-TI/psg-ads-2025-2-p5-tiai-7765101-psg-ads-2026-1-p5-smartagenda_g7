@@ -36,21 +36,21 @@ Semelhante à imagem abaixo:
 
 ---
 
-## 4.2 Tecnologias Utilizadas (Sprint 1)
+## 4.2 Tecnologias Utilizadas
 
 Descreva as tecnologias, linguagens, frameworks, bibliotecas e serviços escolhidos pelo Squad.
 
 | Dimensão | Tecnologia Escolhida |
 |----------|----------------------|
-| Banco de Dados (SGBD) | Ex: SQL Server, PostgreSQL ou MongoDB |
-| Back-end (API) | Ex: C# (.NET Core) |
-| Front-end / Mobile | Ex: HTML + CSS + JavaScript, React ou Flutter |
-| Hospedagem / Deploy | Ex: Azure, AWS, Render ou Railway |
-| Gestão e Versionamento | GitHub e GitHub Projects (Kanban) |
+| **Banco de Dados (SGBD)** | Firebase Cloud Firestore (NoSQL) |
+| **Back-end API** | Firebase, utilizando Firebase Auth para autenticação de usuários. |
+| **Front-end / Mobile** | React Native e React. |
+| **Inteligência Artificial** | Framework React Native AI (@react-native-ai/mlc). |
+| **Ambiente e Emulação** | Android Studio (Android SDK) atuando em conjunto com o Metro Bundler. |
+| **Gestão e Versionamento** | GitHub. |
 
  ⚠️ **Observação:**
- - GitHub Pages não executa back-end.
- - Utilize apenas tecnologias realmente implementadas.
+ - O sistema não requer hospedagem ou deploy de um servidor próprio por conta do Firebase.
 
 ---
 
