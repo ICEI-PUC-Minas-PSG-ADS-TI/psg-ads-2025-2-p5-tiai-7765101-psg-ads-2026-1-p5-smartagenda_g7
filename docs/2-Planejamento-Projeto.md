@@ -150,11 +150,14 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|  Nitai            |  Tech Lead   | Requisitos Funcionais (01-03) | 19/03 | 06/04 | ✔️ |
-|             |        | Requisitos Não Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
-|  Nitai, Isaque, Carol           |  Conjunto      | Histórias de Usuário (01-03) | 19/03 | 06/04 |  ✔️ |
+| Isaque | Facilitador Agil | Correção de Contexto.md e Lista Macro de Funcionalidades | 03/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Tecnologias Utilizadas e Diagrama de Arquitetura | 03/04 | 06/04 | ✔️ |
+ Isaque | Facilitador Agil | Requisitos Não Funcionais, Restrições e Regras de negócio | 03/04 | 06/04 |  ✔️ |
+| Nitai, Isaque | Conjunto | Requisitos Funcionais (01-07) | 19/03 | 06/04 | ✔️ |
+ Isaque |  Facilitador Agil | Requisitos Funcionais (08-13) | 19/03 | 06/04 |  ✔️ |
+ Nitai, Isaque, Carol           |  Conjunto      | Histórias de Usuário (01-03) | 19/03 | 06/04 |  ✔️ |
+ Isaque           |  Facilitador Agil      | Histórias de Usuário (04-10) | 03/04 | 06/04 |  ✔️ |
 |             |        | Documentação das Tabelas do Banco de Dados | --/03 | 06/04 | ❌ |
-|             |        | Diagrama de Arquitetura (Doc-4) | --/03 | 06/04 | ❌ |
 |             |        | WireFrame/Mockup da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
 |             |        | Desenvolvimento da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
 |             |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
