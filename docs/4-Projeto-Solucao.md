@@ -10,31 +10,11 @@
 
 ## 4.1 Arquitetura da Solução (Sprint 1 e 2)
 
-Apresente um **diagrama macro** demonstrando como os componentes do sistema se comunicam.
+A arquitetura do SmartAgenda foi projetada sob um paradigma Híbrido e Serverless, com o objetivo de oferecer máxima performance e funcionamento offline
 
-A arquitetura deve refletir o modelo de **fatias verticais**, evidenciando o fluxo:
-
-**Front-end → API (Back-end) → Banco de Dados**
-
-Semelhante à imagem abaixo:
-
-![Exemplo de Arquitetura](https://uds.com.br/blog/wp-content/uploads/2024/09/Imagem-1-Comparativo-ilustrativo-das-diferencas-entre-front-end-e-back-end.jpg)
-
-
-
- **Fonte:** [Guia Completo de Desenvolvimento de Software - UDS](https://uds.com.br/blog/desenvolvimento-de-software-guia-completo/) <br><br>
+### Diagrama de Arquitetura do Projeto
  
- ### 📎 Inserir o Diagrama de Arquitetura do Projeto do Grupo
-🚨 O grupo deverá inserir aqui a imagem
-
-
----
-🔧**Ferramentas recomendadas:**
-- Draw.io
-- Lucidchart
-- Figma
-
----
+ ![Diagrama de arquitetura da solução](./images/Diagrama_Arquitetura_SmartAgenda.png)
 
 ## 4.2 Tecnologias Utilizadas
 
@@ -45,7 +25,7 @@ Descreva as tecnologias, linguagens, frameworks, bibliotecas e serviços escolhi
 | **Banco de Dados (SGBD)** | Firebase Cloud Firestore (NoSQL) |
 | **Back-end API** | Firebase, utilizando Firebase Auth para autenticação de usuários. |
 | **Front-end / Mobile** | React Native e React. |
-| **Inteligência Artificial** | Framework React Native AI (@react-native-ai/mlc). |
+| **Inteligência Artificial Local** | Framework React Native AI (@react-native-ai/mlc). |
 | **Ambiente e Emulação** | Android Studio (Android SDK) atuando em conjunto com o Metro Bundler. |
 | **Gestão e Versionamento** | GitHub. |
 
