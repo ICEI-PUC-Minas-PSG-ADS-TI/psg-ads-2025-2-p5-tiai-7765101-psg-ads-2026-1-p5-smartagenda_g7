@@ -95,7 +95,7 @@ const carregarTarefas = async () => {
         return true; // 'Todas'
     });
 
-    // Tela de carregamento
+    // Tela de carregamento das informações já salvas no Firebase
     if (carregando) {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>

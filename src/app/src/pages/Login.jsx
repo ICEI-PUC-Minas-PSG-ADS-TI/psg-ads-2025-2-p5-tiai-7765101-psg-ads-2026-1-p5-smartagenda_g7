@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
-export default function LoginPage({ onSuccess }) {
+
+export default function LoginPage({ onSuccess,onCadastro  }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,12 +48,18 @@ export default function LoginPage({ onSuccess }) {
         secureTextEntry
       />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="blue" />
+            {loading ? (
+        <ActivityIndicator size="large" color="#9F7CFA" />
       ) : (
-        <Button title="Entrar" onPress={handleLogin} />
+        <Button title="Entrar" onPress={handleLogin} color="#9F7CFA" />
       )}
+
+      {/* Botão de cadastro */}
+      <TouchableOpacity onPress={onCadastro} style={styles.linkContainer}>
+        <Text style={styles.linkText}>Não tem uma conta? Cadastre-se</Text>
+      </TouchableOpacity>
     </View>
+    
   );
 }
 
@@ -73,8 +80,18 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#333',
-    color: 'white', padding: 12,
+    color: 'white',
+    padding: 12,
     marginBottom: 15,
     borderRadius: 8
+  },
+  linkContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#9F7CFA',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   }
 });
