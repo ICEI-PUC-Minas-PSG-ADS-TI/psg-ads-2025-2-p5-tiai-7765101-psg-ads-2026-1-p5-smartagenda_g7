@@ -159,8 +159,8 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
  Isaque           |  Facilitador Agil      | Histórias de Usuário (04-10) | 03/04 | 06/04 |  ✔️ |
 |  Carol           | Arquiteto de Dados       | Documentação das Tabelas do Banco de Dados | 05/04 | 06/04 | ✔️ |
 | Carol |  Arquiteto de Dados   | Desenvolvimento da Página de Cadastro | 05/04 | 06/04 | ✔️ |
-| Isaque |        | WireFrame/Mockup da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
-| Isaque |        | Desenvolvimento da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
+| Isaque |   Facilitador Agil     | WireFrame/Mockup da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil       | Desenvolvimento da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
 |            |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
 |      Isaque       |  Facilitador Ágil      | Desenvolvimento da Página de Detalhes de Tarefa | --/03 | 06/04 | ✔️ |
 |  Nitai           |  Tech Lead      | WireFrame/Mockup da Página de Gerenciamento de Tarefa | 23/03 | 06/04 | ✔️ |
