@@ -4,6 +4,7 @@ import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, To
 import { Tarefa } from '../types/tarefa.ts'
 import { CreateTarefa, LocaleStringToTimestamp } from '../services/TarefaService.ts';
 import StorageAPI from '../services/LocalStorageService';
+import { salvarTarefaFirestore } from '../services/FirestoreService';
 
 
 type Props = {
@@ -129,13 +130,30 @@ export default function TaskManager({ tarefa, onClose }: Props) {
             return;
         }
 
+ try {
+        // 1. Primeiro salvar no Firebase
+        console.log("Tentando salvar no Firebase...");
+        await salvarTarefaFirestore(task);
+        console.log("✅ SALVOU NO FIREBASE com sucesso!");
+
+        // 2. Depois salvar localmente (backup)
         let data = await StorageAPI.CarregarTarefas() || {};
-        if (data) {
-            data[task.id] = task;
-            await StorageAPI.SalvarTarefas(data);
-        }
+        data[task.id] = task;
+        await StorageAPI.SalvarTarefas(data);
+        console.log("✅ SALVOU LOCALMENTE com sucesso!");
+
+        // 3. Fechar o modal
         if (onClose) onClose(task);
+        
+    } catch (error) {
+        console.log("❌ ERRO AO SALVAR:", error);
+        Alert.alert(
+            "Erro ao salvar", 
+            "Não foi possível salvar a tarefa. Verifique sua conexão com a internet e tente novamente.",
+            [{ text: "OK", style: "default" }]
+        );
     }
+}
 
     return (
         <View style={[styles.container, styles.coloredbackground]}>
