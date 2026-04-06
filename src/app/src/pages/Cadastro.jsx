@@ -1,24 +1,52 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import { onUserAuthenticated } from '../services/UserService';
 
-export default function LoginScreen({ onSuccess, onCadastro }) {
+export default function CadastroScreen({ onSuccess, onBackToLogin }) {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Aviso', 'Os campos e-mail e senha são obrigatórios.');
+  const handleCadastro = async () => {
+    if (!email || !password || !nome) {
+      Alert.alert('Campos Obrigatórios', 'Por favor, preencha todos os campos.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Senhas incompatíveis', 'As senhas digitadas não coincidem.');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Senha fraca', 'A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
     setLoading(true);
     try {
-      await auth().signInWithEmailAndPassword(email, password);
+      // 1. Criar usuário no Firebase Authentication
+      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+      
+      // 2. Atualizar o perfil com o nome
+      await userCredential.user.updateProfile({ displayName: nome });
+      
+      // 3. Criar documento no Firestore
+      await onUserAuthenticated(userCredential.user);
+      
+      Alert.alert('Sucesso', 'Conta criada com sucesso! Bem-vindo ao SmartAgenda.');
       onSuccess();
     } catch (err) {
-      Alert.alert('Erro de Autenticação', 'E-mail ou senha incorretos.');
+      let mensagem = 'Ocorreu um erro ao criar a conta.';
+      if (err.code === 'auth/email-already-in-use') {
+        mensagem = 'Este e-mail já está cadastrado em outra conta.';
+      } else if (err.code === 'auth/invalid-email') {
+        mensagem = 'Formato de e-mail inválido.';
+      }
+      Alert.alert('Erro no Cadastro', mensagem);
     } finally {
       setLoading(false);
     }
@@ -28,10 +56,18 @@ export default function LoginScreen({ onSuccess, onCadastro }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
       
-      <Text style={styles.title}>SmartAgenda</Text>
-      <Text style={styles.subtitle}>Faça login para continuar</Text>
+      <Text style={styles.title}>Criar Conta</Text>
+      <Text style={styles.subtitle}>Junte-se ao SmartAgenda</Text>
 
       <View style={styles.formContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nome completo"
+          placeholderTextColor="#888888"
+          value={nome}
+          onChangeText={setNome}
+        />
+
         <TextInput
           style={styles.input}
           placeholder="E-mail"
@@ -44,24 +80,33 @@ export default function LoginScreen({ onSuccess, onCadastro }) {
 
         <TextInput
           style={styles.input}
-          placeholder="Senha"
+          placeholder="Senha (mínimo 6 caracteres)"
           placeholderTextColor="#888888"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
 
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar senha"
+          placeholderTextColor="#888888"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
+
         {loading ? (
           <ActivityIndicator size="large" color="#9F7CFA" style={{ marginVertical: 20 }} />
         ) : (
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} activeOpacity={0.8}>
-            <Text style={styles.primaryButtonText}>Entrar</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleCadastro} activeOpacity={0.8}>
+            <Text style={styles.primaryButtonText}>Cadastrar</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity onPress={onCadastro} style={styles.linkContainer} activeOpacity={0.7}>
+        <TouchableOpacity onPress={onBackToLogin} style={styles.linkContainer} activeOpacity={0.7}>
           <Text style={styles.linkText}>
-            Não tem uma conta? <Text style={styles.linkTextBold}>Cadastre-se</Text>
+            Já tem uma conta? <Text style={styles.linkTextBold}>Faça login</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -77,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212'
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',

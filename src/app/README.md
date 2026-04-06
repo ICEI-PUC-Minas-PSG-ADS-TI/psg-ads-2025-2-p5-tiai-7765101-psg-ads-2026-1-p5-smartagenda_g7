@@ -51,6 +51,7 @@ cmake {
     arguments
 }
 ```
+Caso ainda ocorra erros, limpe o cache (deletar pasta em Android/app/.cxx)
 
 Certifique que o caminho que está na linha que contem está correto. (Aponta corretamente para o ninja.exe)
 
