@@ -4,6 +4,9 @@ import TarefaMinimal from '../components/TarefaMinimal';
 import TaskManager from '../components/TaskManager';
 import { Tarefa } from '../types/tarefa.ts';
 import StorageAPI from '../services/LocalStorageService';
+import { buscarTarefasFirestore } from '../services/FirestoreService';
+import auth from '@react-native-firebase/auth';
+import { ActivityIndicator } from 'react-native';
 
 type FiltroTipo = 'Todas' | 'Pendentes' | 'Concluídas';
 
@@ -12,6 +15,8 @@ export default function ListaTarefas() {
     const [filtroAtivo, setFiltroAtivo] = useState<FiltroTipo>('Todas');
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [carregando, setCarregando] = useState(true);
 
     // Ordenação otimizada aproveitando que data_vencimento já é milissegundos
     const ordenarTarefas = (lista: Tarefa[]) => {
@@ -22,14 +27,48 @@ export default function ListaTarefas() {
         });
     };
 
-    useEffect(() => {
-        const loadTarefas = async () => {
-            const tarefasCarregadas = await StorageAPI.CarregarTarefasArray() || [];
-            setTarefas(ordenarTarefas(tarefasCarregadas));
-        };
+    // Função para carregar tarefas existentes no Firebase
+const carregarTarefas = async () => {
+    try {
+        setCarregando(true);
+        console.log('🔄 Buscando tarefas do Firebase...');
+        
+        const user = auth().currentUser;
+        if (!user) {
+            console.log('⚠️ Usuário não logado');
+            setCarregando(false);
+            return;
+        }
 
-        loadTarefas();
-    }, []);
+        const tarefasDoFirebase = await buscarTarefasFirestore();
+        
+        if (tarefasDoFirebase && tarefasDoFirebase.length > 0) {
+            console.log('✅ Tarefas carregadas do Firebase:', tarefasDoFirebase.length);
+            setTarefas(ordenarTarefas([...tarefasDoFirebase]));
+            
+            const tarefasMap: Record<string, Tarefa> = {};
+            tarefasDoFirebase.forEach(t => {
+                tarefasMap[t.id] = t;
+            });
+            await StorageAPI.SalvarTarefas(tarefasMap);
+        } else {
+            console.log('⚠️ Nenhuma tarefa no Firebase, buscando local...');
+            const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
+            if (tarefasLocais.length > 0) {
+                setTarefas(ordenarTarefas(tarefasLocais));
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar tarefas:', error);
+        const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
+        setTarefas(ordenarTarefas(tarefasLocais));
+    } finally {
+        setCarregando(false);
+    }
+};
+   useEffect(() => {
+    carregarTarefas();
+}, []);
 
     const NewTask = () => {
         setSelectedTask(null);
@@ -41,24 +80,13 @@ export default function ListaTarefas() {
         setIsModalOpen(true);
     };
 
-    const SaveEdited = (result?: Tarefa) => {
-        if (result) {
-            setTarefas(prev => {
-                const newTarefas = [...prev];
-                const index = newTarefas.findIndex(t => t.id === result.id);
-
-                if (index !== -1) {
-                    newTarefas[index] = result;
-                } else {
-                    newTarefas.push(result);
-                }
-
-                return ordenarTarefas(newTarefas);
-            });
-        }
-        setSelectedTask(null);
-        setIsModalOpen(false);
-    };
+    const SaveEdited = async (result?: Tarefa) => {
+    if (result) {
+        await carregarTarefas(); // Recarrega tudo do Firebase
+    }
+    setSelectedTask(null);
+    setIsModalOpen(false);
+};
 
     // Aplica o filtro selecionado antes de renderizar a lista
     const tarefasFiltradas = tarefas.filter(t => {
@@ -66,6 +94,17 @@ export default function ListaTarefas() {
         if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
         return true; // 'Todas'
     });
+
+    // Tela de carregamento
+    if (carregando) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <StatusBar barStyle="light-content" backgroundColor="#121212" />
+                <ActivityIndicator size="large" color="#9F7CFA" />
+                <Text style={{ color: '#9F7CFA', marginTop: 16 }}>Carregando tarefas...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
