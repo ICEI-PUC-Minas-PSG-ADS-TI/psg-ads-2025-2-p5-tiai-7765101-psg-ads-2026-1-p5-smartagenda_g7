@@ -44,28 +44,21 @@ Cada Wireframe ou Mockups devem estar associados a pelo menos:
 - Uma História de Usuário
 
 
-## Tela de Gerenciamento de Tarefa (RF-01)
+### Tela de Gerenciamento de Tarefa (RF-01)
 
-**História associada:** Eu como Usuário desejo criar, editar, atualizar e excluir tarefas, para poder me programar e me relembrar de meus afazeres.
-
-Representação simplificada do Wireframe:
+**História associada:** Como usuário, eu quero criar, editar, atualizar e excluir tarefas, para que eu possa me programar e manter um registro preciso dos meus afazeres.
 
 <img src="images/mockup_gerenciamento.png" width="30%">
 
 **Descrição:** Página ou Modal que permite a alteração das informações de uma tarefa, a serem salvas no AsyncStorage, depois salvas no dispositivo local, depois salvas como backup no Firebase.
 
----
-🔧 **Ferramentas sugeridas:**
-- Figma  
-- MarvelApp  
-- Balsamiq  
----
+### Tela da Lista de Tarefas (RF-05 e RF-06)
 
-### 📎 Inserir AQUI Wireframes/ Mockups do Projeto de Software
+**História associada:** Como usuário, eu quero visualizar a lista das minhas tarefas ordenadas por vencimento e acessar seus detalhes, para que eu não me esqueça do que precisa ser feito primeiro.
 
-🚨 O grupo deverá inserir aqui a imagem
+<img src="images/Lista de Tarefas.jpeg" width="30%">
 
-
+**Descrição:** Página que apresenta uma lista das tarefas disponíveis. Elas são ordenadas pela data de vencimento, mas existem também os filtros "Pendentes" e "Concluídas".
 
 ---
 
