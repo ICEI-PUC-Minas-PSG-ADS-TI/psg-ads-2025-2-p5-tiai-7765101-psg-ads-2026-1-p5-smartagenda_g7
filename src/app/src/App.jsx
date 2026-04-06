@@ -7,20 +7,25 @@ import { preloadModel } from './services/GENAIService';
 import BasicGENAIPromptComponent from './components/BasicGENAIPromptComponent';
 import LoginScreen from './pages/Login';
 import ListaTarefas from './pages/ListaTarefas';
-
+import CadastroScreen from './pages/Cadastro';
 import StorageAPI from './services/LocalStorageService';
+import { onUserAuthenticated } from './services/UserService';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [user, setUser] = useState(null);
+  const [showCadastro, setShowCadastro] = useState(false);
 
   useEffect(() => {
-    //preloadModel(); Desativado pois não vamos testar a IA agora
-
-    StorageAPI.Iniciar(); // CARREGAMENTO DE DADOS LOCAIS
-    
     try {
-      const subscriber = auth().onAuthStateChanged(setUser);
+      const subscriber = auth().onAuthStateChanged(async (authUser) => {
+        setUser(authUser);
+        
+        if (authUser) {
+          await onUserAuthenticated(authUser);
+          await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
+        }
+      });
       return subscriber; 
     } catch (err) {
       Alert.alert('Não foi possível se conectar ao Firebase', `Erro: ${err.message}`);
@@ -28,15 +33,33 @@ function App() {
     }
   }, []);
 
+  // Se está logado, mostra a lista de tarefas
+  if (user) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <View style={styles.container}>
+          <ListaTarefas />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  // Se não está logado, mostra tela de login ou cadastro
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-
       <View style={styles.container}>
-        {user ? (
-          <ListaTarefas />
+        {showCadastro ? (
+          <CadastroScreen 
+            onSuccess={() => setShowCadastro(false)} 
+            onBackToLogin={() => setShowCadastro(false)} 
+          />
         ) : (
-          <LoginScreen onSuccess={() => console.log('Logado com sucesso!')} />
+          <LoginScreen 
+            onSuccess={() => console.log('Logado com sucesso!')} 
+            onCadastro={() => setShowCadastro(true)} 
+          />
         )}
       </View>
     </SafeAreaProvider>

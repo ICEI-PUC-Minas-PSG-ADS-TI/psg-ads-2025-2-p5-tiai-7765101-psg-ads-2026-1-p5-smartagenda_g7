@@ -2,71 +2,46 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { Tarefa } from '../types/tarefa';
 
-export async function salvarTarefaFirestore(tarefa: Tarefa) {
+/**
+ * Helper centralizado para obter a referência correta do usuário logado.
+ * Garante que cada usuário acesse apenas as suas próprias tarefas.
+ */
+const getTarefasRef = () => {
+  const user = auth().currentUser;
+  if (!user) throw new Error('Usuário não autenticado');
+  
+  return firestore()
+    .collection('usuarios')
+    .doc(user.uid)
+    .collection('tarefas');
+};
+
+export async function salvarTarefaFirestore(tarefa: Tarefa): Promise<void> {
   try {
-    const user = auth().currentUser;
+    // Mapeamento exato dos dados locais para os tipos do Firestore
+    const dadosFirestore = {
+      titulo: tarefa.titulo,
+      descricao_geral: tarefa.descricao_geral || '',
+      data_criado: firestore.Timestamp.fromMillis(tarefa.data_criado),
+      data_vencimento: firestore.Timestamp.fromMillis(tarefa.data_vencimento),
+      data_finalizado: tarefa.data_finalizado ? firestore.Timestamp.fromMillis(tarefa.data_finalizado) : null,
+      categorias: tarefa.categorias || [],
+      estado: tarefa.estado,
+      updatedAt: firestore.FieldValue.serverTimestamp()
+    };
 
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    // Verificar se a tarefa já existe (edição) ou é nova (criação)
-    const tarefaRef = firestore()
-      .collection('usuarios')
-      .doc(user.uid)
-      .collection('tarefas');
-
-    if (tarefa.id) {
-      // Atualizar tarefa existente
-      await tarefaRef.doc(tarefa.id).set({
-        titulo: tarefa.titulo,
-        descricao: tarefa.descricao_geral,
-        data_criado: firestore.Timestamp.fromDate(new Date(tarefa.data_criado)),
-        data_vencimento: firestore.Timestamp.fromDate(new Date(tarefa.data_vencimento)),
-        data_finalizado: tarefa.data_finalizado ? firestore.Timestamp.fromDate(new Date(tarefa.data_finalizado)) : null,
-        categorias: tarefa.categorias || [],
-        estado: tarefa.estado,
-        updatedAt: firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-      
-      console.log('✅ Tarefa atualizada no Firestore!');
-    } else {
-      // Criar nova tarefa
-      const docRef = await tarefaRef.add({
-        titulo: tarefa.titulo,
-        descricao: tarefa.descricao_geral,
-        data_criado: firestore.Timestamp.fromDate(new Date(tarefa.data_criado)),
-        data_vencimento: firestore.Timestamp.fromDate(new Date(tarefa.data_vencimento)),
-        data_finalizado: tarefa.data_finalizado ? firestore.Timestamp.fromDate(new Date(tarefa.data_finalizado)) : null,
-        categorias: tarefa.categorias || [],
-        estado: tarefa.estado,
-        createdAt: firestore.FieldValue.serverTimestamp()
-      });
-      
-      console.log('✅ Tarefa salva no Firestore com ID:', docRef.id);
-      return docRef.id;
-    }
+    // Como o ID sempre é gerado no app (offline-first), usamos sempre o set com merge
+    await getTarefasRef().doc(tarefa.id).set(dadosFirestore, { merge: true });
+    
   } catch (error) {
-    console.error('❌ Erro ao salvar tarefa:', error);
+    console.error('[FirestoreService] Erro ao salvar tarefa:', error);
     throw error;
   }
 }
 
-export async function buscarTarefasFirestore() {
+export async function buscarTarefasFirestore(): Promise<Tarefa[]> {
   try {
-    const user = auth().currentUser;
-    
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    const snapshot = await firestore()
-      .collection('usuarios')
-      .doc(user.uid)
-      .collection('tarefas')
-      .orderBy('data_vencimento', 'asc')
-      .get();
-
+    const snapshot = await getTarefasRef().orderBy('data_vencimento', 'asc').get();
     const tarefas: Tarefa[] = [];
 
     snapshot.forEach(doc => {
@@ -74,10 +49,10 @@ export async function buscarTarefasFirestore() {
       tarefas.push({
         id: doc.id,
         titulo: data.titulo,
-        descricao_geral: data.descricao || data.descricao_geral, // Compatibilidade com ambos os nomes
-        data_criado: data.data_criado?.toDate().getTime() || Date.now(),
-        data_vencimento: data.data_vencimento?.toDate().getTime() || Date.now(),
-        data_finalizado: data.data_finalizado?.toDate().getTime(),
+        descricao_geral: data.descricao_geral || data.descricao || '', 
+        data_criado: data.data_criado ? data.data_criado.toMillis() : Date.now(),
+        data_vencimento: data.data_vencimento ? data.data_vencimento.toMillis() : Date.now(),
+        data_finalizado: data.data_finalizado ? data.data_finalizado.toMillis() : undefined,
         categorias: data.categorias || [],
         estado: data.estado || 'NaoIniciado'
       });
@@ -85,82 +60,63 @@ export async function buscarTarefasFirestore() {
 
     return tarefas;
   } catch (error) {
-    console.error('❌ Erro ao buscar tarefas:', error);
-    return [];
+    console.error('[FirestoreService] Erro ao buscar tarefas:', error);
+    return []; // Retorna array vazio em caso de erro para não quebrar a UI
   }
 }
 
-export async function atualizarTarefaFirestore(id: string, dados: Partial<Tarefa>) {
+export async function atualizarTarefaFirestore(id: string, dados: Partial<Tarefa>): Promise<void> {
   try {
-    const user = auth().currentUser;
-    
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
     const updateData: any = {};
+    
     if (dados.titulo) updateData.titulo = dados.titulo;
-    if (dados.descricao_geral) updateData.descricao = dados.descricao_geral;
-    if (dados.data_vencimento) updateData.data_vencimento = firestore.Timestamp.fromDate(new Date(dados.data_vencimento));
+    if (dados.descricao_geral) updateData.descricao_geral = dados.descricao_geral;
+    if (dados.data_vencimento) updateData.data_vencimento = firestore.Timestamp.fromMillis(dados.data_vencimento);
     if (dados.categorias) updateData.categorias = dados.categorias;
     if (dados.estado) updateData.estado = dados.estado;
-    if (dados.data_finalizado) updateData.data_finalizado = firestore.Timestamp.fromDate(new Date(dados.data_finalizado));
+    if (dados.data_finalizado) updateData.data_finalizado = firestore.Timestamp.fromMillis(dados.data_finalizado);
     
     updateData.updatedAt = firestore.FieldValue.serverTimestamp();
 
-    await firestore()
-      .collection('usuarios')
-      .doc(user.uid)
-      .collection('tarefas')
-      .doc(id)
-      .update(updateData);
-      
-    console.log('✅ Tarefa atualizada no Firestore!');
+    await getTarefasRef().doc(id).update(updateData);
   } catch (error) {
-    console.error('❌ Erro ao atualizar tarefa:', error);
+    console.error('[FirestoreService] Erro ao atualizar tarefa:', error);
     throw error;
   }
 }
 
-export async function deletarTarefaFirestore(id: string) {
+export async function deletarTarefaFirestore(id: string): Promise<void> {
   try {
-    const user = auth().currentUser;
-    
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    await firestore()
-      .collection('usuarios')
-      .doc(user.uid)
-      .collection('tarefas')
-      .doc(id)
-      .delete();
-      
-    console.log('✅ Tarefa deletada do Firestore!');
+    await getTarefasRef().doc(id).delete();
   } catch (error) {
-    console.error('❌ Erro ao deletar tarefa:', error);
+    console.error('[FirestoreService] Erro ao deletar tarefa:', error);
     throw error;
   }
 }
 
-// Função para sincronizar dados locais com Firebase
-export async function sincronizarTarefas(tarefasLocais: Record<string, Tarefa>) {
+export async function sincronizarTarefas(tarefasLocais: Record<string, Tarefa>): Promise<void> {
   try {
     const tarefasFirestore = await buscarTarefasFirestore();
     const tarefasFirestoreMap = new Map();
     
     tarefasFirestore.forEach(t => tarefasFirestoreMap.set(t.id, t));
     
-    // Sincronizar: salvar no Firebase as tarefas locais que não estão no Firebase
+    const promises = [];
+    
+    // Sincronizar: envia para o Firebase as tarefas locais que não estão lá
     for (const [id, tarefa] of Object.entries(tarefasLocais)) {
       if (!tarefasFirestoreMap.has(id)) {
-        await salvarTarefaFirestore(tarefa);
+        promises.push(salvarTarefaFirestore(tarefa));
       }
     }
     
-    console.log('✅ Sincronização concluída!');
+    // Dispara todas as requisições de salvamento em paralelo (muito mais rápido)
+    if (promises.length > 0) {
+      await Promise.all(promises);
+      console.log(`[FirestoreService] Sincronização concluída: ${promises.length} tarefas enviadas.`);
+    }
+    
   } catch (error) {
-    console.error('❌ Erro na sincronização:', error);
+    console.error('[FirestoreService] Erro na sincronização:', error);
   }
 }
