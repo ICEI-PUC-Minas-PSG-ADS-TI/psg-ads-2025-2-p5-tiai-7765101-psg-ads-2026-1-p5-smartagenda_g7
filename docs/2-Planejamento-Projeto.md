@@ -162,7 +162,7 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 | Isaque |   Facilitador Agil     | WireFrame/Mockup da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
 | Isaque | Facilitador Agil       | Desenvolvimento da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
 |            |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
-|      Isaque       |  Facilitador Ágil      | Desenvolvimento da Página de Detalhes de Tarefa | --/03 | 06/04 | ✔️ |
+|      Isaque       |  Facilitador Ágil      | Desenvolvimento da Página de Detalhes de Tarefa | 05/04 | 06/04 | ✔️ |
 |  Nitai           |  Tech Lead      | WireFrame/Mockup da Página de Gerenciamento de Tarefa | 23/03 | 06/04 | ✔️ |
 |  Nitai           |  Tech Lead      | Desenvolvimento da Página de Gerenciamento de Tarefa | 20/03 | 06/04 | ✔️ |
 | Carol, Isaque |  Conjunto      | Integração dos dados ao Firebase | 05/04 | 06/04 | ✔️ |
@@ -175,7 +175,7 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|             |        | Implementar Regra de Negócio Y | 06/04 | 15/04 | ❌ |
+|  Nitai           |  Tech Lead      | Implementação de Subtarefas | --/04 | 15/04 | ❌ |
 |             |        | Implementar Cálculo/Processo Z | 06/04 | 15/04 | ❌ |
 |             |        | Atualizar DER via Engenharia Reversa | 16/04 | 20/04 | ❌ |
 |             |        | Atualizar Diagrama de Classes | 16/04 | 23/04 | ❌ |
