@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-    View, 
-    Text, 
-    FlatList, 
-    TouchableOpacity, 
-    Modal, 
-    StyleSheet, 
-    StatusBar, 
-    ActivityIndicator 
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 // Componentes
@@ -43,21 +34,15 @@ export default function ListaTarefas() {
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
-            
             const user = auth().currentUser;
-            if (!user) {
-                return;
-            }
+            if (!user) return;
 
             const tarefasDoFirebase = await buscarTarefasFirestore();
             
             if (tarefasDoFirebase && tarefasDoFirebase.length > 0) {
                 setTarefas(ordenarTarefas([...tarefasDoFirebase]));
-                
                 const tarefasMap: Record<string, Tarefa> = {};
-                tarefasDoFirebase.forEach(t => { 
-                    tarefasMap[t.id] = t; 
-                });
+                tarefasDoFirebase.forEach(t => { tarefasMap[t.id] = t; });
                 await StorageAPI.SalvarTarefas(tarefasMap);
             } else {
                 const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
@@ -76,6 +61,10 @@ export default function ListaTarefas() {
     useEffect(() => {
         carregarTarefas();
     }, [carregarTarefas]);
+
+    const handleLogout = useCallback(() => {
+        auth().signOut();
+    }, []);
 
     const handleOpenDetails = useCallback((tarefa: Tarefa) => {
         setSelectedTask(tarefa);
@@ -103,26 +92,18 @@ export default function ListaTarefas() {
                 const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
                 tarefasLocais[result.id] = result;
                 await StorageAPI.SalvarTarefas(tarefasLocais);
-
                 salvarTarefaFirestore(result).catch(() => {});
-
                 const atualizadas = await StorageAPI.CarregarTarefasArray() || [];
                 setTarefas(ordenarTarefas(atualizadas));
-            } catch (error) {
-                // Tratamento de erro silencioso para manter a fluidez
-            }
+            } catch (error) {}
         }
         handleCloseModal();
     }, [handleCloseModal]);
 
     const tarefasFiltradas = useMemo(() => {
         return tarefas.filter(t => {
-            if (filtroAtivo === 'Pendentes') {
-                return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
-            }
-            if (filtroAtivo === 'Concluídas') {
-                return t.estado === 'Finalizado';
-            }
+            if (filtroAtivo === 'Pendentes') return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
+            if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
             return true; 
         });
     }, [tarefas, filtroAtivo]);
@@ -130,7 +111,6 @@ export default function ListaTarefas() {
     if (carregando) {
         return (
             <View style={styles.loadingContainer}>
-                <StatusBar barStyle="light-content" backgroundColor="#121212" />
                 <ActivityIndicator size="large" color="#9F7CFA" />
                 <Text style={styles.loadingText}>Carregando tarefas...</Text>
             </View>
@@ -151,41 +131,20 @@ export default function ListaTarefas() {
                     {(['Todas', 'Pendentes', 'Concluídas'] as FiltroTipo[]).map((filtro) => (
                         <TouchableOpacity
                             key={filtro}
-                            style={[
-                                styles.filterChip, 
-                                filtroAtivo === filtro && styles.filterChipActive
-                            ]}
+                            style={[styles.filterChip, filtroAtivo === filtro && styles.filterChipActive]}
                             onPress={() => setFiltroAtivo(filtro)}>
-                            <Text style={[
-                                styles.filterText, 
-                                filtroAtivo === filtro && styles.filterTextActive
-                            ]}>
-                                {filtro}
-                            </Text>
+                            <Text style={[styles.filterText, filtroAtivo === filtro && styles.filterTextActive]}>{filtro}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
             </View>
 
-            <Modal 
-                visible={modalMode !== 'none'} 
-                transparent={true} 
-                animationType="slide" 
-                onRequestClose={handleCloseModal}
-            >
+            <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
                 {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes 
-                        tarefa={selectedTask} 
-                        onClose={handleCloseModal} 
-                        onEdit={handleOpenEdit} 
-                        onComplete={handleSaveTask} 
-                    />
+                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
                 )}
                 {modalMode === 'edit' && (
-                    <TaskManager 
-                        tarefa={selectedTask} 
-                        onClose={handleSaveTask} 
-                    />
+                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} />
                 )}
             </Modal>
 
@@ -197,13 +156,16 @@ export default function ListaTarefas() {
                 ListEmptyComponent={() => (
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyText}>Nada por aqui ainda.</Text>
-                        <Text style={styles.emptySubtext}>
-                            {filtroAtivo === 'Todas' ? 'Toque no + para começar a se organizar!' : `Nenhuma tarefa em "${filtroAtivo}".`}
-                        </Text>
                     </View>
                 )}
             />
 
+            {/* Botão de Logout Rápido */}
+            <TouchableOpacity style={styles.logoutFab} onPress={handleLogout} activeOpacity={0.8}>
+                <Text style={styles.logoutIcon}>⎋</Text>
+            </TouchableOpacity>
+
+            {/* Botão de Adicionar (+) */}
             <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>
                 <Text style={styles.fabIcon}>+</Text>
             </TouchableOpacity>
@@ -284,11 +246,6 @@ const styles = StyleSheet.create({
         fontSize: 18, 
         fontWeight: 'bold' 
     },
-    emptySubtext: { 
-        color: '#888888', 
-        fontSize: 14, 
-        marginTop: 8 
-    },
     fab: { 
         position: 'absolute', 
         bottom: 30, 
@@ -299,16 +256,29 @@ const styles = StyleSheet.create({
         borderRadius: 30, 
         justifyContent: 'center', 
         alignItems: 'center', 
-        elevation: 5, 
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 4 }, 
-        shadowOpacity: 0.3, 
-        shadowRadius: 4 
+        elevation: 5 
     },
     fabIcon: { 
         fontSize: 32, 
         color: '#FFFFFF', 
-        fontWeight: '300', 
         lineHeight: 34 
+    },
+    logoutFab: { 
+        position: 'absolute', 
+        bottom: 30, 
+        right: 105, // Posicionado à esquerda do FAB principal (60 largura + 30 direita + 15 de gap)
+        backgroundColor: '#2D2D2D', 
+        width: 60, 
+        height: 60, 
+        borderRadius: 30, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: '#3D3D3D'
+    },
+    logoutIcon: { 
+        fontSize: 24, 
+        color: '#FFFFFF' 
     }
 });

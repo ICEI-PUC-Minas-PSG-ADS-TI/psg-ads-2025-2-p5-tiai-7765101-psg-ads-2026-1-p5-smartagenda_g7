@@ -1,29 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { onUserAuthenticated } from '../services/UserService';
 
-export default function CadastroPage({ onSuccess, onBackToLogin }) {
+export default function CadastroScreen({ onSuccess, onBackToLogin }) {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [nome, setNome] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCadastro = async () => {
-    // Validações
     if (!email || !password || !nome) {
-      Alert.alert('Aviso', 'Os campos e-mail, senha e nome são obrigatórios.');
+      Alert.alert('Campos Obrigatórios', 'Por favor, preencha todos os campos.');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Aviso', 'As senhas não coincidem.');
+      Alert.alert('Senhas incompatíveis', 'As senhas digitadas não coincidem.');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Aviso', 'A senha deve ter pelo menos 6 caracteres.');
+      Alert.alert('Senha fraca', 'A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
@@ -33,25 +32,21 @@ export default function CadastroPage({ onSuccess, onBackToLogin }) {
       const userCredential = await auth().createUserWithEmailAndPassword(email, password);
       
       // 2. Atualizar o perfil com o nome
-      await userCredential.user.updateProfile({
-        displayName: nome
-      });
+      await userCredential.user.updateProfile({ displayName: nome });
       
-      // 3. Criar documento no Firestore (usuário e coleção tarefas)
+      // 3. Criar documento no Firestore
       await onUserAuthenticated(userCredential.user);
       
-      Alert.alert('Sucesso', 'Conta criada com sucesso!');
+      Alert.alert('Sucesso', 'Conta criada com sucesso! Bem-vindo ao SmartAgenda.');
       onSuccess();
     } catch (err) {
-      let mensagem = 'Erro ao criar conta.';
+      let mensagem = 'Ocorreu um erro ao criar a conta.';
       if (err.code === 'auth/email-already-in-use') {
-        mensagem = 'Este e-mail já está em uso.';
+        mensagem = 'Este e-mail já está cadastrado em outra conta.';
       } else if (err.code === 'auth/invalid-email') {
-        mensagem = 'E-mail inválido.';
-      } else if (err.code === 'auth/weak-password') {
-        mensagem = 'Senha muito fraca. Use pelo menos 6 caracteres.';
+        mensagem = 'Formato de e-mail inválido.';
       }
-      Alert.alert('Erro', mensagem);
+      Alert.alert('Erro no Cadastro', mensagem);
     } finally {
       setLoading(false);
     }
@@ -59,53 +54,62 @@ export default function CadastroPage({ onSuccess, onBackToLogin }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>SmartAgenda - Criar Conta</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      
+      <Text style={styles.title}>Criar Conta</Text>
+      <Text style={styles.subtitle}>Junte-se ao SmartAgenda</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nome completo"
-        placeholderTextColor="gray"
-        value={nome}
-        onChangeText={setNome}
-      />
+      <View style={styles.formContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nome completo"
+          placeholderTextColor="#888888"
+          value={nome}
+          onChangeText={setNome}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        placeholderTextColor="gray"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="E-mail"
+          placeholderTextColor="#888888"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Senha (mínimo 6 caracteres)"
-        placeholderTextColor="gray"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Senha (mínimo 6 caracteres)"
+          placeholderTextColor="#888888"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Confirmar senha"
-        placeholderTextColor="gray"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar senha"
+          placeholderTextColor="#888888"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#9F7CFA" />
-      ) : (
-        <Button title="Criar Conta" onPress={handleCadastro} color="#9F7CFA" />
-      )}
+        {loading ? (
+          <ActivityIndicator size="large" color="#9F7CFA" style={{ marginVertical: 20 }} />
+        ) : (
+          <TouchableOpacity style={styles.primaryButton} onPress={handleCadastro} activeOpacity={0.8}>
+            <Text style={styles.primaryButtonText}>Cadastrar</Text>
+          </TouchableOpacity>
+        )}
 
-      <TouchableOpacity onPress={onBackToLogin} style={styles.linkContainer}>
-        <Text style={styles.linkText}>Já tem uma conta? Faça login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={onBackToLogin} style={styles.linkContainer} activeOpacity={0.7}>
+          <Text style={styles.linkText}>
+            Já tem uma conta? <Text style={styles.linkTextBold}>Faça login</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -114,31 +118,64 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
     backgroundColor: '#121212'
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#FFFFFF',
     textAlign: 'center',
-    color: 'white'
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#A59EC0',
+    textAlign: 'center',
+    marginBottom: 40,
+    marginTop: 8,
+  },
+  formContainer: {
+    width: '100%',
   },
   input: {
+    backgroundColor: '#1E1E1E',
     borderWidth: 1,
-    borderColor: '#333',
-    color: 'white',
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8
+    borderColor: '#2D2D2D',
+    color: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 16,
+    borderRadius: 12,
+    fontSize: 16,
+  },
+  primaryButton: {
+    backgroundColor: '#9F7CFA',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    elevation: 3,
+    shadowColor: '#9F7CFA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   linkContainer: {
-    marginTop: 20,
+    marginTop: 24,
     alignItems: 'center',
+    padding: 10,
   },
   linkText: {
+    color: '#A59EC0',
+    fontSize: 15,
+  },
+  linkTextBold: {
     color: '#9F7CFA',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    fontWeight: 'bold',
   }
 });

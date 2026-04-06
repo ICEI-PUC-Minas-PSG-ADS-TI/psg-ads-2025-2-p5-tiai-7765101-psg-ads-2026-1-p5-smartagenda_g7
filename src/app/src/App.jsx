@@ -17,16 +17,13 @@ function App() {
   const [showCadastro, setShowCadastro] = useState(false);
 
   useEffect(() => {
-    //preloadModel(); Desativado pois não vamos testar a IA agora
-
-    StorageAPI.Iniciar(); // CARREGAMENTO DE DADOS LOCAIS
-    
     try {
       const subscriber = auth().onAuthStateChanged(async (authUser) => {
         setUser(authUser);
         
         if (authUser) {
           await onUserAuthenticated(authUser);
+          await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
         }
       });
       return subscriber; 
