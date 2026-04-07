@@ -98,50 +98,47 @@ Cada Wireframe ou Mockups devem estar associados a pelo menos:
 
 ## 4.4 Modelagem de Dados (Sprint 2 e 3)
 
-O sistema exige persistência de dados.
-
-A documentação do banco seguirá a abordagem de **entrega contínua**, sendo expandida conforme evolução do projeto.
+O sistema utiliza Firebase Firestore como banco de dados NoSQL, integrado com Firebase Authentication para gerenciamento de usuários.
 
 ---
 
 ### 4.4.1 Script Físico (Entrega na Sprint 2 - MVP)
 
-Para a primeira fatia vertical (MVP), o Squad deverá entregar o **script de criação das tabelas ou coleções utilizadas**.
+Coleção usuarios:
 
-#### 🔹 Para Banco Relacional (SQL)
-
-Incluir:
-
-- Comandos `CREATE TABLE`
-- Definição de chave primária (PK)
-- Definição de chaves estrangeiras (FK)
-
-**Exemplo:**
-
-```sql
-CREATE TABLE Usuario (
-    Id INT PRIMARY KEY,
-    Nome VARCHAR(100),
-    Email VARCHAR(150) UNIQUE,
-    Senha VARCHAR(200)
-);
-```
-
----
-
-### Para Banco NoSQL
-
-Incluir a estrutura dos documentos JSON (Schema).
-
-**Exemplo:**
-
-```json
 {
-  "nome": "João Silva",
-  "email": "joao@email.com",
-  "senha": "hash_da_senha"
+  "email": "user1@gmail.com",
+  "nome": "Usuario1",
+  "ultimoAcesso": "2026-04-06T22:46:50.000Z"
 }
-```
+
+
+Subcoleção tarefas (dentro de cada usuário):
+
+{
+  "titulo": "Exemplo",
+  "descricao": "Descrição da tarefa",
+  "data_vencimento": "timestamp",
+  "categorias": ["categoria1", "categoria2"],
+  "estado": "NaoIniciado"
+}
+
+
+Estrutura no Firebase:
+
+usuarios (coleção)
+  └── {uid} (documento)
+       ├── email: "user1@gmail.com"
+       ├── nome: "Usuario1"
+       ├── ultimoAcesso: timestamp
+       └── tarefas (subcoleção)
+            └── {id} (documento)
+                 ├── titulo: string
+                 ├── descricao: string
+                 ├── data_vencimento: timestamp
+                 ├── categorias: array
+                 └── estado: string
+
 
 ### 📁 Obrigatório
 
