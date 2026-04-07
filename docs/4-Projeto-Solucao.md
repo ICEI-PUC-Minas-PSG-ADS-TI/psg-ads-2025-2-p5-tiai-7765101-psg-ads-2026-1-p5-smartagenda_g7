@@ -106,38 +106,20 @@ O sistema utiliza Firebase Firestore como banco de dados NoSQL, integrado com Fi
 
 Coleção usuarios:
 
-{
-  "email": "user1@gmail.com",
-  "nome": "Usuario1",
-  "ultimoAcesso": "2026-04-06T22:46:50.000Z"
-}
+<img  width="30%" src="https://github.com/user-attachments/assets/38eac7e6-95c6-423d-8930-3c55b55d3e3f" />
+
 
 
 Subcoleção tarefas (dentro de cada usuário):
 
-{
-  "titulo": "Exemplo",
-  "descricao": "Descrição da tarefa",
-  "data_vencimento": "timestamp",
-  "categorias": ["categoria1", "categoria2"],
-  "estado": "NaoIniciado"
-}
+<img  width="30%" src="https://github.com/user-attachments/assets/c8f585d0-3060-4df6-8709-9bf70c801723" />
+
 
 
 Estrutura no Firebase:
 
-usuarios (coleção)
-  └── {uid} (documento)
-       ├── email: "user1@gmail.com"
-       ├── nome: "Usuario1"
-       ├── ultimoAcesso: timestamp
-       └── tarefas (subcoleção)
-            └── {id} (documento)
-                 ├── titulo: string
-                 ├── descricao: string
-                 ├── data_vencimento: timestamp
-                 ├── categorias: array
-                 └── estado: string
+<img  width="30%" src="https://github.com/user-attachments/assets/b10bd4e3-f514-4242-b7ab-60bc2aa0b81c" />
+
 
 
 ### 📁 Obrigatório
