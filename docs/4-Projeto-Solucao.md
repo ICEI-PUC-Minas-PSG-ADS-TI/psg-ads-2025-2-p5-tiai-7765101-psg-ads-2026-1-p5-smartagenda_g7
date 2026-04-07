@@ -62,6 +62,18 @@ Cada Wireframe ou Mockups devem estar associados a pelo menos:
 
 ---
 
+### Tela de Cadastro (RF-01)
+
+**História associada:** Como usuário, eu quero criar uma conta no sistema, para que eu possa acessar minhas tarefas de forma personalizada e sincronizá-las na nuvem.
+
+<img width="30%" src="https://github.com/user-attachments/assets/c391d602-5894-43d8-b456-4719043f2a87" />
+
+<img width="30%" src="https://github.com/user-attachments/assets/46bd565d-360b-4453-ab12-7f5063a27817" />
+
+**Descrição:** Tela de cadastro de novos usuários. O usuário informa nome, e-mail e senha. Após o cadastro, o sistema cria automaticamente o usuário no Firebase Authentication e no Firestore, com sua coleção de tarefas.
+
+---
+
 ### Tela da Lista de Tarefas (RF-05 e RF-06)
 
 **História associada:** Como usuário, eu quero visualizar a lista das minhas tarefas ordenadas por vencimento e acessar seus detalhes, para que eu não me esqueça do que precisa ser feito primeiro.
