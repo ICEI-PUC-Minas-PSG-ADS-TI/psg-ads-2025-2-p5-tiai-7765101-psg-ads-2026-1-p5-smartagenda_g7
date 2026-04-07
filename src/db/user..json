@@ -1,0 +1,21 @@
+{
+  "usuarios": {
+    "{uid}": {
+      "email": "user1@gmail.com",
+      "nome": "Usuario1",
+      "ultimoAcesso": "2026-04-06T22:46:50.000Z",
+      "tarefas": {
+        "{id}": {
+          "titulo": "Exemplo",
+          "descricao": "Descrição da tarefa",
+          "data_vencimento": "timestamp",
+          "categorias": [
+            "categoria1",
+            "categoria2"
+          ],
+          "estado": "NaoIniciado"
+        }
+      }
+    }
+  }
+}
