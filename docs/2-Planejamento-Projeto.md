@@ -152,22 +152,21 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 |-------------|--------|--------|--------|--------|--------|
 | Isaque | Facilitador Agil | Correção de Contexto.md e Lista Macro de Funcionalidades | 03/04 | 06/04 | ✔️ |
 | Isaque | Facilitador Agil | Tecnologias Utilizadas e Diagrama de Arquitetura | 03/04 | 06/04 | ✔️ |
- Isaque | Facilitador Agil | Requisitos Não Funcionais, Restrições e Regras de negócio | 03/04 | 06/04 |  ✔️ |
-| Nitai, Isaque | Conjunto | Requisitos Funcionais (01-07) | 19/03 | 06/04 | ✔️ |
- Isaque |  Facilitador Agil | Requisitos Funcionais (08-13) | 19/03 | 06/04 |  ✔️ |
- Nitai, Isaque, Carol           |  Conjunto      | Histórias de Usuário (01-03) | 19/03 | 06/04 |  ✔️ |
- Isaque           |  Facilitador Agil      | Histórias de Usuário (04-10) | 03/04 | 06/04 |  ✔️ |
-|  Carol           | Arquiteto de Dados       | Documentação das Tabelas do Banco de Dados | 05/04 | 06/04 | ✔️ |
-| Carol |  Arquiteto de Dados   | Desenvolvimento da Página de Cadastro | 05/04 | 06/04 | ✔️ |
-| Isaque |   Facilitador Agil     | WireFrame/Mockup da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
-| Isaque | Facilitador Agil       | Desenvolvimento da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
-|            |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
-|      Isaque       |  Facilitador Ágil      | Desenvolvimento da Página de Detalhes de Tarefa | 05/04 | 06/04 | ✔️ |
-|  Nitai           |  Tech Lead      | WireFrame/Mockup da Página de Gerenciamento de Tarefa | 23/03 | 06/04 | ✔️ |
-|  Nitai           |  Tech Lead      | Desenvolvimento da Página de Gerenciamento de Tarefa | 20/03 | 06/04 | ✔️ |
-| Carol, Isaque |  Conjunto      | Integração dos dados ao Firebase | 05/04 | 06/04 | ✔️ |
-|             |        | WireFrame/Mockup da Página de Calendário | --/03 | 06/04 | ❌ |
-|             |        | Desenvolvimento da Página de Calendário | --/03 | 06/04 | ❌ |
+| Isaque | Facilitador Agil | Requisitos Não Funcionais, Restrições e Regras de Negócio | 03/04 | 06/04 |  ✔️ |
+| Nitai, Isaque | Conjunto | Requisitos Funcionais | 19/03 | 06/04 | ✔️ |
+| Nitai, Isaque, Carol | Conjunto | Histórias de Usuário | 19/03 | 06/04 |  ✔️ |
+| Carol | Arquiteto de Dados | Documentação das Tabelas do Banco de Dados | 05/04 | 06/04 | ✔️ |
+| Carol | Arquiteto de Dados | WireFrame/Mockup da Página de Cadastro | 05/04 | 06/04 | ✔️ |
+| Carol, Isaque | Conjunto | Desenvolvimento da Página de Cadastro | 05/04 | 06/04 | ✔️ |
+| Carol, Isaque | Conjunto | Integração dos dados ao Firebase | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Implementação do salvamento híbrido no Firebase (Offline-first) | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | WireFrame/Mockup da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Desenvolvimento da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | WireFrame/Mockup da Página de Detalhes de Tarefa | 05/03 | 06/04 | ✔️ |
+| Isaque | Facilitador Ágil | Desenvolvimento da Página de Detalhes de Tarefa | 05/04 | 06/04 | ✔️ |
+|  Nitai | Tech Lead | WireFrame/Mockup da Página de Gerenciamento de Tarefa | 23/03 | 06/04 | ✔️ |
+|  Nitai | Tech Lead | Desenvolvimento da Página de Gerenciamento de Tarefa | 20/03 | 06/04 | ✔️ |
+| Isaque | Facilitador Ágil | Exportação do APK | 06/04 | 06/04 | ✔️ |
 
 ---
 
