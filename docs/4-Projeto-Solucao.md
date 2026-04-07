@@ -52,13 +52,35 @@ Cada Wireframe ou Mockups devem estar associados a pelo menos:
 
 **Descrição:** Página ou Modal que permite a alteração das informações de uma tarefa, a serem salvas no AsyncStorage, depois salvas no dispositivo local, depois salvas como backup no Firebase.
 
+### Tela de Login (RF-01)
+
+**História associada:** Como usuário, eu quero criar uma conta e realizar login no sistema, para que eu possa associar meus dados localmente e sincronizá-los com segurança na nuvem.
+
+<img src="images/Login.jpeg" width="30%">
+
+**Descrição:** Tela de autenticação onde o sistema permite que os usuários realizem cadastro e login informando e-mail e senha. Serve como porta de entrada para a sincronização dos dados locais com o Firebase.
+
+---
+
 ### Tela da Lista de Tarefas (RF-05 e RF-06)
 
 **História associada:** Como usuário, eu quero visualizar a lista das minhas tarefas ordenadas por vencimento e acessar seus detalhes, para que eu não me esqueça do que precisa ser feito primeiro.
 
 <img src="images/Lista de Tarefas.jpeg" width="30%">
 
-**Descrição:** Página que apresenta uma lista das tarefas disponíveis. Elas são ordenadas pela data de vencimento, mas existem também os filtros "Pendentes" e "Concluídas".
+**Descrição:** Página principal que permite aos usuários visualizarem as tarefas registradas em forma de lista, ordenadas pela data de validade mais próxima. Inclui filtros dinâmicos para alternar entre "Pendentes" e "Concluídas".
+
+---
+
+### Tela de Detalhes da Tarefa (RF-03, RF-04 e RF-06)
+
+**Histórias associadas:** 
+- Como usuário, eu quero visualizar a lista das minhas tarefas ordenadas por vencimento e acessar seus detalhes, para que eu não me esqueça do que precisa ser feito primeiro.
+- Como usuário, eu quero poder marcar rapidamente minhas tarefas como concluídas com um menu de confirmação, para que eu tenha a sensação de progresso e limpe minha lista de pendências.
+
+<img src="images/Detalhes da Tarefa.jpeg" width="30%">
+
+**Descrição:** Modal que permite aos usuários selecionarem as tarefas exibindo mais detalhes sobre elas. A partir desta tela, o sistema permite que o usuário navegue para a página de edição da tarefa ou marque a tarefa como completa.
 
 ---
 
