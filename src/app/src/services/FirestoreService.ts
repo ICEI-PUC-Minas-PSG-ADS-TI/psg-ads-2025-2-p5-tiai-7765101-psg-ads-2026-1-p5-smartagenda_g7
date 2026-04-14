@@ -27,6 +27,8 @@ export async function salvarTarefaFirestore(tarefa: Tarefa): Promise<void> {
       data_finalizado: tarefa.data_finalizado ? firestore.Timestamp.fromMillis(tarefa.data_finalizado) : null,
       categorias: tarefa.categorias || [],
       estado: tarefa.estado,
+      subtarefas: tarefa.subtarefas || [],
+      isSubtarefa: tarefa.isSubtarefa,
       updatedAt: firestore.FieldValue.serverTimestamp()
     };
 
@@ -54,7 +56,9 @@ export async function buscarTarefasFirestore(): Promise<Tarefa[]> {
         data_vencimento: data.data_vencimento ? data.data_vencimento.toMillis() : Date.now(),
         data_finalizado: data.data_finalizado ? data.data_finalizado.toMillis() : undefined,
         categorias: data.categorias || [],
-        estado: data.estado || 'NaoIniciado'
+        estado: data.estado || 'NaoIniciado',
+        subtarefas: data.subtarefas || [],
+        isSubtarefa: data.isSubtarefa || false
       });
     });
 

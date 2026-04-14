@@ -25,6 +25,7 @@
     "react-native-get-random-values": "^2.0.0",
     "react-native-safe-area-context": "^5.5.2",
     "text-encoding": "^0.7.0",
+    "uuid": "^13.0.0",
     "web-streams-polyfill": "^4.2.0"
   },
   "devDependencies": {

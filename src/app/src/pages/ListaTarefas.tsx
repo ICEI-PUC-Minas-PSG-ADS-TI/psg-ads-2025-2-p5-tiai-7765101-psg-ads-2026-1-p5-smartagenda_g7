@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 // Componentes
@@ -9,27 +9,20 @@ import TarefaDetalhes from '../components/DetalhesTarefa';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
-import StorageAPI from '../services/LocalStorageService';
-import { buscarTarefasFirestore, salvarTarefaFirestore } from '../services/FirestoreService';
+import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
+import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
 
 type FiltroTipo = 'Todas' | 'Pendentes' | 'Concluídas';
 type ModalMode = 'none' | 'details' | 'edit';
-
-const ordenarTarefas = (lista: Tarefa[]) => {
-    return lista.sort((a, b) => {
-        if (!a.data_vencimento) return 1;
-        if (!b.data_vencimento) return -1;
-        return a.data_vencimento - b.data_vencimento;
-    });
-};
 
 export default function ListaTarefas() {
     const [tarefas, setTarefas] = useState<Tarefa[]>([]);
     const [filtroAtivo, setFiltroAtivo] = useState<FiltroTipo>('Todas');
     const [carregando, setCarregando] = useState(true);
-    
+
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [modalMode, setModalMode] = useState<ModalMode>('none');
+    const unsavedChanges = useRef(false); 
 
     const carregarTarefas = useCallback(async () => {
         try {
@@ -37,22 +30,16 @@ export default function ListaTarefas() {
             const user = auth().currentUser;
             if (!user) return;
 
-            const tarefasDoFirebase = await buscarTarefasFirestore();
-            
-            if (tarefasDoFirebase && tarefasDoFirebase.length > 0) {
-                setTarefas(ordenarTarefas([...tarefasDoFirebase]));
-                const tarefasMap: Record<string, Tarefa> = {};
-                tarefasDoFirebase.forEach(t => { tarefasMap[t.id] = t; });
-                await StorageAPI.SalvarTarefas(tarefasMap);
-            } else {
-                const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
-                if (tarefasLocais.length > 0) {
-                    setTarefas(ordenarTarefas(tarefasLocais));
-                }
+            const tarefasCarregadas = await TryCarregarTarefasArray();
+            if (!tarefasCarregadas) {
+                console.log("[ListaTarefas] ATENÇÃO: Nenhuma tarefa encontrada no Firestore ou localmente, ou ocorreu um erro.");
+                setTarefas([]);
             }
+            else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
+
         } catch (error) {
-            const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
-            setTarefas(ordenarTarefas(tarefasLocais));
+            console.log("[ListaTarefas] ATENÇÃO: Ocorreu um erro ao carregar as tarefas: " + error);
+            setTarefas([]);
         } finally {
             setCarregando(false);
         }
@@ -68,12 +55,12 @@ export default function ListaTarefas() {
 
     const handleOpenDetails = useCallback((tarefa: Tarefa) => {
         setSelectedTask(tarefa);
-        setModalMode('details'); 
+        setModalMode('details');
     }, []);
 
     const handleOpenEdit = useCallback((tarefa: Tarefa) => {
         setSelectedTask(tarefa);
-        setModalMode('edit'); 
+        setModalMode('edit');
     }, []);
 
     const handleCreateNew = useCallback(() => {
@@ -82,21 +69,52 @@ export default function ListaTarefas() {
     }, []);
 
     const handleCloseModal = useCallback(() => {
+        if (modalMode === 'edit' && unsavedChanges.current) {
+            console.log("Unsaved changes");
+            Alert.alert(
+                'Tem certeza que deseja cancelar a edição da tarefa?',
+                `Todas as alterações não salvas serão perdidas.`,
+                [
+                    { text: 'Não', style: 'cancel' },
+                    {
+                        text: 'Sim, sair sem salvar', onPress: () => {
+                            unsavedChanges.current = false;
+                            setSelectedTask(null);
+                            setModalMode('none');
+                        }
+                    }
+                ]
+            );
+            return;
+        }
+        unsavedChanges.current = false;
         setSelectedTask(null);
         setModalMode('none');
-    }, []);
+    }, [modalMode, unsavedChanges.current]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
         if (result) {
             try {
-                const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
-                tarefasLocais[result.id] = result;
-                await StorageAPI.SalvarTarefas(tarefasLocais);
-                salvarTarefaFirestore(result).catch(() => {});
-                const atualizadas = await StorageAPI.CarregarTarefasArray() || [];
-                setTarefas(ordenarTarefas(atualizadas));
-            } catch (error) {}
+                let atualizadas = await TrySalvarTarefa(result);
+                if (atualizadas.length > 0) {
+                    setTarefas((OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true))));
+                }
+                else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
+            } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
         }
+        else
+        {
+            // call for refresh
+            try{
+                const atualizadas = await TryCarregarTarefasArray();
+                if (atualizadas) {
+                    setTarefas(OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true)));
+                }
+                else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de recarregamento."); }
+            }
+            catch (e) { console.log("ERRO ao recarregar tarefas após tentativa de salvamento: " + e); }
+        }
+        unsavedChanges.current = false;
         handleCloseModal();
     }, [handleCloseModal]);
 
@@ -104,7 +122,7 @@ export default function ListaTarefas() {
         return tarefas.filter(t => {
             if (filtroAtivo === 'Pendentes') return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
             if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
-            return true; 
+            return true;
         });
     }, [tarefas, filtroAtivo]);
 
@@ -144,7 +162,7 @@ export default function ListaTarefas() {
                     <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
                 )}
                 {modalMode === 'edit' && (
-                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} />
+                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
                 )}
             </Modal>
 
@@ -174,111 +192,111 @@ export default function ListaTarefas() {
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: '#121212' 
+    container: {
+        flex: 1,
+        backgroundColor: '#121212'
     },
-    loadingContainer: { 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        backgroundColor: '#121212' 
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#121212'
     },
-    loadingText: { 
-        color: '#9F7CFA', 
-        marginTop: 16 
+    loadingText: {
+        color: '#9F7CFA',
+        marginTop: 16
     },
-    header: { 
-        paddingTop: 40, 
-        paddingHorizontal: 24, 
-        paddingBottom: 15, 
-        backgroundColor: '#1E1E1E', 
-        borderBottomWidth: 1, 
-        borderBottomColor: '#2D2D2D' 
+    header: {
+        paddingTop: 40,
+        paddingHorizontal: 24,
+        paddingBottom: 15,
+        backgroundColor: '#1E1E1E',
+        borderBottomWidth: 1,
+        borderBottomColor: '#2D2D2D'
     },
-    headerTitle: { 
-        fontSize: 28, 
-        fontWeight: 'bold', 
-        color: '#FFFFFF' 
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#FFFFFF'
     },
-    headerSubtitle: { 
-        fontSize: 14, 
-        color: '#9F7CFA', 
-        marginTop: 4, 
-        marginBottom: 16 
+    headerSubtitle: {
+        fontSize: 14,
+        color: '#9F7CFA',
+        marginTop: 4,
+        marginBottom: 16
     },
-    filterContainer: { 
-        flexDirection: 'row', 
-        gap: 10 
+    filterContainer: {
+        flexDirection: 'row',
+        gap: 10
     },
-    filterChip: { 
-        paddingVertical: 6, 
-        paddingHorizontal: 16, 
-        borderRadius: 20, 
-        backgroundColor: '#2D2D2D', 
-        borderWidth: 1, 
-        borderColor: '#3D3D3D' 
+    filterChip: {
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        backgroundColor: '#2D2D2D',
+        borderWidth: 1,
+        borderColor: '#3D3D3D'
     },
-    filterChipActive: { 
-        backgroundColor: 'rgba(159, 124, 250, 0.2)', 
-        borderColor: '#9F7CFA' 
+    filterChipActive: {
+        backgroundColor: 'rgba(159, 124, 250, 0.2)',
+        borderColor: '#9F7CFA'
     },
-    filterText: { 
-        color: '#A59EC0', 
-        fontSize: 14, 
-        fontWeight: '500' 
+    filterText: {
+        color: '#A59EC0',
+        fontSize: 14,
+        fontWeight: '500'
     },
-    filterTextActive: { 
-        color: '#9F7CFA', 
-        fontWeight: 'bold' 
+    filterTextActive: {
+        color: '#9F7CFA',
+        fontWeight: 'bold'
     },
-    listContainer: { 
-        padding: 16, 
-        paddingBottom: 100 
+    listContainer: {
+        padding: 16,
+        paddingBottom: 100
     },
-    emptyContainer: { 
-        marginTop: 80, 
-        alignItems: 'center', 
-        justifyContent: 'center' 
+    emptyContainer: {
+        marginTop: 80,
+        alignItems: 'center',
+        justifyContent: 'center'
     },
-    emptyText: { 
-        color: '#FFFFFF', 
-        fontSize: 18, 
-        fontWeight: 'bold' 
+    emptyText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold'
     },
-    fab: { 
-        position: 'absolute', 
-        bottom: 30, 
-        right: 30, 
-        backgroundColor: '#9F7CFA', 
-        width: 60, 
-        height: 60, 
-        borderRadius: 30, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        elevation: 5 
+    fab: {
+        position: 'absolute',
+        bottom: 30,
+        right: 30,
+        backgroundColor: '#9F7CFA',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5
     },
-    fabIcon: { 
-        fontSize: 32, 
-        color: '#FFFFFF', 
-        lineHeight: 34 
+    fabIcon: {
+        fontSize: 32,
+        color: '#FFFFFF',
+        lineHeight: 34
     },
-    logoutFab: { 
-        position: 'absolute', 
-        bottom: 30, 
+    logoutFab: {
+        position: 'absolute',
+        bottom: 30,
         right: 105, // Posicionado à esquerda do FAB principal (60 largura + 30 direita + 15 de gap)
-        backgroundColor: '#2D2D2D', 
-        width: 60, 
-        height: 60, 
-        borderRadius: 30, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+        backgroundColor: '#2D2D2D',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
         elevation: 5,
         borderWidth: 1,
         borderColor: '#3D3D3D'
     },
-    logoutIcon: { 
-        fontSize: 24, 
-        color: '#FFFFFF' 
+    logoutIcon: {
+        fontSize: 24,
+        color: '#FFFFFF'
     }
 });

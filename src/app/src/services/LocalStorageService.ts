@@ -13,8 +13,8 @@ const getStorageKey = () => {
 
 const getFilePath = () => {
     const user = auth().currentUser;
-    return user 
-        ? `${RNFS.DocumentDirectoryPath}/tarefas_${user.uid}.json` 
+    return user
+        ? `${RNFS.DocumentDirectoryPath}/tarefas_${user.uid}.json`
         : `${RNFS.DocumentDirectoryPath}/tarefas_guest.json`;
 };
 
@@ -63,7 +63,7 @@ export async function CarregarTarefas(): Promise<Record<string, Tarefa> | null> 
     try {
         let data = await AS.getItem(getStorageKey());
         if (data) return JSON.parse(data);
-        
+
         console.log("Tarefas não carregadas em memória, buscando arquivos locais...");
         let fallbackdata = await CarregarTarefasLocal();
         if (fallbackdata) {
@@ -78,6 +78,46 @@ export async function CarregarTarefas(): Promise<Record<string, Tarefa> | null> 
     }
 }
 
+/**
+ * Deleta uma tarefa, removendo do Async Storage, mas não imediatamente localmente ou no firebase, mas no proximo salvamento local, será atualizado
+ * @param id Id da tarefa a ser deletada
+ * @returns 
+ */
+export async function DeletarTarefa(id: string, ignoreSubtasks?: boolean) {
+    try {
+        // tirar a referencia das tarefas pai
+        let tarefas = await CarregarTarefas();
+        if (!tarefas) return;
+        Object.values(tarefas).forEach(tarefa => {
+            if (tarefa.subtarefas) {
+                tarefa.subtarefas = tarefa.subtarefas.filter(subId => subId !== id);
+            }
+        });
+        console.log("[LocalStorageService] Removido Referencias à tarefa ", id);
+        await DeletarTarefaActual(tarefas, id, ignoreSubtasks);
+        await SalvarTarefas(tarefas);
+    }
+    catch (e) {
+        console.log("Erro ao deletar tarefa: " + e);
+    }
+}
+
+async function DeletarTarefaActual(tarefas: Record<string, Tarefa>, id: string, ignoreSubtasks?: boolean)
+{
+        if (!tarefas) return;
+        if (!ignoreSubtasks) {
+            if (!tarefas[id]) return;
+            const subtarefas = tarefas[id].subtarefas ?? [];
+
+            for (const subId of subtarefas) {
+                if (tarefas[subId]) {
+                    await DeletarTarefaActual(tarefas, subId); // confiando que não é possível ter loops de referencia
+                }
+            }
+        }
+        delete tarefas[id];
+        console.log("[LocalStorageService] Deletando tarefa ", id);
+}
 
 // ------------- FUNÇÕES DE FILE SERVICE (SALVAMENTO LOCAL) ------------
 
@@ -96,11 +136,11 @@ export async function SalvarTarefasLocal(tarefas: Record<string, Tarefa>) {
 /**
  * Carrega as tarefas salvas localmente no dispositivo, e as retorna
  */
-export async function CarregarTarefasLocal(): Promise<Record<string, Tarefa> | null> { 
+export async function CarregarTarefasLocal(): Promise<Record<string, Tarefa> | null> {
     try {
         const exists = await RNFS.exists(getFilePath());
         if (!exists) return null;
-        
+
         let json = await RNFS.readFile(getFilePath());
         return json ? JSON.parse(json) : null;
     } catch (err) {
@@ -116,5 +156,6 @@ export default {
     CarregarTarefasArray,
     SalvarTarefas,
     SalvarTarefasLocal,
+    DeletarTarefa,
     Iniciar
 }

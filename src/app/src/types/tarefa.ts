@@ -7,7 +7,7 @@ export type Tarefa = {
     data_criado: number; // milisegundos desde 01/01/1970. Traduza usando "new Date(numero).toLocaleString()" ou "new Date(numero).toLocaleDateString()"
     data_vencimento: number; // Ditto acima.
     data_finalizado?: number; // Ditto acima. Só deve ser preenchido quando a tarefa for finalizada.
+    subtarefas?: string[]; // IDs das subtarefas, caso existam. O formato de cada tarefa é o mesmo.
+    isSubtarefa: boolean; // Indica se a tarefa é uma subtarefa ou não. Principalmente para filtra-las na lista de tarefas.
 }
 
-// N: Provavelmente expandirei num sistema de subtarefas, onde cara tarefa pode ter várias tarefas filhas. 
-// Nesse caso seria guardado no pai os IDs das tarefas filhas.
