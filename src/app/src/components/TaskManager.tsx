@@ -13,11 +13,9 @@ import {
 
 // Tipos e Serviços
 import { Tarefa } from '../types/tarefa.ts';
-import { CreateTarefa, LocaleStringToTimestamp, GetSubtarefas } from '../services/TarefaService.ts';
-import StorageAPI from '../services/LocalStorageService';
-import { salvarTarefaFirestore } from '../services/FirestoreService';
+import { CreateTarefa, LocaleStringToTimestamp, GetSubtarefas, CreateTarefaJSON, GetUniqueID } from '../services/TarefaService.ts';
+import StorageAPI, { CarregarTarefas } from '../services/LocalStorageService';
 import 'react-native-get-random-values';
-import { v4 as uuidv4 } from 'uuid'; // para geração de ID
 import SubTaskList from './SubTaskList.tsx';
 import { TrySalvarTarefa, TrySalvar } from '../services/SaveControlService.ts';
 
@@ -29,13 +27,8 @@ type Props = {
 };
 
 export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedChanges }: Props) {
-
     const CreateTarefaControlled = useCallback(async () => {
-        let id = uuidv4();
-        let tarefas = await StorageAPI.CarregarTarefas();
-        while (tarefas && tarefas[id]) { // certificar que o ID é único, pelo menos por usuário.
-            id = uuidv4();
-        }
+        let id = await GetUniqueID();
 
         return CreateTarefa(
             id,
@@ -217,9 +210,9 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
                 subtarefas: updatedSubtasks.map(t => t.id)
             };
             console.log("1new subtask count: ", newtask?.subtarefas?.length);
-       
 
-        setTask(newtask);
+
+            setTask(newtask);
         }
         console.log("2new subtask count: ", newtask?.subtarefas?.length);
         if (newtask) await TrySalvarTarefa(newtask);
@@ -297,6 +290,23 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         if (onClose) {
             onClose();
         }
+    }, []);
+
+    const importTasksJSON = useCallback(async (tarefas: Tarefa[]) => {
+        if (tarefas)
+        {
+            unsavedChanges.current = false;
+            for (const t of tarefas){
+                await TrySalvarTarefa(t);
+            }
+            let selected = tarefas.find((t) => !t.isSubtarefa);
+            //if (selected) setTask(selected);
+
+            if (onClose && selected) {
+                    onClose(selected);
+            }
+        }
+        else {}
     }, []);
 
     const handleExit = async () => {
@@ -427,11 +437,15 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <View style={[styles.container, styles.coloredBackground]}>
                 <Text style={styles.secondaryText}>{depthDisplay}</Text>
-                {!isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
+                { !isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
                 <Text style={styles.title}> {isCreating ?
                     (depthDisplay ? 'Criar Sub-Tarefa' : 'Criar Tarefa') :
                     (depthDisplay ? 'Editar Sub-Tarefa' : 'Editar Tarefa')}
                 </Text>
+
+                { isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>}
+
+                {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
 
                 <Modal visible={selectedSubtask !== null} transparent={true} animationType="slide" onRequestClose={tryCloseSubtask}>
                     <TaskManager tarefa={null} onClose={saveSubtask} depthDisplay={depthDisplay ? depthDisplay + tarefa?.titulo + " > " : tarefa?.titulo + " > "} onUnsavedChanges={(e) => { unsavedSubtaskChanges.current = e; }} />
@@ -547,6 +561,58 @@ function KebabOptionsMenu({ onOptionPressed }: KebabProps) {
     );
 }
 
+type ImportModalProps = {
+    onImport?: (tasks: Tarefa[]) => void;
+};
+
+function ImportTasksModal({onImport}: ImportModalProps) {
+    const [visible, setVisible] = useState(false);
+    const [text, setText] = useState('');
+
+    const importTasks = useCallback(async () => {
+        console.log(text);
+        if (!text) {Alert.alert("Insira uma estrutura JSON no campo"); return;}
+        let res = await CreateTarefaJSON(text);
+        if (!res || res.length <= 0) {
+            console.log("Couldn't import tasks by json :(");
+            Alert.alert("Não foi possível importar as tarefas pelo JSON, verifique os LOGS");
+            return;
+        }
+        console.log("Imported ", res.length, " tasks");
+        onImport?.(res);
+        setVisible(false);
+    }, [text]);
+
+    return (
+        <View>
+            <TouchableOpacity style={[styles.buttonSmall, styles.highlightColor3]}onPress={() => setVisible(true)}><Text style={styles.label}>Importar Tarefas por JSON</Text></TouchableOpacity>
+
+            <Modal
+                visible={visible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setVisible(false)}
+            >
+                <View style={styles.container}>
+                    <View>
+                        <Text style={styles.title}>Importar Tarefas por JSON</Text>
+
+                        <TextInput
+                            style={styles.biginput}
+                            multiline
+                            placeholder={`{ "tarefas": [] }`}
+                            value={text}
+                            onChangeText={setText}
+                        />
+
+                        <TouchableOpacity style={[styles.buttonSmall, styles.highlightColor3]} onPress={importTasks} ><Text style={styles.label}>Importar Tarefa(s)</Text></TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -588,6 +654,17 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: '#E1E1E1',
         borderRadius: 10
+    },
+    biginput: {
+        color: '#000000',
+        borderColor: '#000000',
+        borderWidth: 2,
+        justifyContent: 'center',
+        backgroundColor: '#E1E1E1',
+        borderRadius: 10,
+        padding: 10,
+        minHeight: 300,
+        maxHeight: 600
     },
     label: {
         color: '#FFFFFF',
