@@ -174,10 +174,10 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|  Nitai           |  Tech Lead      | Implementação de Subtarefas | --/04 | 15/04 | ❌ |
-|             |        | Implementar Cálculo/Processo Z | 06/04 | 15/04 | ❌ |
-|             |        | Atualizar DER via Engenharia Reversa | 16/04 | 20/04 | ❌ |
-|             |        | Atualizar Diagrama de Classes | 16/04 | 23/04 | ❌ |
+|  Nitai           |  Tech Lead      | Implementação de Subtarefas no Gerenciamento de Tarefas | 13/04 | 30/04 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação de Funções para Importação de tarefas por JSON (para o uso de IA) | 20/04 | 30/04 | ✔️ |
+|             |        | Atualizar DER via Engenharia Reversa | 16/04 | 30/04 | ❌ |
+|             |        | Atualizar Diagrama de Classes | 16/04 | 30/04 | ❌ |
 
 ---
 
