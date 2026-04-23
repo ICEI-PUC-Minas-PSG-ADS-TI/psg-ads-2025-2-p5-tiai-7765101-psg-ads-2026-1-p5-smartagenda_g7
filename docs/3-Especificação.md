@@ -31,6 +31,8 @@ O objetivo é organizar claramente as funcionalidades, qualidades e limites da s
 | RF-11 | Sistema | O sistema deve garantir a operação base offline, salvando tarefas no banco de dados local e agendando a sincronização com a nuvem/IA quando houver conectividade. | 🔴 ALTA |
 | RF-12 | Sistema | O sistema deve disparar alertas automáticos baseados em regras de antecedência para lembrar o usuário de iniciar ou finalizar seus afazeres. | 🔴 ALTA |
 | RF-13 | Visualização | O sistema deve exibir um indicador visual do status de conectividade, informando ao usuário quando as funcionalidades avançadas de IA em nuvem estiverem temporariamente indisponíveis. | 🟡 MÉDIA |
+| RF-14 | Gerenciamento | O sistema deve permitir que o usuário Crie, edite, remova uma Sub-tarefa vinculada a uma outra tarefa já existente | 🔴 ALTA |
+| RF-15 | Gerenciamento | Se a tarefa possui Sub-tarefas, o sistema deve atualizar o estado de conclusão da tarefa a partir do estado de conclusão de todas suas sub-tarefas. | 🔴 ALTA |
 ---
 
 # 3.2 Histórias de Usuário
@@ -66,6 +68,9 @@ Como usuário, eu quero receber notificações automáticas sobre minhas tarefas
 
 ### História 10 (relacionada ao RF-13)
 Como usuário, eu quero visualizar um aviso claro na interface quando meu celular estiver sem internet, para que eu entenda o motivo da opção decompor com IA estar desabilitada naquele momento.
+
+### História 11 (relacionada ao RF-14 e RF-15)
+Como usuário, eu quero poder criar sub-tarefas dentro de uma tarefa determinada, para que possa dividir as atividades do processo e definir datas de vencimento para cada uma.
 
 # 3.3 Requisitos Não Funcionais
 
