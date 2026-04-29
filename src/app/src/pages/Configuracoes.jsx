@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const Calendario = () => {
+const Configuracoes = () => {
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, styles.text]}>Calendário</Text>
-      <Text style={styles.text}>Aqui serão exibidas as tarefas no calendário.</Text>
+      <Text style={[styles.title, styles.text]}>Configurações</Text>
+      <Text style={styles.text}>Configurações do aplicativo.</Text>
     </View>
   );
 };
@@ -27,4 +27,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Calendario;
+export default Configuracoes;
