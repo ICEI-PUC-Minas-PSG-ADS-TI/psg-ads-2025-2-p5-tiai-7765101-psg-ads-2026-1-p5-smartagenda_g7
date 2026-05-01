@@ -3,9 +3,8 @@ import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, A
 import auth from '@react-native-firebase/auth';
 
 // Componentes
-import TarefaMinimal from '../components/TarefaMinimal';
+import TarefaList from '../components/TarefaList';
 import TaskManager from '../components/TaskManager';
-import TarefaDetalhes from '../components/DetalhesTarefa';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
@@ -20,8 +19,7 @@ export default function ListaTarefas() {
     const [filtroAtivo, setFiltroAtivo] = useState<FiltroTipo>('Todas');
     const [carregando, setCarregando] = useState(true);
 
-    const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
-    const [modalMode, setModalMode] = useState<ModalMode>('none');
+    const [isCreating, setIsCreating] = useState(false);
     const unsavedChanges = useRef(false); 
 
     const carregarTarefas = useCallback(async () => {
@@ -53,34 +51,22 @@ export default function ListaTarefas() {
         auth().signOut();
     }, []);
 
-    const handleOpenDetails = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('details');
-    }, []);
-
-    const handleOpenEdit = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('edit');
-    }, []);
-
     const handleCreateNew = useCallback(() => {
-        setSelectedTask(null);
-        setModalMode('edit');
+        setIsCreating(true);
     }, []);
 
     const handleCloseModal = useCallback(() => {
-        if (modalMode === 'edit' && unsavedChanges.current) {
+        if (isCreating && unsavedChanges.current) {
             console.log("Unsaved changes");
             Alert.alert(
-                'Tem certeza que deseja cancelar a edição da tarefa?',
+                'Tem certeza que deseja cancelar a criação da tarefa?',
                 `Todas as alterações não salvas serão perdidas.`,
                 [
                     { text: 'Não', style: 'cancel' },
                     {
                         text: 'Sim, sair sem salvar', onPress: () => {
                             unsavedChanges.current = false;
-                            setSelectedTask(null);
-                            setModalMode('none');
+                            setIsCreating(false);
                         }
                     }
                 ]
@@ -88,9 +74,8 @@ export default function ListaTarefas() {
             return;
         }
         unsavedChanges.current = false;
-        setSelectedTask(null);
-        setModalMode('none');
-    }, [modalMode, unsavedChanges.current]);
+        setIsCreating(false);
+    }, [isCreating, unsavedChanges.current]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
         if (result) {
@@ -157,25 +142,15 @@ export default function ListaTarefas() {
                 </View>
             </View>
 
-            <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-                {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
-                )}
-                {modalMode === 'edit' && (
-                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+            <Modal visible={isCreating} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
+                {isCreating && (
+                    <TaskManager tarefa={null} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
                 )}
             </Modal>
 
-            <FlatList
-                data={tarefasFiltradas}
-                renderItem={({ item }) => <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-                ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Nada por aqui ainda.</Text>
-                    </View>
-                )}
+            <TarefaList
+                tarefas={tarefasFiltradas}
+                onRefresh={carregarTarefas}
             />
 
             {/* Botão de Logout Rápido */}
@@ -248,20 +223,6 @@ const styles = StyleSheet.create({
     },
     filterTextActive: {
         color: '#9F7CFA',
-        fontWeight: 'bold'
-    },
-    listContainer: {
-        padding: 16,
-        paddingBottom: 100
-    },
-    emptyContainer: {
-        marginTop: 80,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    emptyText: {
-        color: '#FFFFFF',
-        fontSize: 18,
         fontWeight: 'bold'
     },
     fab: {
