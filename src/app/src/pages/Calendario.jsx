@@ -96,62 +96,63 @@ const Calendario = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Calendário</Text>
-      
-      <TarefaFilter 
-        selectedState={selectedState}
-        selectedCategories={selectedCategories}
-        categoriasDisponiveis={categoriasDisponiveis}
-        onSelectState={setSelectedState}
-        onToggleCategory={handleToggleCategory}
-      />
-
       <CalendarProvider
         date={selectedDate}
         onDateChanged={onDateChanged}
         theme={{ todayButtonTextColor: '#BB86FC' }}
       >
-        <ExpandableCalendar
-          initialPosition={'open'}
-          closeOnDayPress={true}
-          style={styles.calendar}
-          theme={{
-            backgroundColor: '#121212',
-            calendarBackground: '#1E1E1E',
-            textSectionTitleColor: '#b6c1cd',
-            selectedDayBackgroundColor: '#BB86FC',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#BB86FC',
-            dayTextColor: '#d9e1e8',
-            textDisabledColor: '#555555',
-            dotColor: '#BB86FC',
-            selectedDotColor: '#ffffff',
-            arrowColor: '#FFFFFF',
-            disabledArrowColor: '#fafafaff',
-            monthTextColor: 'white',
-            indicatorColor: 'white',
-            textDayFontWeight: '400',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '500',
-            textDayFontSize: 16,
-            textMonthFontSize: 18,
-            textDayHeaderFontSize: 14
-          }}
-          renderArrow={(direction) => (
-            <Text style={{ fontSize: 24, color: '#FFFFFF', fontWeight: 'bold' }}>
-              {direction === 'left' ? '<' : '>'}
-            </Text>
-          )}
-          markedDates={markedDates}
+        <TarefaList 
+          tarefas={tarefasDoDia} 
+          onRefresh={carregarTarefas}
+          emptyMessage="Nenhum compromisso para hoje. Deixe a IA planejar algo para você?"
+          ListHeaderComponent={
+            <View style={styles.headerContainer}>
+              <Text style={styles.title}>Calendário</Text>
+              
+              <TarefaFilter 
+                selectedState={selectedState}
+                selectedCategories={selectedCategories}
+                categoriasDisponiveis={categoriasDisponiveis}
+                onSelectState={setSelectedState}
+                onToggleCategory={handleToggleCategory}
+              />
+
+              <ExpandableCalendar
+                initialPosition={'open'}
+                closeOnDayPress={true}
+                style={styles.calendar}
+                theme={{
+                  backgroundColor: '#121212',
+                  calendarBackground: '#1E1E1E',
+                  textSectionTitleColor: '#b6c1cd',
+                  selectedDayBackgroundColor: '#BB86FC',
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: '#BB86FC',
+                  dayTextColor: '#d9e1e8',
+                  textDisabledColor: '#555555',
+                  dotColor: '#BB86FC',
+                  selectedDotColor: '#ffffff',
+                  arrowColor: '#FFFFFF',
+                  disabledArrowColor: '#fafafaff',
+                  monthTextColor: 'white',
+                  indicatorColor: 'white',
+                  textDayFontWeight: '400',
+                  textMonthFontWeight: 'bold',
+                  textDayHeaderFontWeight: '500',
+                  textDayFontSize: 16,
+                  textMonthFontSize: 18,
+                  textDayHeaderFontSize: 14
+                }}
+                renderArrow={(direction) => (
+                  <Text style={{ fontSize: 24, color: '#FFFFFF', fontWeight: 'bold' }}>
+                    {direction === 'left' ? '<' : '>'}
+                  </Text>
+                )}
+                markedDates={markedDates}
+              />
+            </View>
+          }
         />
-        
-        <View style={styles.listContainer}>
-          <TarefaList 
-            tarefas={tarefasDoDia} 
-            onRefresh={carregarTarefas}
-            emptyMessage="Nenhum compromisso para hoje. Deixe a IA planejar algo para você?"
-          />
-        </View>
       </CalendarProvider>
     </View>
   );
@@ -163,6 +164,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     paddingTop: 10,
   },
+  headerContainer: {
+    paddingBottom: 10,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -173,10 +177,6 @@ const styles = StyleSheet.create({
   },
   calendar: {
     elevation: 4,
-  },
-  listContainer: {
-    flex: 1,
-    marginTop: 10,
   }
 });
 

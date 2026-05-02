@@ -10,11 +10,12 @@ interface TarefaListProps {
     tarefas: Tarefa[];
     emptyMessage?: string;
     onRefresh?: () => void;
+    ListHeaderComponent?: React.ReactElement | null;
 }
 
 type ModalMode = 'none' | 'details' | 'edit';
 
-const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh }) => {
+const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent }) => {
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [modalMode, setModalMode] = useState<ModalMode>('none');
     const unsavedChanges = useRef(false);
@@ -71,9 +72,10 @@ const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefres
             <FlatList
                 data={tarefas}
                 renderItem={({ item }) => <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            ListEmptyComponent={() => (
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContainer}
+                ListHeaderComponent={ListHeaderComponent}
+                ListEmptyComponent={() => (
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
                 </View>

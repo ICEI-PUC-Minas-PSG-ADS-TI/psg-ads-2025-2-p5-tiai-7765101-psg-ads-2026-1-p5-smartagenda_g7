@@ -133,21 +133,6 @@ export default function ListaTarefas() {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Minhas Tarefas</Text>
-                <Text style={styles.headerSubtitle}>
-                    {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
-                </Text>
-            </View>
-
-            <TarefaFilter 
-                selectedState={selectedState}
-                selectedCategories={selectedCategories}
-                categoriasDisponiveis={categoriasDisponiveis}
-                onSelectState={setSelectedState}
-                onToggleCategory={handleToggleCategory}
-            />
-
             <Modal visible={isCreating} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
                 {isCreating && (
                     <TaskManager tarefa={null} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
@@ -157,6 +142,24 @@ export default function ListaTarefas() {
             <TarefaList
                 tarefas={tarefasFiltradas}
                 onRefresh={carregarTarefas}
+                ListHeaderComponent={
+                    <View style={styles.headerContainer}>
+                        <View style={styles.header}>
+                            <Text style={styles.headerTitle}>Minhas Tarefas</Text>
+                            <Text style={styles.headerSubtitle}>
+                                {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
+                            </Text>
+                        </View>
+
+                        <TarefaFilter 
+                            selectedState={selectedState}
+                            selectedCategories={selectedCategories}
+                            categoriasDisponiveis={categoriasDisponiveis}
+                            onSelectState={setSelectedState}
+                            onToggleCategory={handleToggleCategory}
+                        />
+                    </View>
+                }
             />
 
             {/* Botão de Logout Rápido */}
@@ -186,6 +189,9 @@ const styles = StyleSheet.create({
     loadingText: {
         color: '#9F7CFA',
         marginTop: 16
+    },
+    headerContainer: {
+        paddingBottom: 10,
     },
     header: {
         paddingTop: 40,

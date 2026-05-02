@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 
 export type FiltroEstado = 'Todas' | 'Pendentes' | 'Concluídas';
@@ -18,9 +18,11 @@ const TarefaFilter: React.FC<TarefaFilterProps> = ({
   onSelectState,
   onToggleCategory,
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <View style={styles.container}>
-      {/* Linha 1: Filtros de Estado */}
+      {/* Filtros de Estado */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {(['Todas', 'Pendentes', 'Concluídas'] as FiltroEstado[]).map((estado) => {
           const isActive = selectedState === estado;
@@ -36,22 +38,36 @@ const TarefaFilter: React.FC<TarefaFilterProps> = ({
         })}
       </ScrollView>
 
-      {/* Linha 2: Filtros de Categorias (se houver categorias disponíveis) */}
+      {/* Filtros de Categorias (se houver categorias disponíveis) */}
       {categoriasDisponiveis.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-          {categoriasDisponiveis.map((categoria) => {
-            const isActive = selectedCategories.includes(categoria);
-            return (
-              <TouchableOpacity
-                key={categoria}
-                style={[styles.filterChip, isActive && styles.filterChipActive]}
-                onPress={() => onToggleCategory(categoria)}
-              >
-                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{categoria}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <View style={styles.categoriesSection}>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => setIsExpanded(!isExpanded)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionLabel}>Categorias</Text>
+            <Text style={styles.sectionIcon}>{isExpanded ? '▲' : '▼'}</Text>
+          </TouchableOpacity>
+
+          {isExpanded && (
+            <View style={styles.wrapContainer}>
+              {categoriasDisponiveis.map((categoria) => {
+                const isActive = selectedCategories.includes(categoria);
+                return (
+                  <TouchableOpacity
+                    key={categoria}
+                    style={[styles.filterChip, isActive && styles.filterChipActive]}
+                    onPress={() => onToggleCategory(categoria)}
+                  >
+                    <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{categoria}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
       )}
     </View>
   );
@@ -62,7 +78,7 @@ export const aplicarFiltros = (tarefas: any[], estado: FiltroEstado, categorias:
     // Filtro de Estado
     if (estado === 'Pendentes' && t.estado === 'Finalizado') return false;
     if (estado === 'Concluídas' && t.estado !== 'Finalizado') return false;
-    
+
     // Filtro de Categorias
     if (categorias.length > 0) {
       if (!t.categorias || t.categorias.length === 0) return false;
@@ -82,7 +98,37 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: 10,
-    paddingHorizontal: 24, // Para alinhar com o padding da tela, se necessário. Depende de onde for montado.
+    paddingHorizontal: 24,
+  },
+  categoriesSection: {
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#3D3D3D',
+    marginVertical: 4,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    gap: 8,
+  },
+  sectionLabel: {
+    color: '#A59EC0',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  sectionIcon: {
+    color: '#A59EC0',
+    fontSize: 10,
+  },
+  wrapContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   filterChip: {
     paddingVertical: 6,
