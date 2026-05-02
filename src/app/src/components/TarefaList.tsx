@@ -13,9 +13,9 @@ interface TarefaListProps {
     ListHeaderComponent?: React.ReactElement | null;
 }
 
-type ModalMode = 'none' | 'details' | 'edit';
+export type ModalMode = 'none' | 'details' | 'edit';
 
-const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent }) => {
+export const useTaskModals = (onRefresh?: () => void) => {
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [modalMode, setModalMode] = useState<ModalMode>('none');
     const unsavedChanges = useRef(false);
@@ -67,6 +67,27 @@ const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefres
         setModalMode('none');
     }, [onRefresh]);
 
+    const modals = (
+        <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
+            {modalMode === 'details' && selectedTask && (
+                <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
+            )}
+            {modalMode === 'edit' && selectedTask && (
+                <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+            )}
+        </Modal>
+    );
+
+    return {
+        handleOpenDetails,
+        handleOpenEdit,
+        modals
+    };
+};
+
+const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent }) => {
+    const { handleOpenDetails, modals } = useTaskModals(onRefresh);
+
     return (
         <>
             <FlatList
@@ -81,14 +102,7 @@ const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefres
                 </View>
             )}
         />
-            <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-                {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
-                )}
-                {modalMode === 'edit' && selectedTask && (
-                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
-                )}
-            </Modal>
+            {modals}
         </>
     );
 };
