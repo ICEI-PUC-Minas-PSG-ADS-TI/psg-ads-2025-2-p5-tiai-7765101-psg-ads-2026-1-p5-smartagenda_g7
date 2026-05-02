@@ -5,18 +5,17 @@ import auth from '@react-native-firebase/auth';
 // Componentes
 import TarefaList from '../components/TarefaList';
 import TaskManager from '../components/TaskManager';
+import TarefaFilter, { FiltroEstado, aplicarFiltros } from '../components/TarefaFilter';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
 import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
 
-type FiltroTipo = 'Todas' | 'Pendentes' | 'Concluídas';
-type ModalMode = 'none' | 'details' | 'edit';
-
 export default function ListaTarefas() {
     const [tarefas, setTarefas] = useState<Tarefa[]>([]);
-    const [filtroAtivo, setFiltroAtivo] = useState<FiltroTipo>('Todas');
+    const [selectedState, setSelectedState] = useState<FiltroEstado>('Todas');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [carregando, setCarregando] = useState(true);
 
     const [isCreating, setIsCreating] = useState(false);
@@ -103,13 +102,23 @@ export default function ListaTarefas() {
         handleCloseModal();
     }, [handleCloseModal]);
 
-    const tarefasFiltradas = useMemo(() => {
-        return tarefas.filter(t => {
-            if (filtroAtivo === 'Pendentes') return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
-            if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
-            return true;
+    const categoriasDisponiveis = useMemo(() => {
+        const cats = new Set<string>();
+        tarefas.forEach(t => {
+            if (t.categorias) t.categorias.forEach(c => cats.add(c));
         });
-    }, [tarefas, filtroAtivo]);
+        return Array.from(cats);
+    }, [tarefas]);
+
+    const handleToggleCategory = useCallback((cat: string) => {
+        setSelectedCategories(prev => 
+            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+        );
+    }, []);
+
+    const tarefasFiltradas = useMemo(() => {
+        return aplicarFiltros(tarefas, selectedState, selectedCategories);
+    }, [tarefas, selectedState, selectedCategories]);
 
     if (carregando) {
         return (
@@ -129,18 +138,15 @@ export default function ListaTarefas() {
                 <Text style={styles.headerSubtitle}>
                     {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
                 </Text>
-
-                <View style={styles.filterContainer}>
-                    {(['Todas', 'Pendentes', 'Concluídas'] as FiltroTipo[]).map((filtro) => (
-                        <TouchableOpacity
-                            key={filtro}
-                            style={[styles.filterChip, filtroAtivo === filtro && styles.filterChipActive]}
-                            onPress={() => setFiltroAtivo(filtro)}>
-                            <Text style={[styles.filterText, filtroAtivo === filtro && styles.filterTextActive]}>{filtro}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
             </View>
+
+            <TarefaFilter 
+                selectedState={selectedState}
+                selectedCategories={selectedCategories}
+                categoriasDisponiveis={categoriasDisponiveis}
+                onSelectState={setSelectedState}
+                onToggleCategory={handleToggleCategory}
+            />
 
             <Modal visible={isCreating} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
                 {isCreating && (
@@ -198,32 +204,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#9F7CFA',
         marginTop: 4,
-        marginBottom: 16
-    },
-    filterContainer: {
-        flexDirection: 'row',
-        gap: 10
-    },
-    filterChip: {
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        backgroundColor: '#2D2D2D',
-        borderWidth: 1,
-        borderColor: '#3D3D3D'
-    },
-    filterChipActive: {
-        backgroundColor: 'rgba(159, 124, 250, 0.2)',
-        borderColor: '#9F7CFA'
-    },
-    filterText: {
-        color: '#A59EC0',
-        fontSize: 14,
-        fontWeight: '500'
-    },
-    filterTextActive: {
-        color: '#9F7CFA',
-        fontWeight: 'bold'
     },
     fab: {
         position: 'absolute',

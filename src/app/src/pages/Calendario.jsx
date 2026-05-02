@@ -4,6 +4,7 @@ import { CalendarProvider, ExpandableCalendar, LocaleConfig } from 'react-native
 import { useFocusEffect } from '@react-navigation/native';
 import StorageAPI from '../services/LocalStorageService';
 import TarefaList from '../components/TarefaList';
+import TarefaFilter, { aplicarFiltros } from '../components/TarefaFilter';
 
 // Configuração para pt-br
 LocaleConfig.locales['pt-br'] = {
@@ -20,31 +21,15 @@ LocaleConfig.defaultLocale = 'pt-br';
 
 const Calendario = () => {
   const [allTasks, setAllTasks] = useState([]);
-  const [taskMarks, setTaskMarks] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const [selectedState, setSelectedState] = useState('Todas');
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   const carregarTarefas = useCallback(async () => {
     try {
       const tarefasArray = await StorageAPI.CarregarTarefasArray();
-      if (tarefasArray) {
-        setAllTasks(tarefasArray);
-        const marks = {};
-        tarefasArray.forEach(tarefa => {
-          if (tarefa.data_vencimento) {
-            const date = new Date(tarefa.data_vencimento);
-            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
-            marks[dateString] = {
-              marked: true,
-              dotColor: tarefa.estado === 'Finalizado' ? '#4caf50' : '#f44336'
-            };
-          }
-        });
-        setTaskMarks(marks);
-      } else {
-        setAllTasks([]);
-        setTaskMarks({});
-      }
+      setAllTasks(tarefasArray || []);
     } catch (error) {
       console.error("Erro ao carregar tarefas para o calendário: ", error);
     }
@@ -60,29 +45,67 @@ const Calendario = () => {
     setSelectedDate(date);
   }, []);
 
+  const categoriasDisponiveis = useMemo(() => {
+    const cats = new Set();
+    allTasks.forEach(t => {
+      if (t.categorias) t.categorias.forEach(c => cats.add(c));
+    });
+    return Array.from(cats);
+  }, [allTasks]);
+
+  const handleToggleCategory = useCallback((cat) => {
+    setSelectedCategories(prev => 
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  }, []);
+
+  const filteredTasks = useMemo(() => {
+    return aplicarFiltros(allTasks, selectedState, selectedCategories);
+  }, [allTasks, selectedState, selectedCategories]);
+
   const markedDates = useMemo(() => {
-    const marks = { ...taskMarks };
+    const marks = {};
+    filteredTasks.forEach(tarefa => {
+      if (tarefa.data_vencimento) {
+        const date = new Date(tarefa.data_vencimento);
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+        marks[dateString] = {
+          marked: true,
+          dotColor: tarefa.estado === 'Finalizado' ? '#4caf50' : '#f44336'
+        };
+      }
+    });
+
     marks[selectedDate] = {
       ...(marks[selectedDate] || {}),
       selected: true,
       selectedColor: '#BB86FC'
     };
     return marks;
-  }, [taskMarks, selectedDate]);
+  }, [filteredTasks, selectedDate]);
 
   const tarefasDoDia = useMemo(() => {
-    return allTasks.filter(tarefa => {
+    return filteredTasks.filter(tarefa => {
       if (!tarefa.data_vencimento) return false;
       const date = new Date(tarefa.data_vencimento);
       const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       return dateString === selectedDate;
     });
-  }, [allTasks, selectedDate]);
+  }, [filteredTasks, selectedDate]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Calendário</Text>
       
+      <TarefaFilter 
+        selectedState={selectedState}
+        selectedCategories={selectedCategories}
+        categoriasDisponiveis={categoriasDisponiveis}
+        onSelectState={setSelectedState}
+        onToggleCategory={handleToggleCategory}
+      />
+
       <CalendarProvider
         date={selectedDate}
         onDateChanged={onDateChanged}
