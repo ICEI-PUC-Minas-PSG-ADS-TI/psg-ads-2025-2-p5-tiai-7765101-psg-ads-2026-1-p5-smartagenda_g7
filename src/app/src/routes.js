@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Calendar, ListTodo, Settings } from 'lucide-react-native';
+import { MessageCircleMore, Calendar, ListTodo, Settings } from 'lucide-react-native';
 
 // Importação das telas
 import ListaTarefas from './pages/ListaTarefas';
 import Calendario from './pages/Calendario';
 import Configuracoes from './pages/Configuracoes';
+import ChatIA from './pages/ChatIA';
 
 const Tab = createBottomTabNavigator();
 
@@ -43,6 +44,16 @@ const Routes = () => {
           tabBarLabel: 'Tarefas',
           tabBarIcon: ({ color }) => (
             <ListTodo color={color} size={24} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Chat IA"
+        component={ChatIA}
+        options={{
+          tabBarLabel: 'Chat IA',
+          tabBarIcon: ({ color }) => (
+            <MessageCircleMore color={color} size={24} />
           ),
         }}
       />
