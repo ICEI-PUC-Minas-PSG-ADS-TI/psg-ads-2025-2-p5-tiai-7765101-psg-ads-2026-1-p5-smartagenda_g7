@@ -8,46 +8,19 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView
+    SafeAreaView,
+    ActivityIndicator
 } from 'react-native';
-
-interface Message {
-    id: string;
-    text: string;
-    sender: 'user' | 'assistant';
-}
+import { useAIChat, Message } from '../hooks/useAIChat';
 
 export default function ChatIA() {
     const [inputText, setInputText] = useState('');
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            text: 'Olá! Sou seu assistente de produtividade. Como posso te ajudar a organizar suas tarefas hoje?',
-            sender: 'assistant',
-        }
-    ]);
+    const { messages, sendMessage, isLoading } = useAIChat();
 
     const handleSend = () => {
         if (!inputText.trim()) return;
-
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            text: inputText.trim(),
-            sender: 'user',
-        };
-
-        setMessages((prev) => [...prev, newMessage]);
+        sendMessage(inputText);
         setInputText('');
-
-        // Mock resposta
-        setTimeout(() => {
-            const botResponse: Message = {
-                id: (Date.now() + 1).toString(),
-                text: 'Entendi! Vou analisar as informações e te ajudar a estruturar suas tarefas. (Mock de Resposta)',
-                sender: 'assistant',
-            };
-            setMessages((prev) => [...prev, botResponse]);
-        }, 1000);
     };
 
     const renderMessage = ({ item }: { item: Message }) => {
@@ -79,6 +52,14 @@ export default function ChatIA() {
                     showsVerticalScrollIndicator={false}
                 />
 
+                {/* Loading Indicator */}
+                {isLoading && (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color="#9F7CFA" />
+                        <Text style={styles.loadingText}>A IA está pensando...</Text>
+                    </View>
+                )}
+
                 {/* Input e Botão de Envio */}
                 <View style={styles.inputContainer}>
                     <TextInput
@@ -88,8 +69,14 @@ export default function ChatIA() {
                         value={inputText}
                         onChangeText={setInputText}
                         multiline
+                        editable={!isLoading}
                     />
-                    <TouchableOpacity style={styles.sendButton} onPress={handleSend} activeOpacity={0.8}>
+                    <TouchableOpacity 
+                        style={[styles.sendButton, isLoading && styles.sendButtonDisabled]} 
+                        onPress={handleSend} 
+                        activeOpacity={0.8}
+                        disabled={isLoading}
+                    >
                         <Text style={styles.sendButtonText}>Enviar</Text>
                     </TouchableOpacity>
                 </View>
@@ -179,5 +166,19 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    sendButtonDisabled: {
+        opacity: 0.5,
+    },
+    loadingContainer: {
+        flexDirection: 'row',
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        color: '#9F7CFA',
+        marginLeft: 8,
+        fontSize: 14,
     },
 });
