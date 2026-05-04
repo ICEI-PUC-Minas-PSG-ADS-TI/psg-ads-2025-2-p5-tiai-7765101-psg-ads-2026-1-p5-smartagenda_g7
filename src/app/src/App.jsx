@@ -19,13 +19,13 @@ function App() {
     try {
       const subscriber = auth().onAuthStateChanged(async (authUser) => {
         setUser(authUser);
-        
+
         if (authUser) {
           await onUserAuthenticated(authUser);
           await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
         }
       });
-      return subscriber; 
+      return subscriber;
     } catch (err) {
       Alert.alert('Não foi possível se conectar ao Firebase', `Erro: ${err.message}`);
       return;
@@ -52,14 +52,14 @@ function App() {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.container}>
         {showCadastro ? (
-          <CadastroScreen 
-            onSuccess={() => setShowCadastro(false)} 
-            onBackToLogin={() => setShowCadastro(false)} 
+          <CadastroScreen
+            onSuccess={() => setShowCadastro(false)}
+            onBackToLogin={() => setShowCadastro(false)}
           />
         ) : (
-          <LoginScreen 
-            onSuccess={() => console.log('Logado com sucesso!')} 
-            onCadastro={() => setShowCadastro(true)} 
+          <LoginScreen
+            onSuccess={() => console.log('Logado com sucesso!')}
+            onCadastro={() => setShowCadastro(true)}
           />
         )}
       </View>
@@ -68,9 +68,9 @@ function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#121212' 
+  container: {
+    flex: 1,
+    backgroundColor: '#121212'
   }
 });
 

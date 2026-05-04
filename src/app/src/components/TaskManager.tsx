@@ -18,6 +18,7 @@ import StorageAPI, { CarregarTarefas } from '../services/LocalStorageService';
 import 'react-native-get-random-values';
 import SubTaskList from './SubTaskList.tsx';
 import { TrySalvarTarefa, TrySalvar } from '../services/SaveControlService.ts';
+import TaskTreeView from './TaskTreeView.tsx';
 
 type Props = {
     tarefa?: Tarefa | null;
@@ -50,6 +51,7 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         tarefa ?? null
     );
 
+    // relacionados aos textos que precisam ser transformados nos campos
     const [textDates, setTextDates] = useState<Record<string, string>>({});
     const [categoriesString, setCategoriesString] = useState('');
     const [descriptionHeight, setDescriptionHeight] = useState(40);
@@ -57,6 +59,9 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
     // useStates relacionados a subtarefas.
     const [Subtasks, setSubtasks] = useState<Tarefa[]>([]);
     const [selectedSubtask, setSelectedSubtask] = useState<Tarefa | null>(null);
+
+    // taskTreeView
+    const [openTreeView, setOpenTreeView] = useState(false);
 
     useEffect(() => {
         if (tarefa) {
@@ -269,10 +274,13 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         unsavedChanges.current = true;
     }, [task, updateField]);
 
-    const handleKebabMenu = useCallback((optionIndex: number) => {
+    const handleKebabMenu = useCallback((optionIndex: string) => {
         switch (optionIndex) {
-            case 1:
+            case "Delete":
                 tryDeleteTask();
+                break;
+            case "TreeView":
+                setOpenTreeView(true);
                 break;
         }
     }, []);
@@ -293,20 +301,19 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
     }, []);
 
     const importTasksJSON = useCallback(async (tarefas: Tarefa[]) => {
-        if (tarefas)
-        {
+        if (tarefas) {
             unsavedChanges.current = false;
-            for (const t of tarefas){
+            for (const t of tarefas) {
                 await TrySalvarTarefa(t);
             }
             let selected = tarefas.find((t) => !t.isSubtarefa);
             //if (selected) setTask(selected);
 
             if (onClose && selected) {
-                    onClose(selected);
+                onClose(selected);
             }
         }
-        else {}
+        else { }
     }, []);
 
     const handleExit = async () => {
@@ -437,13 +444,13 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <View style={[styles.container, styles.coloredBackground]}>
                 <Text style={styles.secondaryText}>{depthDisplay}</Text>
-                { !isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
+                {!isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
                 <Text style={styles.title}> {isCreating ?
                     (depthDisplay ? 'Criar Sub-Tarefa' : 'Criar Tarefa') :
                     (depthDisplay ? 'Editar Sub-Tarefa' : 'Editar Tarefa')}
                 </Text>
 
-                { isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>}
+                {isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>}
 
                 {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
 
@@ -514,13 +521,24 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
                         <Text style={styles.label}>{isCreating ? 'Salvar Nova Tarefa' : 'Salvar Alterações'}</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/*
+                <TouchableOpacity style={[styles.button, styles.highlightColor2]} onPress={() => setOpenTreeView(true)}><Text style={styles.label}>Visualização de Árvore</Text></TouchableOpacity>
+                */}
             </View>
+
+            {!isCreating && (
+                <Modal visible={openTreeView} transparent={true} animationType="slide" onRequestClose={() => setOpenTreeView(false)}>
+                    <TaskTreeView tarefa={task} />
+                </Modal>
+            )}
+
         </ScrollView >
     );
 }
 
 type KebabProps = {
-    onOptionPressed?: (option: number) => void;
+    onOptionPressed?: (option: string) => void;
 };
 
 function KebabOptionsMenu({ onOptionPressed }: KebabProps) {
@@ -529,9 +547,14 @@ function KebabOptionsMenu({ onOptionPressed }: KebabProps) {
     const tryDelete = () => {
         Alert.alert('Excluir Tarefa?', 'Tem certeza que deseja excluir essa tarefa, e TODAS suas sub-tarefas?',
             [{ text: 'Cancelar', style: 'cancel' },
-            { text: 'Sim, excluir tarefa e todas as sub-tarefas', onPress: () => onOptionPressed?.(1) }]
+            { text: 'Sim, excluir tarefa e todas as sub-tarefas', onPress: () => onOptionPressed?.("Delete") }]
         )
         //setVisible(false);
+    }
+
+    const TreeView = () => {
+        setVisible(false);
+        onOptionPressed?.("TreeView");
     }
 
     return (
@@ -554,6 +577,9 @@ function KebabOptionsMenu({ onOptionPressed }: KebabProps) {
                         <TouchableOpacity onPress={tryDelete}>
                             <Text style={styles.kebaboption}>Excluir Tarefa</Text>
                         </TouchableOpacity>
+                        <TouchableOpacity onPress={TreeView}>
+                            <Text style={styles.kebaboption}>Exbição de Árvore</Text>
+                        </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
             </Modal>
@@ -565,13 +591,13 @@ type ImportModalProps = {
     onImport?: (tasks: Tarefa[]) => void;
 };
 
-function ImportTasksModal({onImport}: ImportModalProps) {
+function ImportTasksModal({ onImport }: ImportModalProps) {
     const [visible, setVisible] = useState(false);
     const [text, setText] = useState('');
 
     const importTasks = useCallback(async () => {
         console.log(text);
-        if (!text) {Alert.alert("Insira uma estrutura JSON no campo"); return;}
+        if (!text) { Alert.alert("Insira uma estrutura JSON no campo"); return; }
         let res = await CreateTarefaJSON(text);
         if (!res || res.length <= 0) {
             console.log("Couldn't import tasks by json :(");
@@ -585,7 +611,7 @@ function ImportTasksModal({onImport}: ImportModalProps) {
 
     return (
         <View>
-            <TouchableOpacity style={[styles.buttonSmall, styles.highlightColor3]}onPress={() => setVisible(true)}><Text style={styles.label}>Importar Tarefas por JSON</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.buttonSmall, styles.highlightColor3]} onPress={() => setVisible(true)}><Text style={styles.label}>Importar Tarefas por JSON</Text></TouchableOpacity>
 
             <Modal
                 visible={visible}
