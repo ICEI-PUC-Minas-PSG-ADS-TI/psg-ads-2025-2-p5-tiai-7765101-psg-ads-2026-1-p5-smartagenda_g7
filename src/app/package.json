@@ -24,6 +24,8 @@
     "react-native-fs": "^2.20.0",
     "react-native-get-random-values": "^2.0.0",
     "react-native-safe-area-context": "^5.5.2",
+    "react-native-svg": "^15.15.4",
+    "react-native-worklets": "^0.8.1",
     "text-encoding": "^0.7.0",
     "uuid": "^13.0.0",
     "web-streams-polyfill": "^4.2.0"

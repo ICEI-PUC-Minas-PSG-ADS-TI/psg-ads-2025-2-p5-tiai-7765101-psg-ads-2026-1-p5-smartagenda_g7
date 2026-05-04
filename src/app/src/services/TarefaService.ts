@@ -236,7 +236,7 @@ export async function GetSubtarefasById(id: string): Promise<Tarefa[] | null> {
 }
 
 /**
- * Obtém as subtarefas diretas de uma tarefa específica.
+ * Obtém as subtarefas diretas (somente uma camada de filhos) de uma tarefa específica.
  * @param tarefa 
  * @returns array de subtarefas, ou null se a tarefa não tiver subtarefas ou se ocorrer algum erro durante o processo.
  */
@@ -255,6 +255,28 @@ export async function GetSubtarefas(tarefa: Tarefa): Promise<Tarefa[] | null> {
     }
 
     console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
+    return subtarefas;
+}
+
+/**
+ * Obtém todas as subtarefas de uma tarefa específica, inclusive as subtarefas de subtarefas
+ * @param tarefa 
+ * @returns array de subtarefas, ou null se a tarefa não tiver subtarefas ou se ocorrer algum erro durante o processo.
+ */
+export async function GetAllSubtarefas(tarefa: Tarefa): Promise<Tarefa[] | null> {
+    let subtarefas: Tarefa[] = [];
+
+    let tempsub = await GetSubtarefas(tarefa);
+    if (!tempsub) return [];
+    subtarefas = subtarefas.concat(tempsub);
+    for (let s of subtarefas)
+    {
+        let subsub = await GetAllSubtarefas(s);
+        if (subsub)
+        subtarefas = subtarefas.concat(subsub);
+    };
+
+    //console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
     return subtarefas;
 }
 
