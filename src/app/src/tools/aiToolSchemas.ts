@@ -2,7 +2,7 @@ import { FunctionDeclaration, SchemaType, Tool } from '@google/generative-ai';
 
 export const gerenciamentoTarefasSchema: FunctionDeclaration = {
     name: "gerenciar_tarefas",
-    description: "Cria ou edita tarefas e subtarefas no aplicativo. Recebe uma lista de tarefas. Para tarefas com subtarefas novas, utilize IDs temporários (ex: 'temp_1', 'temp_2') para conectá-las usando o array de 'subtarefas' da tarefa pai. O sistema vai resolver os IDs reais automaticamente.",
+    description: "Cria tarefas e subtarefas no aplicativo. Recebe uma lista de tarefas. Para tarefas com subtarefas novas, utilize IDs temporários (ex: 'temp_1', 'temp_2') para conectá-las usando o array de 'subtarefas' da tarefa pai. O sistema vai resolver os IDs reais automaticamente.",
     parameters: {
         type: SchemaType.OBJECT,
         properties: {
@@ -63,8 +63,68 @@ export const gerenciamentoTarefasSchema: FunctionDeclaration = {
     }
 };
 
+export const listarTarefasSchema: FunctionDeclaration = {
+    name: "listar_tarefas",
+    description: "Recupera a lista de todas as tarefas e rotinas cadastradas no sistema. Use esta ferramenta sempre que o usuário perguntar sobre suas tarefas atuais, horários, prazos ou quiser saber como está a sua rotina.",
+    parameters: {
+        type: SchemaType.OBJECT,
+        properties: {}
+    }
+};
+
+export const editarTarefaSchema: FunctionDeclaration = {
+    name: "editar_tarefa",
+    description: "Edita uma tarefa existente. Somente o 'id' é obrigatório. Os demais campos enviados substituirão os valores atuais da tarefa.",
+    parameters: {
+        type: SchemaType.OBJECT,
+        properties: {
+            id: {
+                type: SchemaType.STRING,
+                description: "ID obrigatório da tarefa que será editada."
+            },
+            titulo: {
+                type: SchemaType.STRING,
+                description: "Novo título da tarefa."
+            },
+            descricao_geral: {
+                type: SchemaType.STRING,
+                description: "Nova descrição da tarefa."
+            },
+            data_vencimento: {
+                type: SchemaType.NUMBER,
+                description: "Nova data de vencimento em timestamp numérico (milissegundos desde 1970)."
+            },
+            estado: {
+                type: SchemaType.STRING,
+                description: "Novo status da tarefa. Opções válidas estritas: 'NaoIniciado', 'EmProgresso', ou 'Finalizado'."
+            }
+        },
+        required: ["id"]
+    }
+};
+
+export const excluirTarefaSchema: FunctionDeclaration = {
+    name: "excluir_tarefa",
+    description: "Exclui permanentemente uma tarefa do sistema.",
+    parameters: {
+        type: SchemaType.OBJECT,
+        properties: {
+            id: {
+                type: SchemaType.STRING,
+                description: "ID obrigatório da tarefa a ser excluída."
+            }
+        },
+        required: ["id"]
+    }
+};
+
 export const aiTools: Tool[] = [
     {
-        functionDeclarations: [gerenciamentoTarefasSchema]
+        functionDeclarations: [
+            gerenciamentoTarefasSchema,
+            listarTarefasSchema,
+            editarTarefaSchema,
+            excluirTarefaSchema
+        ]
     }
 ];

@@ -3,6 +3,8 @@ import { GoogleGenerativeAI, ChatSession } from '@google/generative-ai';
 import { GEMINI_API_KEY } from '@env';
 import { aiTools } from '../tools/aiToolSchemas';
 import { CreateTarefaJSON } from '../services/TarefaService';
+import LocalStorageService from '../services/LocalStorageService';
+import SaveControlService from '../services/SaveControlService';
 
 const INITIAL_TEXT = "Olá! Sou seu assistente de Agenda IA. Como posso te ajudar a organizar suas tarefas e rotina hoje?";
 const AI_MODEL = 'gemini-2.5-flash-lite';
@@ -90,37 +92,101 @@ export function useAIChat() {
 
             while (functionCalls && functionCalls.length > 0) {
                 for (const call of functionCalls) {
-                    if (call.name === 'gerenciar_tarefas') {
-                        try {
-                            // A chamada extrai os argumentos em JSON (Object), convertemos para String
+                    const callName = call.name;
+                    let functionResponseData: any;
+
+                    try {
+                        if (callName === 'gerenciar_tarefas') {
                             const argsJson = JSON.stringify(call.args);
-
-                            console.log("[useAIChat] Invocando TarefaService com:", argsJson);
-
-                            // O TarefaService aceita e interpreta a string formatada em JSON com a lista de tarefas
+                            console.log("[useAIChat] Invocando TarefaService (Criar) com:", argsJson);
                             const tarefasCriadas = await CreateTarefaJSON(argsJson);
 
-                            // Após processar, mandamos a resposta de execução de volta pro Gemini
-                            result = await chat.sendMessage([{
-                                functionResponse: {
-                                    name: 'gerenciar_tarefas',
-                                    response: {
-                                        status: 'success',
-                                        message: AI_SUCCESS_MESSAGE,
-                                        count: tarefasCriadas?.length || 0
-                                    }
+                            // Salvando as tarefas criadas ativamente
+                            if (tarefasCriadas && tarefasCriadas.length > 0) {
+                                for (const t of tarefasCriadas) {
+                                    await SaveControlService.TrySalvarTarefa(t);
                                 }
-                            }]);
-                        } catch (err) {
-                            console.error("[useAIChat] Erro no gerenciar_tarefas:", err);
-                            // Envia o erro de volta para que a IA saiba e relate o problema
-                            result = await chat.sendMessage([{
-                                functionResponse: {
-                                    name: 'gerenciar_tarefas',
-                                    response: { status: 'error', message: String(err) }
-                                }
-                            }]);
+                            }
+
+                            functionResponseData = {
+                                status: 'success',
+                                message: 'Tarefas criadas e persistidas com sucesso.',
+                                count: tarefasCriadas?.length || 0
+                            };
                         }
+                        else if (callName === 'listar_tarefas') {
+                            console.log("[useAIChat] Invocando LocalStorageService.CarregarTarefasArray()");
+                            const tarefas = await LocalStorageService.CarregarTarefasArray();
+
+                            // Extrair apenas o necessário para otimizar o contexto
+                            const resumo = (tarefas || []).map(t => ({
+                                id: t.id,
+                                titulo: t.titulo,
+                                estado: t.estado,
+                                vencimento: t.data_vencimento ? new Date(t.data_vencimento).toLocaleString() : 'Sem prazo'
+                            }));
+
+                            functionResponseData = {
+                                status: 'success',
+                                tarefas: resumo
+                            };
+                        }
+                        else if (callName === 'editar_tarefa') {
+                            const args = call.args as Record<string, any>;
+                            console.log("[useAIChat] Invocando edição com:", args);
+                            const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
+                            const tarefa = tarefasLocais[args.id as string];
+
+                            if (tarefa) {
+                                if (args.titulo) tarefa.titulo = args.titulo as string;
+                                if (args.descricao_geral) tarefa.descricao_geral = args.descricao_geral as string;
+                                if (args.data_vencimento) tarefa.data_vencimento = Number(args.data_vencimento);
+                                if (args.estado) tarefa.estado = args.estado as any;
+
+                                await SaveControlService.TrySalvarTarefa(tarefa);
+
+                                functionResponseData = {
+                                    status: 'success',
+                                    message: `Tarefa atualizada e persistida.`
+                                };
+                            } else {
+                                functionResponseData = {
+                                    status: 'error',
+                                    message: `Tarefa com id ${args.id} não encontrada.`
+                                };
+                            }
+                        }
+                        else if (callName === 'excluir_tarefa') {
+                            const args = call.args as Record<string, any>;
+                            console.log("[useAIChat] Invocando exclusão para id:", args.id);
+
+                            // Deleta localmente e limpa links de subtarefas
+                            await LocalStorageService.DeletarTarefa(args.id as string);
+                            // Sincroniza essa exclusão para refletir no Firebase
+                            await SaveControlService.TrySalvar();
+
+                            functionResponseData = {
+                                status: 'success',
+                                message: `Tarefa excluída e persistida.`
+                            };
+                        }
+
+                        // Envia a resposta de volta ao Gemini após processar e salvar tudo
+                        result = await chat.sendMessage([{
+                            functionResponse: {
+                                name: callName,
+                                response: functionResponseData
+                            }
+                        }]);
+
+                    } catch (err) {
+                        console.error(`[useAIChat] Erro na tool ${callName}:`, err);
+                        result = await chat.sendMessage([{
+                            functionResponse: {
+                                name: callName,
+                                response: { status: 'error', message: String(err) }
+                            }
+                        }]);
                     }
                 }
 

@@ -45,7 +45,7 @@ export async function TrySalvar(): Promise<Tarefa[]> {
  * @param result tarefa a ser salva.
  * @returns Lista atualizada das tarefas. Em caso de erro severo, retorna a lista vazia.
  */
-export async function TrySalvarTarefa(result: Tarefa,): Promise<Tarefa[]> {
+export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
     try {
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         tarefasLocais[result.id] = result;
@@ -164,6 +164,7 @@ function CompareAndCheck(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): nu
 }
 
 export default {
+    TrySalvar,
     TrySalvarTarefa,
     TryCarregarTarefasArray
 }
