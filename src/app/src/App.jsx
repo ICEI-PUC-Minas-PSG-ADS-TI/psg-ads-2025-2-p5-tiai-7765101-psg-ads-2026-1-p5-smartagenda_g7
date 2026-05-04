@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 
-import { preloadModel } from './services/GENAIService';
-import BasicGENAIPromptComponent from './components/BasicGENAIPromptComponent';
+import Routes from './routes';
 import LoginScreen from './pages/Login';
-import ListaTarefas from './pages/ListaTarefas';
 import CadastroScreen from './pages/Cadastro';
 import StorageAPI from './services/LocalStorageService';
 import { onUserAuthenticated } from './services/UserService';
@@ -33,14 +32,16 @@ function App() {
     }
   }, []);
 
-  // Se está logado, mostra a lista de tarefas
+  // Se está logado, mostra a navegação principal
   if (user) {
     return (
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
-          <ListaTarefas />
-        </View>
+        <NavigationContainer>
+          <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+          <View style={styles.container}>
+            <Routes />
+          </View>
+        </NavigationContainer>
       </SafeAreaProvider>
     );
   }

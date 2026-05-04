@@ -3,25 +3,22 @@ import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, A
 import auth from '@react-native-firebase/auth';
 
 // Componentes
-import TarefaMinimal from '../components/TarefaMinimal';
+import TarefaList from '../components/TarefaList';
 import TaskManager from '../components/TaskManager';
-import TarefaDetalhes from '../components/DetalhesTarefa';
+import TarefaFilter, { FiltroEstado, aplicarFiltros } from '../components/TarefaFilter';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
 import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
 
-type FiltroTipo = 'Todas' | 'Pendentes' | 'Concluídas';
-type ModalMode = 'none' | 'details' | 'edit';
-
 export default function ListaTarefas() {
     const [tarefas, setTarefas] = useState<Tarefa[]>([]);
-    const [filtroAtivo, setFiltroAtivo] = useState<FiltroTipo>('Todas');
+    const [selectedState, setSelectedState] = useState<FiltroEstado>('Todas');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [carregando, setCarregando] = useState(true);
 
-    const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
-    const [modalMode, setModalMode] = useState<ModalMode>('none');
+    const [isCreating, setIsCreating] = useState(false);
     const unsavedChanges = useRef(false); 
 
     const carregarTarefas = useCallback(async () => {
@@ -53,34 +50,22 @@ export default function ListaTarefas() {
         auth().signOut();
     }, []);
 
-    const handleOpenDetails = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('details');
-    }, []);
-
-    const handleOpenEdit = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('edit');
-    }, []);
-
     const handleCreateNew = useCallback(() => {
-        setSelectedTask(null);
-        setModalMode('edit');
+        setIsCreating(true);
     }, []);
 
     const handleCloseModal = useCallback(() => {
-        if (modalMode === 'edit' && unsavedChanges.current) {
+        if (isCreating && unsavedChanges.current) {
             console.log("Unsaved changes");
             Alert.alert(
-                'Tem certeza que deseja cancelar a edição da tarefa?',
+                'Tem certeza que deseja cancelar a criação da tarefa?',
                 `Todas as alterações não salvas serão perdidas.`,
                 [
                     { text: 'Não', style: 'cancel' },
                     {
                         text: 'Sim, sair sem salvar', onPress: () => {
                             unsavedChanges.current = false;
-                            setSelectedTask(null);
-                            setModalMode('none');
+                            setIsCreating(false);
                         }
                     }
                 ]
@@ -88,9 +73,8 @@ export default function ListaTarefas() {
             return;
         }
         unsavedChanges.current = false;
-        setSelectedTask(null);
-        setModalMode('none');
-    }, [modalMode, unsavedChanges.current]);
+        setIsCreating(false);
+    }, [isCreating, unsavedChanges.current]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
         if (result) {
@@ -118,13 +102,23 @@ export default function ListaTarefas() {
         handleCloseModal();
     }, [handleCloseModal]);
 
-    const tarefasFiltradas = useMemo(() => {
-        return tarefas.filter(t => {
-            if (filtroAtivo === 'Pendentes') return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
-            if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
-            return true;
+    const categoriasDisponiveis = useMemo(() => {
+        const cats = new Set<string>();
+        tarefas.forEach(t => {
+            if (t.categorias) t.categorias.forEach(c => cats.add(c));
         });
-    }, [tarefas, filtroAtivo]);
+        return Array.from(cats);
+    }, [tarefas]);
+
+    const handleToggleCategory = useCallback((cat: string) => {
+        setSelectedCategories(prev => 
+            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+        );
+    }, []);
+
+    const tarefasFiltradas = useMemo(() => {
+        return aplicarFiltros(tarefas, selectedState, selectedCategories);
+    }, [tarefas, selectedState, selectedCategories]);
 
     if (carregando) {
         return (
@@ -139,43 +133,33 @@ export default function ListaTarefas() {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Minhas Tarefas</Text>
-                <Text style={styles.headerSubtitle}>
-                    {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
-                </Text>
-
-                <View style={styles.filterContainer}>
-                    {(['Todas', 'Pendentes', 'Concluídas'] as FiltroTipo[]).map((filtro) => (
-                        <TouchableOpacity
-                            key={filtro}
-                            style={[styles.filterChip, filtroAtivo === filtro && styles.filterChipActive]}
-                            onPress={() => setFiltroAtivo(filtro)}>
-                            <Text style={[styles.filterText, filtroAtivo === filtro && styles.filterTextActive]}>{filtro}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
-
-            <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-                {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
-                )}
-                {modalMode === 'edit' && (
-                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+            <Modal visible={isCreating} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
+                {isCreating && (
+                    <TaskManager tarefa={null} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
                 )}
             </Modal>
 
-            <FlatList
-                data={tarefasFiltradas}
-                renderItem={({ item }) => <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-                ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Nada por aqui ainda.</Text>
+            <TarefaList
+                tarefas={tarefasFiltradas}
+                onRefresh={carregarTarefas}
+                ListHeaderComponent={
+                    <View style={styles.headerContainer}>
+                        <View style={styles.header}>
+                            <Text style={styles.headerTitle}>Minhas Tarefas</Text>
+                            <Text style={styles.headerSubtitle}>
+                                {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
+                            </Text>
+                        </View>
+
+                        <TarefaFilter 
+                            selectedState={selectedState}
+                            selectedCategories={selectedCategories}
+                            categoriasDisponiveis={categoriasDisponiveis}
+                            onSelectState={setSelectedState}
+                            onToggleCategory={handleToggleCategory}
+                        />
                     </View>
-                )}
+                }
             />
 
             {/* Botão de Logout Rápido */}
@@ -206,6 +190,9 @@ const styles = StyleSheet.create({
         color: '#9F7CFA',
         marginTop: 16
     },
+    headerContainer: {
+        paddingBottom: 10,
+    },
     header: {
         paddingTop: 40,
         paddingHorizontal: 24,
@@ -223,46 +210,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#9F7CFA',
         marginTop: 4,
-        marginBottom: 16
-    },
-    filterContainer: {
-        flexDirection: 'row',
-        gap: 10
-    },
-    filterChip: {
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        backgroundColor: '#2D2D2D',
-        borderWidth: 1,
-        borderColor: '#3D3D3D'
-    },
-    filterChipActive: {
-        backgroundColor: 'rgba(159, 124, 250, 0.2)',
-        borderColor: '#9F7CFA'
-    },
-    filterText: {
-        color: '#A59EC0',
-        fontSize: 14,
-        fontWeight: '500'
-    },
-    filterTextActive: {
-        color: '#9F7CFA',
-        fontWeight: 'bold'
-    },
-    listContainer: {
-        padding: 16,
-        paddingBottom: 100
-    },
-    emptyContainer: {
-        marginTop: 80,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    emptyText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold'
     },
     fab: {
         position: 'absolute',

@@ -1,0 +1,48 @@
+diff --git a/node_modules/react-native-calendars/src/agenda/reservation-list/index.js b/node_modules/react-native-calendars/src/agenda/reservation-list/index.js
+index 75d95c6..c0fa415 100644
+--- a/node_modules/react-native-calendars/src/agenda/reservation-list/index.js
++++ b/node_modules/react-native-calendars/src/agenda/reservation-list/index.js
+@@ -51,12 +51,14 @@ class ReservationList extends Component {
+         this.updateDataSource(this.getReservations(this.props).reservations);
+     }
+     componentDidUpdate(prevProps) {
+-        if (this.props.topDay && prevProps.topDay && prevProps !== this.props) {
+-            if (!sameDate(prevProps.topDay, this.props.topDay)) {
+-                this.setState({ reservations: [] }, () => this.updateReservations(this.props));
+-            }
+-            else {
+-                this.updateReservations(this.props);
++        if (this.props.topDay && prevProps.topDay) {
++            if (this.props.showOnlySelectedDayItems !== prevProps.showOnlySelectedDayItems || this.props.items !== prevProps.items || !sameDate(this.props.selectedDay, prevProps.selectedDay)) {
++                if (!sameDate(prevProps.topDay, this.props.topDay)) {
++                    this.setState({ reservations: [] }, () => this.updateReservations(this.props));
++                }
++                else {
++                    this.updateReservations(this.props);
++                }
+             }
+         }
+     }
+@@ -176,8 +178,8 @@ class ReservationList extends Component {
+     renderRow = ({ item, index }) => {
+         const reservationProps = extractReservationProps(this.props);
+         return (<View onLayout={this.onRowLayoutChange.bind(this, index)}>
+-        <Reservation {...reservationProps} item={item.reservation} date={item.date}/>
+-      </View>);
++            <Reservation {...reservationProps} item={item.reservation} date={item.date} />
++        </View>);
+     };
+     keyExtractor = (item, index) => {
+         return this.props.reservationsKeyExtractor?.(item, index) || `${item?.reservation?.day}${index}`;
+@@ -190,9 +192,9 @@ class ReservationList extends Component {
+             if (isFunction(this.props.renderEmptyData)) {
+                 return this.props.renderEmptyData?.();
+             }
+-            return <ActivityIndicator style={this.style.indicator} color={theme?.indicatorColor}/>;
++            return <ActivityIndicator style={this.style.indicator} color={theme?.indicatorColor} />;
+         }
+-        return (<FlatList ref={this.list} style={style} contentContainerStyle={this.style.content} data={this.state.reservations} renderItem={this.renderRow} keyExtractor={this.keyExtractor} showsVerticalScrollIndicator={false} scrollEventThrottle={200} onMoveShouldSetResponderCapture={this.onMoveShouldSetResponderCapture} onScroll={this.onScroll} refreshControl={this.props.refreshControl} refreshing={this.props.refreshing} onRefresh={this.props.onRefresh} onScrollBeginDrag={this.props.onScrollBeginDrag} onScrollEndDrag={this.props.onScrollEndDrag} onMomentumScrollBegin={this.props.onMomentumScrollBegin} onMomentumScrollEnd={this.props.onMomentumScrollEnd}/>);
++        return (<FlatList ref={this.list} style={style} contentContainerStyle={this.style.content} data={this.state.reservations} renderItem={this.renderRow} keyExtractor={this.keyExtractor} showsVerticalScrollIndicator={false} scrollEventThrottle={200} onMoveShouldSetResponderCapture={this.onMoveShouldSetResponderCapture} onScroll={this.onScroll} refreshControl={this.props.refreshControl} refreshing={this.props.refreshing} onRefresh={this.props.onRefresh} onScrollBeginDrag={this.props.onScrollBeginDrag} onScrollEndDrag={this.props.onScrollEndDrag} onMomentumScrollBegin={this.props.onMomentumScrollBegin} onMomentumScrollEnd={this.props.onMomentumScrollEnd} />);
+     }
+ }
+ export default ReservationList;
