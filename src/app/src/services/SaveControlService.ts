@@ -1,7 +1,7 @@
 // Serviço para Funções controladas de salvamento de tarefas, tanto em memória (Async Storage) quanto em arquivo local (JSON), e possivelmente no futuro, Firebase Firestore.
 
 import auth from '@react-native-firebase/auth';
-import { Alert } from 'react-native';
+import { Alert, DeviceEventEmitter } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas, GetFinalizadas } from '../services/TarefaService';
 import StorageAPI from '../services/LocalStorageService';
@@ -33,6 +33,7 @@ export async function TrySalvar(): Promise<Tarefa[]> {
         catch (err) {
             console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
         }
+        DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -56,6 +57,7 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
         catch (err) {
             console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
         }
+        DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {

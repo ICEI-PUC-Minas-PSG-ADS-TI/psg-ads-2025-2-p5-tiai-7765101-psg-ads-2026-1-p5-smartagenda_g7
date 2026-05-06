@@ -12,7 +12,7 @@ const AI_SYSTEM_PROMPT = `
 Você é um assistente proativo de produtividade para um aplicativo. Seu objetivo é ajudar a gerenciar a rotina do usuário e criar tarefas complexas quebrando em subtarefas.
 CONTEXTO: A data de hoje é ${new Date().toLocaleString()}. 
 REGRAS IMPORTANTES:
-1. Ao usar a tool de criar tarefas, lembre-se de passar corretamente os timestamps de data_vencimento em milissegundos.
+1. Ao usar a tool de criar tarefas, lembre-se de passar corretamente as datas no formato ISO 8601 string.
 2. APÓS usar qualquer ferramenta, você DEVE enviar uma mensagem amigável ao usuário confirmando em texto natural o que foi feito.`;
 
 const AI_SUCCESS_MESSAGE = "As tarefas foram integradas com sucesso no sistema!";
@@ -135,12 +135,18 @@ export function useAIChat() {
                             const args = call.args as Record<string, any>;
                             console.log("[useAIChat] Invocando edição com:", args);
                             const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
-                            const tarefa = tarefasLocais[args.id as string];
+                            const identificador = args.identificador as string;
+                            let tarefa = tarefasLocais[identificador];
+                            
+                            if (!tarefa) {
+                                const lista = Object.values(tarefasLocais);
+                                tarefa = lista.find(t => t.titulo.toLowerCase() === identificador.toLowerCase()) as any;
+                            }
 
                             if (tarefa) {
                                 if (args.titulo) tarefa.titulo = args.titulo as string;
                                 if (args.descricao_geral) tarefa.descricao_geral = args.descricao_geral as string;
-                                if (args.data_vencimento) tarefa.data_vencimento = Number(args.data_vencimento);
+                                if (args.data_vencimento) tarefa.data_vencimento = new Date(args.data_vencimento as string).getTime();
                                 if (args.estado) tarefa.estado = args.estado as any;
 
                                 await SaveControlService.TrySalvarTarefa(tarefa);
@@ -152,16 +158,26 @@ export function useAIChat() {
                             } else {
                                 functionResponseData = {
                                     status: 'error',
-                                    message: `Tarefa com id ${args.id} não encontrada.`
+                                    message: `Tarefa com identificador ${args.identificador} não encontrada.`
                                 };
                             }
                         }
                         else if (callName === 'excluir_tarefa') {
                             const args = call.args as Record<string, any>;
-                            console.log("[useAIChat] Invocando exclusão para id:", args.id);
+                            const identificador = args.identificador as string;
+                            console.log("[useAIChat] Invocando exclusão para identificador:", identificador);
+
+                            const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
+                            let idParaExcluir = identificador;
+                            
+                            if (!tarefasLocais[idParaExcluir]) {
+                                const lista = Object.values(tarefasLocais);
+                                const tarefaEnc = lista.find(t => t.titulo.toLowerCase() === identificador.toLowerCase());
+                                if (tarefaEnc) idParaExcluir = tarefaEnc.id;
+                            }
 
                             // Deleta localmente e limpa links de subtarefas
-                            await LocalStorageService.DeletarTarefa(args.id as string);
+                            await LocalStorageService.DeletarTarefa(idParaExcluir);
                             // Sincroniza essa exclusão para refletir no Firebase
                             await SaveControlService.TrySalvar();
 

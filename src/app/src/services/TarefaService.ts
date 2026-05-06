@@ -110,18 +110,18 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
             : undefined;
 
     const data_criado =
-        Number.isFinite(obj.data_criado) && obj.data_criado > 0
-            ? obj.data_criado
+        typeof obj.data_criado === "string"
+            ? new Date(obj.data_criado).getTime()
             : Date.now();
 
     const data_vencimento =
-        Number.isFinite(obj.data_vencimento)
-            ? obj.data_vencimento
+        typeof obj.data_vencimento === "string"
+            ? new Date(obj.data_vencimento).getTime()
             : Date.now();
 
     const data_finalizado =
-        Number.isFinite(obj.data_finalizado)
-            ? obj.data_finalizado
+        typeof obj.data_finalizado === "string"
+            ? new Date(obj.data_finalizado).getTime()
             : undefined;
 
     const subtarefas =

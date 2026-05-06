@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert, DeviceEventEmitter } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 // Componentes
@@ -44,6 +44,8 @@ export default function ListaTarefas() {
 
     useEffect(() => {
         carregarTarefas();
+        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', carregarTarefas);
+        return () => subscription.remove();
     }, [carregarTarefas]);
 
     const handleLogout = useCallback(() => {

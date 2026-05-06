@@ -32,16 +32,16 @@ export const gerenciamentoTarefasSchema: FunctionDeclaration = {
                             }
                         },
                         data_criado: {
-                            type: SchemaType.NUMBER,
-                            description: "Data de criação em timestamp numérico (milisegundos desde 1970). Se omitido, o sistema usará a data atual."
+                            type: SchemaType.STRING,
+                            description: "Data de criação no formato string ISO 8601 (ex: '2026-05-06T00:00:00Z'). Se omitido, o sistema usará a data atual."
                         },
                         data_vencimento: {
-                            type: SchemaType.NUMBER,
-                            description: "Data limite de vencimento da tarefa em timestamp numérico (milisegundos desde 1970). É um número inteiro fundamental para determinar o prazo."
+                            type: SchemaType.STRING,
+                            description: "Data limite de vencimento da tarefa no formato string ISO 8601 (ex: '2026-05-06T00:00:00Z')."
                         },
                         data_finalizado: {
-                            type: SchemaType.NUMBER,
-                            description: "Timestamp em milisegundos indicando quando a tarefa foi concluída. Só deve ser preenchido se a tarefa for dada como finalizada."
+                            type: SchemaType.STRING,
+                            description: "Data em string ISO 8601 indicando quando a tarefa foi concluída. Só deve ser preenchido se a tarefa for dada como finalizada."
                         },
                         subtarefas: {
                             type: SchemaType.ARRAY,
@@ -74,13 +74,13 @@ export const listarTarefasSchema: FunctionDeclaration = {
 
 export const editarTarefaSchema: FunctionDeclaration = {
     name: "editar_tarefa",
-    description: "Edita uma tarefa existente. Somente o 'id' é obrigatório. Os demais campos enviados substituirão os valores atuais da tarefa.",
+    description: "Edita uma tarefa existente. Somente o 'identificador' é obrigatório. Os demais campos enviados substituirão os valores atuais da tarefa.",
     parameters: {
         type: SchemaType.OBJECT,
         properties: {
-            id: {
+            identificador: {
                 type: SchemaType.STRING,
-                description: "ID obrigatório da tarefa que será editada."
+                description: "Nome exato (título) ou ID obrigatório da tarefa que será editada."
             },
             titulo: {
                 type: SchemaType.STRING,
@@ -91,15 +91,15 @@ export const editarTarefaSchema: FunctionDeclaration = {
                 description: "Nova descrição da tarefa."
             },
             data_vencimento: {
-                type: SchemaType.NUMBER,
-                description: "Nova data de vencimento em timestamp numérico (milissegundos desde 1970)."
+                type: SchemaType.STRING,
+                description: "Nova data de vencimento em formato string ISO 8601 (ex: '2026-05-06T00:00:00Z')."
             },
             estado: {
                 type: SchemaType.STRING,
                 description: "Novo status da tarefa. Opções válidas estritas: 'NaoIniciado', 'EmProgresso', ou 'Finalizado'."
             }
         },
-        required: ["id"]
+        required: ["identificador"]
     }
 };
 
@@ -109,12 +109,12 @@ export const excluirTarefaSchema: FunctionDeclaration = {
     parameters: {
         type: SchemaType.OBJECT,
         properties: {
-            id: {
+            identificador: {
                 type: SchemaType.STRING,
-                description: "ID obrigatório da tarefa a ser excluída."
+                description: "Nome exato (título) ou ID obrigatório da tarefa a ser excluída."
             }
         },
-        required: ["id"]
+        required: ["identificador"]
     }
 };
 
