@@ -18,6 +18,8 @@ const getFilePath = () => {
         : `${RNFS.DocumentDirectoryPath}/tarefas_guest.json`;
 };
 
+const configpath = `${RNFS.DocumentDirectoryPath}/userSettings.json`;
+
 
 // ------------- FUNÇÕES DE ASYNCSTORAGE (SALVAMENTO EM MEMÓRIA) ------------
 
@@ -28,6 +30,8 @@ export async function Iniciar() {
     try {
         const localData = await CarregarTarefasLocal();
         await AS.setItem(getStorageKey(), JSON.stringify(localData || {}));
+        const localConfig = await CarregarConfiguracao();
+        await AS.setItem("userSettings", JSON.stringify(localConfig || {}));
     } catch (err) {
         console.log("Erro ao carregar os dados iniciais: " + err);
     }
@@ -74,6 +78,34 @@ export async function CarregarTarefas(): Promise<Record<string, Tarefa> | null> 
         return null;
     } catch (err) {
         console.log("Erro ao carregar tarefas no Async Storage: " + err);
+        return null;
+    }
+}
+
+export async function SalvarConfiguracao(cfg: any) {
+    try {
+        await AS.setItem("userSettings", JSON.stringify(cfg));
+        await SalvarConfiguracaoLocal(cfg);
+    } catch (err) {
+        console.log("Erro ao salvar tarefas no Async Storage: " + err);
+    }
+}
+
+export async function CarregarConfiguracao(): Promise<any> 
+{
+    try {
+        let data = await AS.getItem("userSettings");
+        if (data) return JSON.parse(data);
+
+        let fallbackdata = await CarregarConfiguracaoLocal();
+        if (fallbackdata) {
+            await AS.setItem("userSettings", JSON.stringify(fallbackdata));
+            return fallbackdata;
+        }
+
+        return null;
+    } catch (err) {
+        console.log("Erro ao carregar configurações no Async Storage: " + err);
         return null;
     }
 }
@@ -149,6 +181,28 @@ export async function CarregarTarefasLocal(): Promise<Record<string, Tarefa> | n
     }
 }
 
+export async function SalvarConfiguracaoLocal(config: any) {
+    try {
+        let json = JSON.stringify(config);
+        await RNFS.writeFile(configpath, json);
+    } catch (err) {
+        console.log("Erro ao salvar configurações localmente no File Service: " + err);
+    }
+}
+
+export async function CarregarConfiguracaoLocal(): Promise<any> {
+    try {
+        const exists = await RNFS.exists(configpath);
+        if (!exists) return null;
+
+        let json = await RNFS.readFile(configpath);
+        return json ? JSON.parse(json) : null;
+    } catch (err) {
+        console.log("Erro ao Carregar configurações Localmente no File Service: " + err);
+        return null;
+    }
+}
+
 // Somente para poder chamar as funções como classe
 export default {
     CarregarTarefas,
@@ -157,5 +211,9 @@ export default {
     SalvarTarefas,
     SalvarTarefasLocal,
     DeletarTarefa,
-    Iniciar
+    Iniciar,
+    CarregarConfiguracao,
+    CarregarConfiguracaoLocal,
+    SalvarConfiguracao,
+    SalvarConfiguracaoLocal
 }

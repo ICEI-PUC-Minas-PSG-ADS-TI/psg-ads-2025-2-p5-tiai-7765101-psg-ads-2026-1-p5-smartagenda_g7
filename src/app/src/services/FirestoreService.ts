@@ -1,5 +1,5 @@
 import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { Tarefa } from '../types/tarefa';
 
 /**
@@ -15,6 +15,21 @@ const getTarefasRef = () => {
     .doc(user.uid)
     .collection('tarefas');
 };
+export function GetCurrentUser(): FirebaseAuthTypes.User | null {
+  try {
+return auth().currentUser;
+  }
+  catch {
+    console.log("No user authenticated");
+    return null;
+  }
+}
+
+export function IsAuth(): boolean {
+  let user = GetCurrentUser();
+  if (!user) return false;
+  return true;
+}
 
 export async function salvarTarefaFirestore(tarefa: Tarefa): Promise<void> {
   try {

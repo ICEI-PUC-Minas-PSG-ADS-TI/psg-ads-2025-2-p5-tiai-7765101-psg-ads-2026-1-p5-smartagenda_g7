@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas, GetFinalizadas } from '../services/TarefaService';
 import StorageAPI from '../services/LocalStorageService';
-import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, deletarTarefaFirestore } from '../services/FirestoreService';
+import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, deletarTarefaFirestore, IsAuth } from '../services/FirestoreService';
 
 
 /**
@@ -15,24 +15,29 @@ import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, dele
 export async function TrySalvar(): Promise<Tarefa[]> {
     try {
         console.log("[SAVECONTROL] Iniciando sincronização de tarefas...");
+        const isAuth = IsAuth();
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         await StorageAPI.SalvarTarefas(tarefasLocais);
         let local = await StorageAPI.CarregarTarefas();
-        let firebase = await buscarTarefasFirestore();
-        let onlyfirebase = firebase ? firebase.filter(f => !local || !local[f.id]) : [];
-        if (onlyfirebase.length > 0) {
-            console.log(`[SAVECONTROL] ${onlyfirebase.length} tarefas encontradas no Firebase que não existem localmente. Deletando essas tarefas do Firebase para evitar conflitos futuros...`);
+        if (isAuth) {
+            let firebase = await buscarTarefasFirestore();
+            let onlyfirebase = firebase ? firebase.filter(f => !local || !local[f.id]) : [];
+            if (onlyfirebase.length > 0) {
+                console.log(`[SAVECONTROL] ${onlyfirebase.length} tarefas encontradas no Firebase que não existem localmente. Deletando essas tarefas do Firebase para evitar conflitos futuros...`);
+            }
+            // Prioridade atual: Local > Firebase. Tarefas locais todas permanecem, e tarefas que só existem no Firebase são deletadas
+            await onlyfirebase.forEach(async t => {
+                await deletarTarefaFirestore(t.id).catch((e) => { console.log("[SAVECONTROL] Falha ao deletar tarefa do Firestore durante sincronização: " + e) });
+            })
+            try {
+                await sincronizarTarefas(tarefasLocais);
+            }
+            catch (err) {
+                console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
+            }
         }
-        // Prioridade atual: Local > Firebase. Tarefas locais todas permanecem, e tarefas que só existem no Firebase são deletadas
-        await onlyfirebase.forEach(async t => {
-            await deletarTarefaFirestore(t.id).catch((e) => { console.log("[SAVECONTROL] Falha ao deletar tarefa do Firestore durante sincronização: " + e) });
-        })
-        try {
-            await sincronizarTarefas(tarefasLocais);
-        }
-        catch (err) {
-            console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
-        }
+        else console.log("Usuário não autenticado, buscando somente tarefas locais");
+
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -50,12 +55,16 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         tarefasLocais[result.id] = result;
         await StorageAPI.SalvarTarefas(tarefasLocais);
-        try {
-            salvarTarefaFirestore(result).catch(() => { });
+        const isAuth = IsAuth();
+        if (isAuth) {
+            try {
+                salvarTarefaFirestore(result).catch(() => { });
+            }
+            catch (err) {
+                console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
+            }
         }
-        catch (err) {
-            console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
-        }
+
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -67,6 +76,12 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
 
 export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tarefa[]> {
     try {
+        const isAuth = IsAuth();
+        if (!isAuth)
+        {
+            //return await StorageAPI.CarregarTarefasArray() || []
+        }
+
         let res;
         let tarefasFirebase;
         let tarefasLocais;
@@ -138,7 +153,7 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
     }
 }
 
-function CompareAndCheck(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): number {
+export function CompareAndCheck(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): number {
     let comparasionstring = "";
     const countFirebase = tarefasFirebase.length;
     const countLocais = tarefasLocais.length;

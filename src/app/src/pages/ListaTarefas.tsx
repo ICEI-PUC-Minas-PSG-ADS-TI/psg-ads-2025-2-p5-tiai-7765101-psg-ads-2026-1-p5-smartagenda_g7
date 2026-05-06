@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Componentes
 import TarefaList from '../components/TarefaList';
@@ -19,17 +20,17 @@ export default function ListaTarefas() {
     const [carregando, setCarregando] = useState(true);
 
     const [isCreating, setIsCreating] = useState(false);
-    const unsavedChanges = useRef(false); 
+    const unsavedChanges = useRef(false);
 
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
             const user = auth().currentUser;
-            if (!user) return;
+            //if (!user) return;
 
             const tarefasCarregadas = await TryCarregarTarefasArray();
             if (!tarefasCarregadas) {
-                console.log("[ListaTarefas] ATENÇÃO: Nenhuma tarefa encontrada no Firestore ou localmente, ou ocorreu um erro.");
+                console.log("[ListaTarefas] ATENÇÃO: Nenhuma tarefa encontrada, ou ocorreu um erro.");
                 setTarefas([]);
             }
             else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
@@ -42,13 +43,12 @@ export default function ListaTarefas() {
         }
     }, []);
 
-    useEffect(() => {
-        carregarTarefas();
-    }, [carregarTarefas]);
+    useFocusEffect(
+        useCallback(() => {
+            carregarTarefas();
+        }, [carregarTarefas])
+    );
 
-    const handleLogout = useCallback(() => {
-        auth().signOut();
-    }, []);
 
     const handleCreateNew = useCallback(() => {
         setIsCreating(true);
@@ -86,10 +86,9 @@ export default function ListaTarefas() {
                 else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
             } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
         }
-        else
-        {
+        else {
             // call for refresh
-            try{
+            try {
                 const atualizadas = await TryCarregarTarefasArray();
                 if (atualizadas) {
                     setTarefas(OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true)));
@@ -111,7 +110,7 @@ export default function ListaTarefas() {
     }, [tarefas]);
 
     const handleToggleCategory = useCallback((cat: string) => {
-        setSelectedCategories(prev => 
+        setSelectedCategories(prev =>
             prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
         );
     }, []);
@@ -151,7 +150,7 @@ export default function ListaTarefas() {
                             </Text>
                         </View>
 
-                        <TarefaFilter 
+                        <TarefaFilter
                             selectedState={selectedState}
                             selectedCategories={selectedCategories}
                             categoriasDisponiveis={categoriasDisponiveis}
@@ -162,10 +161,10 @@ export default function ListaTarefas() {
                 }
             />
 
-            {/* Botão de Logout Rápido */}
+            {/* Botão de Logout Rápido 
             <TouchableOpacity style={styles.logoutFab} onPress={handleLogout} activeOpacity={0.8}>
                 <Text style={styles.logoutIcon}>⎋</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
 
             {/* Botão de Adicionar (+) */}
             <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>
@@ -192,6 +191,7 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         paddingBottom: 10,
+        width: '100%'
     },
     header: {
         paddingTop: 40,

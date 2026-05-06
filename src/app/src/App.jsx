@@ -13,7 +13,6 @@ import { onUserAuthenticated } from './services/UserService';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [user, setUser] = useState(null);
-  const [showCadastro, setShowCadastro] = useState(false);
 
   useEffect(() => {
     try {
@@ -33,7 +32,7 @@ function App() {
   }, []);
 
   // Se está logado, mostra a navegação principal
-  if (user) {
+
     return (
       <SafeAreaProvider>
         <NavigationContainer>
@@ -44,10 +43,9 @@ function App() {
         </NavigationContainer>
       </SafeAreaProvider>
     );
-  }
 
   // Se não está logado, mostra tela de login ou cadastro
-  return (
+  {/*return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.container}>
@@ -64,7 +62,7 @@ function App() {
         )}
       </View>
     </SafeAreaProvider>
-  );
+  );*/}
 }
 
 const styles = StyleSheet.create({
