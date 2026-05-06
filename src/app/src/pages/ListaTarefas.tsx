@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert, DeviceEventEmitter } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Componentes
 import TarefaList from '../components/TarefaList';
@@ -19,13 +20,11 @@ export default function ListaTarefas() {
     const [carregando, setCarregando] = useState(true);
 
     const [isCreating, setIsCreating] = useState(false);
-    const unsavedChanges = useRef(false); 
+    const unsavedChanges = useRef(false);
 
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
-            const user = auth().currentUser;
-            if (!user) return;
 
             const tarefasCarregadas = await TryCarregarTarefasArray();
             if (!tarefasCarregadas) {
@@ -48,9 +47,16 @@ export default function ListaTarefas() {
         return () => subscription.remove();
     }, [carregarTarefas]);
 
-    const handleLogout = useCallback(() => {
-        auth().signOut();
-    }, []);
+    const isLogged = !!auth().currentUser;
+
+    const handleAuthAction = useCallback(async () => {
+        if (isLogged) {
+            await auth().signOut();
+            DeviceEventEmitter.emit('tarefasUpdated'); // Recarregar após deslogar
+        } else {
+            DeviceEventEmitter.emit('showLogin');
+        }
+    }, [isLogged]);
 
     const handleCreateNew = useCallback(() => {
         setIsCreating(true);
@@ -88,10 +94,9 @@ export default function ListaTarefas() {
                 else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
             } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
         }
-        else
-        {
+        else {
             // call for refresh
-            try{
+            try {
                 const atualizadas = await TryCarregarTarefasArray();
                 if (atualizadas) {
                     setTarefas(OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true)));
@@ -113,7 +118,7 @@ export default function ListaTarefas() {
     }, [tarefas]);
 
     const handleToggleCategory = useCallback((cat: string) => {
-        setSelectedCategories(prev => 
+        setSelectedCategories(prev =>
             prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
         );
     }, []);
@@ -153,7 +158,7 @@ export default function ListaTarefas() {
                             </Text>
                         </View>
 
-                        <TarefaFilter 
+                        <TarefaFilter
                             selectedState={selectedState}
                             selectedCategories={selectedCategories}
                             categoriasDisponiveis={categoriasDisponiveis}
@@ -164,14 +169,33 @@ export default function ListaTarefas() {
                 }
             />
 
-            {/* Botão de Logout Rápido */}
-            <TouchableOpacity style={styles.logoutFab} onPress={handleLogout} activeOpacity={0.8}>
-                <Text style={styles.logoutIcon}>⎋</Text>
+            {/* Botão de Login/Logout */}
+            <TouchableOpacity style={styles.logoutFab} onPress={handleAuthAction} activeOpacity={0.8}>
+                {isLogged ? (
+                    <Icon
+                        name="logout"
+                        size={24}
+                        color="#ffffffff"
+                        style={styles.logoutIcon}
+                    />
+                ) : (
+                    <Icon
+                        name="person"
+                        size={24}
+                        color="#000"
+                        style={styles.logoutIcon}
+                    />
+                )}
             </TouchableOpacity>
 
-            {/* Botão de Adicionar (+) */}
+            {/* Botão de criar tarefa */}
             <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>
-                <Text style={styles.fabIcon}>+</Text>
+                <Icon
+                    name="add"
+                    size={28}
+                    color="#ffffffff"
+                    style={styles.fabIcon}
+                />
             </TouchableOpacity>
         </View>
     );

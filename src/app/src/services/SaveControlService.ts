@@ -18,21 +18,25 @@ export async function TrySalvar(): Promise<Tarefa[]> {
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         await StorageAPI.SalvarTarefas(tarefasLocais);
         let local = await StorageAPI.CarregarTarefas();
-        let firebase = await buscarTarefasFirestore();
-        let onlyfirebase = firebase ? firebase.filter(f => !local || !local[f.id]) : [];
-        if (onlyfirebase.length > 0) {
-            console.log(`[SAVECONTROL] ${onlyfirebase.length} tarefas encontradas no Firebase que não existem localmente. Deletando essas tarefas do Firebase para evitar conflitos futuros...`);
+
+        if (auth().currentUser) {
+            let firebase = await buscarTarefasFirestore();
+            let onlyfirebase = firebase ? firebase.filter(f => !local || !local[f.id]) : [];
+            if (onlyfirebase.length > 0) {
+                console.log(`[SAVECONTROL] ${onlyfirebase.length} tarefas encontradas no Firebase que não existem localmente. Deletando essas tarefas do Firebase para evitar conflitos futuros...`);
+            }
+            // Prioridade atual: Local > Firebase. Tarefas locais todas permanecem, e tarefas que só existem no Firebase são deletadas
+            await onlyfirebase.forEach(async t => {
+                await deletarTarefaFirestore(t.id).catch((e) => { console.log("[SAVECONTROL] Falha ao deletar tarefa do Firestore durante sincronização: " + e) });
+            })
+            try {
+                await sincronizarTarefas(tarefasLocais);
+            }
+            catch (err) {
+                console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
+            }
         }
-        // Prioridade atual: Local > Firebase. Tarefas locais todas permanecem, e tarefas que só existem no Firebase são deletadas
-        await onlyfirebase.forEach(async t => {
-            await deletarTarefaFirestore(t.id).catch((e) => { console.log("[SAVECONTROL] Falha ao deletar tarefa do Firestore durante sincronização: " + e) });
-        })
-        try {
-            await sincronizarTarefas(tarefasLocais);
-        }
-        catch (err) {
-            console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
-        }
+
         DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
@@ -52,7 +56,9 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
         tarefasLocais[result.id] = result;
         await StorageAPI.SalvarTarefas(tarefasLocais);
         try {
-            salvarTarefaFirestore(result).catch(() => { });
+            if (auth().currentUser) {
+                salvarTarefaFirestore(result).catch(() => { });
+            }
         }
         catch (err) {
             console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
@@ -74,7 +80,9 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
         let tarefasLocais;
 
         try {
-            tarefasFirebase = await buscarTarefasFirestore() || [];
+            if (auth().currentUser) {
+                tarefasFirebase = await buscarTarefasFirestore() || [];
+            }
         }
         catch (err) {
             console.log("[SAVECONTROL] Erro ao carregar tarefas do Firestore: " + err);

@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { onUserAuthenticated } from '../services/UserService';
+import StorageAPI from '../services/LocalStorageService';
+import SaveControlService from '../services/SaveControlService';
+import { useNetInfo } from '@react-native-community/netinfo';
 
-export default function CadastroScreen({ onSuccess, onBackToLogin }) {
+export default function CadastroScreen({ onSuccess, onBackToLogin, onCancel }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const netInfo = useNetInfo();
+  const isConnected = netInfo.isConnected ?? true;
 
   const handleCadastro = async () => {
     if (!email || !password || !nome) {
@@ -28,6 +34,9 @@ export default function CadastroScreen({ onSuccess, onBackToLogin }) {
 
     setLoading(true);
     try {
+      // 0. Carregar tarefas do guest ANTES de autenticar
+      const tarefasGuest = await StorageAPI.CarregarTarefas() || {};
+
       // 1. Criar usuário no Firebase Authentication
       const userCredential = await auth().createUserWithEmailAndPassword(email, password);
       
@@ -36,6 +45,12 @@ export default function CadastroScreen({ onSuccess, onBackToLogin }) {
       
       // 3. Criar documento no Firestore
       await onUserAuthenticated(userCredential.user);
+      
+      // 4. Migrar tarefas de guest para a nova conta
+      if (Object.keys(tarefasGuest).length > 0) {
+        await StorageAPI.SalvarTarefas(tarefasGuest);
+        await SaveControlService.TrySalvar();
+      }
       
       Alert.alert('Sucesso', 'Conta criada com sucesso! Bem-vindo ao SmartAgenda.');
       onSuccess();
@@ -110,6 +125,22 @@ export default function CadastroScreen({ onSuccess, onBackToLogin }) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {!isConnected && (
+        <View style={styles.overlayBlur}>
+          <View style={styles.offlineBox}>
+            <Text style={styles.offlineTitle}>Sem Conexão</Text>
+            <Text style={styles.offlineText}>
+              O cadastro requer internet para funcionar. Conecte-se à rede para criar sua conta.
+            </Text>
+            {onCancel && (
+              <TouchableOpacity style={styles.offlineButton} onPress={onCancel} activeOpacity={0.8}>
+                <Text style={styles.offlineButtonText}>Voltar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -177,5 +208,46 @@ const styles = StyleSheet.create({
   linkTextBold: {
     color: '#9F7CFA',
     fontWeight: 'bold',
+  },
+  overlayBlur: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  offlineBox: {
+    backgroundColor: '#1E1E1E',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginHorizontal: 30,
+    borderWidth: 2,
+    borderColor: '#9F7CFA',
+  },
+  offlineTitle: {
+    color: '#9F7CFA',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  offlineText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  offlineButton: {
+    backgroundColor: '#9F7CFA',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  offlineButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   }
 });

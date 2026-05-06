@@ -10,7 +10,7 @@ const INITIAL_TEXT = "Olá! Sou seu assistente de Agenda IA. Como posso te ajuda
 const AI_MODEL = 'gemini-2.5-flash-lite';
 const AI_SYSTEM_PROMPT = `
 Você é um assistente proativo de produtividade para um aplicativo. Seu objetivo é ajudar a gerenciar a rotina do usuário e criar tarefas complexas quebrando em subtarefas.
-CONTEXTO: A data de hoje é ${new Date().toLocaleString()}. 
+CONTEXTO: A data atual é ${new Date().toLocaleString()}. Horário BRT, fuso horário UTC-3 
 REGRAS IMPORTANTES:
 1. Ao usar a tool de criar tarefas, lembre-se de passar corretamente as datas no formato ISO 8601 string.
 2. APÓS usar qualquer ferramenta, você DEVE enviar uma mensagem amigável ao usuário confirmando em texto natural o que foi feito.`;
@@ -137,7 +137,7 @@ export function useAIChat() {
                             const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
                             const identificador = args.identificador as string;
                             let tarefa = tarefasLocais[identificador];
-                            
+
                             if (!tarefa) {
                                 const lista = Object.values(tarefasLocais);
                                 tarefa = lista.find(t => t.titulo.toLowerCase() === identificador.toLowerCase()) as any;
@@ -169,7 +169,7 @@ export function useAIChat() {
 
                             const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
                             let idParaExcluir = identificador;
-                            
+
                             if (!tarefasLocais[idParaExcluir]) {
                                 const lista = Object.values(tarefasLocais);
                                 const tarefaEnc = lista.find(t => t.titulo.toLowerCase() === identificador.toLowerCase());
