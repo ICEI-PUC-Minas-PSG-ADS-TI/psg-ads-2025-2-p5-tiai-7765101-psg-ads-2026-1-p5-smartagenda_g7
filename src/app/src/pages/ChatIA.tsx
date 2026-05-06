@@ -11,11 +11,14 @@ import {
     SafeAreaView,
     ActivityIndicator
 } from 'react-native';
+import { useNetInfo } from '@react-native-community/netinfo';
 import { useAIChat, Message } from '../hooks/useAIChat';
 
 export default function ChatIA() {
     const [inputText, setInputText] = useState('');
     const { messages, sendMessage, isLoading } = useAIChat();
+    const netInfo = useNetInfo();
+    const isConnected = netInfo.isConnected ?? true;
 
     const handleSend = () => {
         if (!inputText.trim()) return;
@@ -71,15 +74,27 @@ export default function ChatIA() {
                         multiline
                         editable={!isLoading}
                     />
-                    <TouchableOpacity 
-                        style={[styles.sendButton, isLoading && styles.sendButtonDisabled]} 
-                        onPress={handleSend} 
+                    <TouchableOpacity
+                        style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
+                        onPress={handleSend}
                         activeOpacity={0.8}
                         disabled={isLoading}
                     >
                         <Text style={styles.sendButtonText}>Enviar</Text>
                     </TouchableOpacity>
                 </View>
+
+                {!isConnected && (
+                    <View style={styles.overlayBlur}>
+                        <View style={styles.offlineBox}>
+                            <Text style={styles.offlineTitle}>Sem Conexão</Text>
+                            <Text style={styles.offlineText}>
+                                A Inteligência Artificial requer internet para funcionar.
+                                Conecte-se à rede para usar o Chat IA.
+                            </Text>
+                        </View>
+                    </View>
+                )}
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -180,5 +195,33 @@ const styles = StyleSheet.create({
         color: '#9F7CFA',
         marginLeft: 8,
         fontSize: 14,
+    },
+    overlayBlur: {
+        ...StyleSheet.absoluteFill,
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    offlineBox: {
+        backgroundColor: '#1E1E1E',
+        padding: 24,
+        borderRadius: 16,
+        alignItems: 'center',
+        marginHorizontal: 30,
+        borderWidth: 2,
+        borderColor: '#9F7CFA',
+    },
+    offlineTitle: {
+        color: '#9F7CFA',
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    offlineText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        textAlign: 'center',
+        lineHeight: 24,
     },
 });
