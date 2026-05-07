@@ -43,21 +43,22 @@ export default function ListaTarefas() {
     }, []);
 
     useEffect(() => {
-        carregarTarefas();
-        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', carregarTarefas);
-        return () => subscription.remove();
+        console.log("'tarefasUpdated' listener added");
+        //carregarTarefas();
+        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido");carregarTarefas()});
+        return () => { console.log("'tarefasUpdated' listener removed"); subscription.remove()} ;
     }, [carregarTarefas]);
 
-    const isLogged = !!auth().currentUser;
+    //const isLogged = !!auth().currentUser;
 
-    const handleAuthAction = useCallback(async () => {
+    /*const handleAuthAction = useCallback(async () => {
         if (isLogged) {
             await auth().signOut();
             DeviceEventEmitter.emit('tarefasUpdated'); // Recarregar após deslogar
         } else {
             DeviceEventEmitter.emit('showLogin');
         }
-    }, [isLogged]);
+    }, [isLogged]);*/
 
     const handleCreateNew = useCallback(() => {
         setIsCreating(true);

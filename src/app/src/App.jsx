@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Alert, DeviceEventEmitter } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -16,6 +16,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [showCadastro, setShowCadastro] = useState(false);
   const [showLogin, setShowLogin] = useState(false); // Initially false, so app opens normally
+  const lastUid = useRef(null);
 
   useEffect(() => {
     let subscriber;
@@ -23,9 +24,11 @@ function App() {
       subscriber = auth().onAuthStateChanged(async (authUser) => {
         setUser(authUser);
 
-        if (authUser) {
+        if (authUser && authUser.uid !== lastUid.current) {
+          lastUid.current = authUser.uid;
           await onUserAuthenticated(authUser);
           await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
+          console.log("Trying to sync after auth change...");
           await SaveControlService.TrySalvar(); // Sincroniza e emite evento para atualizar UI
         }
       });

@@ -58,7 +58,7 @@ const Configuracoes = () => {
             newTasks = await buscarTarefasFirestore();
           }
           catch { }
-          let res = CompareAndCheck(newTasks, oldtasks);
+          let res = await CompareAndCheck(newTasks, oldtasks);
 
           if (!res) res = [];
 
@@ -71,7 +71,8 @@ const Configuracoes = () => {
           let resmap = Object.fromEntries(
             res.map(t => [t.id, t])
           ) as Record<string, Tarefa>;
-          LocalStorageService.SalvarTarefas(resmap)
+          LocalStorageService.SalvarTarefas(resmap);
+          await TrySalvar();
         }
         else {
           console.log("Sucessful logoff");
@@ -92,7 +93,8 @@ const Configuracoes = () => {
           setUser(null);
 
         }
-        DeviceEventEmitter.emit('tarefasUpdated');
+        //console.log("Emitting from config");
+        //DeviceEventEmitter.emit('tarefasUpdated');
         break;
     }
   }
@@ -116,15 +118,15 @@ const Configuracoes = () => {
         "Deseja continuar com os dados atuais ou limpar todos os dados?",
         [
           {
-            text: "Manter dados",
-            style: "cancel",
-            onPress: () => resolve(true),
-          },
-          {
             text: "Limpar dados",
             style: "destructive",
             onPress: () => resolve(false),
           },
+          {
+            text: "Manter dados",
+            style: "cancel",
+            onPress: () => resolve(true),
+          }
         ]
       );
     });

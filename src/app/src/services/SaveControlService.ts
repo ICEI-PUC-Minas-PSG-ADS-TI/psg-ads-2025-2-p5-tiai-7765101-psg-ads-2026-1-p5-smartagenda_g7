@@ -38,6 +38,7 @@ export async function TrySalvar(): Promise<Tarefa[]> {
             }
         }
 
+        //console.log("Emitting tarefasUpdated from TrySalvar");
         DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
@@ -65,6 +66,7 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
             console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
         }
         DeviceEventEmitter.emit('tarefasUpdated');
+        //console.log("Emitting tarefasUpdated from TrySalvarTarefa");
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -101,7 +103,7 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
             console.log("[SAVECONTROL] Erro ao carregar tarefas locais: " + err);
         }
 
-        res = CompareAndCheck(tarefasFirebase, tarefasLocais);
+        res = await CompareAndCheck(tarefasFirebase, tarefasLocais);
 
         if (res) {
             // sincronizar dados
@@ -128,11 +130,11 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
  * @param oldTasks Velhas tarefas, geralmente locais
  * @returns Lista escolhida como correta para ser mantida
  */
-export function CompareAndCheck(newTasks?: Tarefa[], oldTasks?: Tarefa[]): Tarefa[] {
+export async function CompareAndCheck(newTasks?: Tarefa[], oldTasks?: Tarefa[]): Promise<Tarefa[]> {
     if (newTasks && newTasks.length > 0) {
         if (oldTasks && oldTasks.length > 0) {
             // Ambas as fontes têm tarefas, comparar e decidir qual usar
-            switch (CompareAndCheckInner(newTasks, oldTasks)) {
+            switch (await CompareAndCheckInner(newTasks, oldTasks)) {
                 case -1: //firebase wins
                     console.log("[SAVECONTROL] Diferenças detectadas, mas optando por usar os dados do Firebase.");
                     return newTasks;
@@ -160,7 +162,7 @@ export function CompareAndCheck(newTasks?: Tarefa[], oldTasks?: Tarefa[]): Taref
     return [];
 }
 
-function CompareAndCheckInner(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): number {
+async function CompareAndCheckInner(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): Promise<number> {
     let comparasionstring = "";
     const countFirebase = tarefasFirebase.length;
     const countLocais = tarefasLocais.length;
@@ -169,9 +171,8 @@ function CompareAndCheckInner(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]
 
     // deve ser bom expandir essa verificação mais tarde, mas por enquanto somente será verificado o  abaixo:
     if (countFirebase != countLocais || finalizadasFirebase != finalizadasLocais) {
-        comparasionstring += `Salvo em Nuvem: ${countFirebase} tarefas (${finalizadasFirebase} finalizadas) | Salvo Localmente: ${countLocais} tarefas (${finalizadasLocais} finalizadas). `;
-        let res;
-
+        comparasionstring += `Salvo em Nuvem: ${countFirebase} tarefas (${finalizadasFirebase} finalizadas) \nSalvo Localmente: ${countLocais} tarefas (${finalizadasLocais} finalizadas). `;
+        let res = await new Promise<number>((resolve) => {
         Alert.alert(
             'Conflito de sincronização',
             [
@@ -184,18 +185,18 @@ function CompareAndCheckInner(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]
             [
                 {
                     text: 'Usar dados da nuvem',
-                    onPress: () => (res = -1),
+                    onPress: () => resolve(-1),
                 },
                 {
                     text: 'Usar dados locais',
-                    onPress: () => (res = 1),
-                },
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-            ]
-        );
+                    onPress: () => resolve(1),
+                }
+            ],
+            {
+                    cancelable: false
+                }
+        )});
+        return res;
     }
 
     return 0;
