@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import { useNetInfo } from '@react-native-community/netinfo';
 
-export default function LoginScreen({ onSuccess, onCadastro }) {
+export default function LoginScreen({ onSuccess, onCadastro, onBack }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const netInfo = useNetInfo();
+  const isConnected = netInfo.isConnected ?? true;
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -27,7 +31,7 @@ export default function LoginScreen({ onSuccess, onCadastro }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
-      
+
       <Text style={styles.title}>SmartAgenda</Text>
       <Text style={styles.subtitle}>Faça login para continuar</Text>
 
@@ -64,7 +68,29 @@ export default function LoginScreen({ onSuccess, onCadastro }) {
             Não tem uma conta? <Text style={styles.linkTextBold}>Cadastre-se</Text>
           </Text>
         </TouchableOpacity>
+
+        {onBack && (
+          <TouchableOpacity onPress={onBack} style={styles.linkContainer} activeOpacity={0.7}>
+            <Text style={[styles.linkText, { marginTop: -10 }]}>Voltar sem fazer login</Text>
+          </TouchableOpacity>
+        )}
       </View>
+
+      {!isConnected && (
+        <View style={styles.overlayBlur}>
+          <View style={styles.offlineBox}>
+            <Text style={styles.offlineTitle}>Sem Conexão</Text>
+            <Text style={styles.offlineText}>
+              O login requer internet para funcionar. Conecte-se à rede para acessar sua conta.
+            </Text>
+            {onBack && (
+              <TouchableOpacity style={styles.offlineButton} onPress={onBack} activeOpacity={0.8}>
+                <Text style={styles.offlineButtonText}>Voltar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -132,5 +158,46 @@ const styles = StyleSheet.create({
   linkTextBold: {
     color: '#9F7CFA',
     fontWeight: 'bold',
+  },
+  overlayBlur: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  offlineBox: {
+    backgroundColor: '#1E1E1E',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginHorizontal: 30,
+    borderWidth: 2,
+    borderColor: '#9F7CFA',
+  },
+  offlineTitle: {
+    color: '#9F7CFA',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  offlineText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  offlineButton: {
+    backgroundColor: '#9F7CFA',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  offlineButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   }
 });

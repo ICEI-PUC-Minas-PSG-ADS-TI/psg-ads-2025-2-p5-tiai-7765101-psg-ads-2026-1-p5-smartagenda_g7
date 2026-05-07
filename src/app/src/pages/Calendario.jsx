@@ -116,8 +116,8 @@ const Calendario = () => {
     const map = {};
 
     // Pre preenche com varias datas para diminuir lag com o scroll
-    const startDate = new Date(2025, 0, 1); // 01/01/2025
-    const endDate = new Date(2027, 11, 31); // 31/12/2027
+    const startDate = new Date(new Date().getFullYear(), 0, 1); // primeiro dia do ano
+    const endDate = new Date(new Date().getFullYear(), 12, 31); // ultimo dia do ano
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View, Alert } from 'react-native';
+import { StatusBar, StyleSheet, useColorScheme, View, Alert, DeviceEventEmitter } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
@@ -9,60 +9,92 @@ import LoginScreen from './pages/Login';
 import CadastroScreen from './pages/Cadastro';
 import StorageAPI from './services/LocalStorageService';
 import { onUserAuthenticated } from './services/UserService';
+import SaveControlService from './services/SaveControlService';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [user, setUser] = useState(null);
+  const [showCadastro, setShowCadastro] = useState(false);
+  const [showLogin, setShowLogin] = useState(false); // Initially false, so app opens normally
 
   useEffect(() => {
+    let subscriber;
     try {
-      const subscriber = auth().onAuthStateChanged(async (authUser) => {
+      subscriber = auth().onAuthStateChanged(async (authUser) => {
         setUser(authUser);
 
         if (authUser) {
           await onUserAuthenticated(authUser);
           await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
+          await SaveControlService.TrySalvar(); // Sincroniza e emite evento para atualizar UI
         }
       });
-      return subscriber;
     } catch (err) {
       Alert.alert('Não foi possível se conectar ao Firebase', `Erro: ${err.message}`);
-      return;
     }
+
+    // Listener para abrir a tela de login a partir de outros componentes
+    const eventListener = DeviceEventEmitter.addListener('showLogin', () => {
+      setShowLogin(true);
+      setShowCadastro(false);
+    });
+
+    return () => {
+      if (subscriber) subscriber();
+      eventListener.remove();
+    };
   }, []);
 
-  // Se está logado, mostra a navegação principal
-
+  if (showCadastro) {
     return (
       <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-          <View style={styles.container}>
-            <Routes />
-          </View>
-        </NavigationContainer>
-      </SafeAreaProvider>
-    );
-
-  // Se não está logado, mostra tela de login ou cadastro
-  {/*return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <View style={styles.container}>
-        {showCadastro ? (
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <View style={styles.container}>
           <CadastroScreen
             onSuccess={() => setShowCadastro(false)}
-            onBackToLogin={() => setShowCadastro(false)}
+            onBackToLogin={() => {
+              setShowCadastro(false);
+              setShowLogin(true);
+            }}
+            onCancel={() => setShowCadastro(false)}
           />
-        ) : (
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (showLogin) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <View style={styles.container}>
           <LoginScreen
-            onSuccess={() => console.log('Logado com sucesso!')}
-            onCadastro={() => setShowCadastro(true)}
+            onSuccess={() => {
+              console.log('Logado com sucesso!');
+              setShowLogin(false);
+            }}
+            onCadastro={() => {
+              setShowLogin(false);
+              setShowCadastro(true);
+            }}
+            onBack={() => setShowLogin(false)}
           />
-        )}
-      </View>
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  // Sempre mostra a navegação principal, independente de logado ou não
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <View style={styles.container}>
+          <Routes />
+        </View>
+      </NavigationContainer>
     </SafeAreaProvider>
-  );*/}
+  );
 }
 
 const styles = StyleSheet.create({

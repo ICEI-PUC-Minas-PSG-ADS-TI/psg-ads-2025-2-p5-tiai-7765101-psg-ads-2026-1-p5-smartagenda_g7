@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert, DeviceEventEmitter } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Componentes
 import TarefaList from '../components/TarefaList';
@@ -25,8 +26,6 @@ export default function ListaTarefas() {
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
-            const user = auth().currentUser;
-            //if (!user) return;
 
             const tarefasCarregadas = await TryCarregarTarefasArray();
             if (!tarefasCarregadas) {
@@ -43,12 +42,22 @@ export default function ListaTarefas() {
         }
     }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            carregarTarefas();
-        }, [carregarTarefas])
-    );
+    useEffect(() => {
+        carregarTarefas();
+        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', carregarTarefas);
+        return () => subscription.remove();
+    }, [carregarTarefas]);
 
+    const isLogged = !!auth().currentUser;
+
+    const handleAuthAction = useCallback(async () => {
+        if (isLogged) {
+            await auth().signOut();
+            DeviceEventEmitter.emit('tarefasUpdated'); // Recarregar após deslogar
+        } else {
+            DeviceEventEmitter.emit('showLogin');
+        }
+    }, [isLogged]);
 
     const handleCreateNew = useCallback(() => {
         setIsCreating(true);
@@ -161,14 +170,33 @@ export default function ListaTarefas() {
                 }
             />
 
-            {/* Botão de Logout Rápido 
-            <TouchableOpacity style={styles.logoutFab} onPress={handleLogout} activeOpacity={0.8}>
-                <Text style={styles.logoutIcon}>⎋</Text>
-            </TouchableOpacity>*/}
+            {/* Botão de Login/Logout */}
+            <TouchableOpacity style={styles.logoutFab} onPress={handleAuthAction} activeOpacity={0.8}>
+                {isLogged ? (
+                    <Icon
+                        name="logout"
+                        size={24}
+                        color="#ffffffff"
+                        style={styles.logoutIcon}
+                    />
+                ) : (
+                    <Icon
+                        name="person"
+                        size={24}
+                        color="#000"
+                        style={styles.logoutIcon}
+                    />
+                )}
+            </TouchableOpacity>
 
-            {/* Botão de Adicionar (+) */}
+            {/* Botão de criar tarefa */}
             <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>
-                <Text style={styles.fabIcon}>+</Text>
+                <Icon
+                    name="add"
+                    size={28}
+                    color="#ffffffff"
+                    style={styles.fabIcon}
+                />
             </TouchableOpacity>
         </View>
     );
