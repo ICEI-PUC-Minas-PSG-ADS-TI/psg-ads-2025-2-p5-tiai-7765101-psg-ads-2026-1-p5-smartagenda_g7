@@ -13,12 +13,11 @@ import { TrySalvarTarefa } from '../services/SaveControlService.ts';
 
 type Props = {
     tarefaPai: Tarefa;
-    depthDisplay: string;
     ModalType?: 'details' | 'edit';
     onUpdateSubtask?: (subtarefas?: Tarefa) => void;
 }
 
-export default function SubtaskList({ tarefaPai, depthDisplay, ModalType, onUpdateSubtask }: Props) {
+export default function SubtaskList({ tarefaPai, ModalType, onUpdateSubtask }: Props) {
     const [subTarefas, setSubTarefas] = useState<Tarefa[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [modalMode, setModalMode] = useState<'details' | 'edit'>(ModalType || 'details');
@@ -82,10 +81,14 @@ export default function SubtaskList({ tarefaPai, depthDisplay, ModalType, onUpda
             try {
                 const atualizadas = await TrySalvarTarefa(result);
                 if (atualizadas.length > 0) {
+                    
                     const filtradas = atualizadas.filter(t =>
                         tarefaPai.subtarefas?.includes(t.id)
                     );
-                    setSubTarefas(OrdenarTarefas(filtradas));
+                    console.log("[suntasklist] a serem atualizadas: ", filtradas.length);
+                    let ordered = OrdenarTarefas(filtradas);
+                    console.log("[suntasklist] ordenadas: ", ordered.length);
+                    setSubTarefas(ordered);
                 }
                 else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
             } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
@@ -125,7 +128,7 @@ export default function SubtaskList({ tarefaPai, depthDisplay, ModalType, onUpda
                         <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
                     )}
                     {modalMode === 'edit' && (
-                        <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} depthDisplay={depthDisplay} />
+                        <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} parent={tarefaPai} />
                     )}
                 </Modal>
 

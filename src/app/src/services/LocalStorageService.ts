@@ -157,6 +157,11 @@ export async function ClearCacheData() {
     }
 }
 
+export async function TarefaExists(id: string): Promise<boolean> {
+    let t = await CarregarTarefas();
+    return t ? !!t[id] : false;
+}
+
 // ------------- FUNÇÕES DE FILE SERVICE (SALVAMENTO LOCAL) ------------
 
 /**
@@ -230,7 +235,7 @@ export async function ClearLocalData() {
         const exists = await RNFS.exists(getFilePath());
         const existsGuest = await RNFS.exists(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`);
         if (exists) {
-            await RNFS.writeFile(configpath, '');
+            await RNFS.writeFile(getFilePath(), '');
         }
         if (existsGuest) {
             await RNFS.writeFile(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`, '');
@@ -256,5 +261,6 @@ export default {
     SalvarConfiguracao,
     SalvarConfiguracaoLocal,
     ClearLocalData,
-    ClearCacheData
+    ClearCacheData,
+    TarefaExists
 }

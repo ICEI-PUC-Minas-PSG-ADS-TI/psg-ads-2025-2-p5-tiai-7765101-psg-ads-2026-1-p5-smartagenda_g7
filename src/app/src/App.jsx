@@ -29,7 +29,7 @@ function App() {
           await onUserAuthenticated(authUser);
           await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
           console.log("Trying to sync after auth change...");
-          await SaveControlService.TrySalvar(); // Sincroniza e emite evento para atualizar UI
+          await SaveControlService.TrySalvar(true); // Sincroniza e emite evento para atualizar UI
         }
       });
     } catch (err) {

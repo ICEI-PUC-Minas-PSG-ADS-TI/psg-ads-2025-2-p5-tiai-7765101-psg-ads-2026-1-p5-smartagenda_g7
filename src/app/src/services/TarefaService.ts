@@ -4,13 +4,13 @@ import type { Tarefa } from '../types/tarefa';
 import StorageAPI from './LocalStorageService';
 import { v4 as uuidv4 } from 'uuid'; // para geração de ID
 
-export function CreateTarefa(id: string, titulo: string, data_criado: number, data_vencimento: number, isSubTarefa?: boolean, categorias?: string[], descricao_geral?: string, subtarefas?: string[], data_finalizado?: number): Tarefa {
+export function CreateTarefa(id: string, titulo: string, data_criado: number, data_vencimento: number, parentId?: string, categorias?: string[], descricao_geral?: string, subtarefas?: string[], data_finalizado?: number): Tarefa {
     return {
         id,
         titulo,
         data_criado,
         data_vencimento,
-        isSubtarefa: isSubTarefa || false,
+        parentId,
         subtarefas,
         categorias,
         descricao_geral,
@@ -129,12 +129,12 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
             ? obj.subtarefas.filter(s => typeof s === "string")
             : undefined;
 
-    const isSubtarefa =
-        typeof obj.isSubtarefa === "boolean"
-            ? obj.isSubtarefa
-            : false;
+    const parentId =
+        typeof obj.parentId === "string"
+            ? obj.parentId
+            : undefined;
 
-    let res = await CreateTarefa(id, titulo, data_criado, data_vencimento, isSubtarefa, categorias, descricao_geral, subtarefas, data_finalizado)
+    let res = await CreateTarefa(id, titulo, data_criado, data_vencimento, parentId, categorias, descricao_geral, subtarefas, data_finalizado)
 
     return res;
 }
@@ -174,7 +174,11 @@ function LimparTarefas(tarefas: Tarefa[]): Tarefa[] {
         const tarefa = tarefasRecord[id];
         if (!tarefa) continue;
 
-        tarefa.isSubtarefa = count > 0;
+        if (count > 0 && !tarefa.parentId) {
+            let p = TryFindParent(tarefa, tarefasRecord);
+            if (p) tarefa.parentId = p.id;
+            else throw new Error(`Tarefa ${tarefa.titulo} (${tarefa.id}) é referenciada como subtarefa, mas não tem parentId definido.`); // e eu n sei como concertar por agora
+        }
     }
 
     return tarefas;
@@ -220,6 +224,16 @@ export async function GetUniqueID(): Promise<string> {
     return id;
 }
 
+// this is a last resort
+function TryFindParent(tarefa: Tarefa, tarefasRecord: Record<string, Tarefa>): Tarefa | null {
+    for (const t of Object.values(tarefasRecord)) {
+        if (t.subtarefas && t.subtarefas.includes(tarefa.id)) {
+            return t;
+        }
+    }
+    return null;
+}
+
 /**
  * Obtém as subtarefas diretas de uma tarefa específica.
  * @param id ID da tarefa cujas subtarefas se deseja obter.
@@ -248,6 +262,7 @@ export async function GetSubtarefas(tarefa: Tarefa): Promise<Tarefa[] | null> {
 
     let subtarefas: Tarefa[] = [];
 
+    //console.log("----- from ", tarefa.subtarefas.length, " sub IDS");
     for (let subId of tarefa.subtarefas) {
         let sub = tarefas[subId];
         if (sub) subtarefas.push(sub);
@@ -301,11 +316,21 @@ export async function GetSubtarefasFinalizadas(tarefa: Tarefa): Promise<Tarefa[]
 export async function FilterSubTarefasArray(tarefas: Tarefa[], onlyMaintasks: boolean): Promise<Tarefa[]> {
     let res: Tarefa[] = [];
 
-    tarefas.forEach((value) => {
-        if (value.isSubtarefa === !onlyMaintasks) {
-            res.push(value);
+    for (const t of tarefas)
+    {
+        if (!t.parentId)
+        {
+            if (onlyMaintasks) {
+                res.push(t);
+                //console.log("parent");
+            }
         }
-    });
+        else if (!onlyMaintasks)
+        {
+            res.push(t);
+            //console.log("sub");
+        }
+    }
 
     return res;
 }
@@ -319,11 +344,21 @@ export async function FilterSubTarefasArray(tarefas: Tarefa[], onlyMaintasks: bo
 export async function FilterSubTarefas(tarefas: Tarefa[], onlyMaintasks: boolean): Promise<Record<string, Tarefa>> {
     let res = {} as Record<string, Tarefa>;
 
-    tarefas.forEach((value) => {
-        if (value.isSubtarefa === !onlyMaintasks) {
-            res[value.id] = value;
+    for (const t of tarefas)
+    {
+        if (!t.parentId)
+        {
+            if (onlyMaintasks) {
+                res[t.id] = t;
+                //console.log("parent");
+            }
         }
-    });
+        else if (!onlyMaintasks)
+        {
+            res[t.id] = t;
+            //console.log("sub");
+        }
+    }
 
     return res;
 }

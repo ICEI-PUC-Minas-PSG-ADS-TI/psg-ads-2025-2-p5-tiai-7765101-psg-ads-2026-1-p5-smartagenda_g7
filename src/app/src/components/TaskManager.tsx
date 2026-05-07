@@ -23,11 +23,11 @@ import TaskTreeView from './TaskTreeView.tsx';
 type Props = {
     tarefa?: Tarefa | null;
     onClose?: (result?: Tarefa) => void;
-    depthDisplay?: string;
+    parent?: Tarefa;
     onUnsavedChanges?: (hasUnsavedChanges: boolean) => void;
 };
 
-export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedChanges }: Props) {
+export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges }: Props) {
     const CreateTarefaControlled = useCallback(async () => {
         let id = await GetUniqueID();
 
@@ -50,6 +50,7 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
     const [task, setTask] = useState<Tarefa | null>(
         tarefa ?? null
     );
+    const [depthDisplay, setDepthDisplay] = useState<string | undefined>(undefined);
 
     // relacionados aos textos que precisam ser transformados nos campos
     const [textDates, setTextDates] = useState<Record<string, string>>({});
@@ -67,7 +68,29 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         if (tarefa) {
             setTask(tarefa);
         }
-    }, [tarefa]);
+
+        if (parent) {
+            //console.log("parented here");
+            const getParentChain = async (t: Tarefa, chain: string): Promise<string> => {
+                let tarefas = await StorageAPI.CarregarTarefas();
+                if (tarefas)
+                    return await getParentChainInner(t, chain, tarefas)
+                else return chain;
+            }
+            const getParentChainInner = async (t: Tarefa, chain: string, tarefas: Record<string, Tarefa>): Promise<string> => {
+
+                if (!tarefas) return chain;
+                let parent = tarefas[t.parentId!];
+                if (!parent) return chain;
+                return getParentChain(parent, parent.titulo + " > " + chain);
+            }
+            if (tarefa)
+                getParentChain(tarefa, "").then((fullChain) => { setDepthDisplay(fullChain); });
+            else
+                getParentChain(parent, `${parent.titulo} >`).then((fullChain) => { setDepthDisplay(fullChain); });
+        }
+        //else console.log("no parents?");
+    }, [tarefa, parent]);
 
     useEffect(() => {
         if (task) return;
@@ -106,48 +129,30 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             }
         }
 
-    }, [task, task?.subtarefas]);
+    }, [task, Subtasks]);
 
     const newSubtask = useCallback(() => {
+        //if (!task) return;
         const createSubtask = async () => {
             let subtask = await CreateTarefaControlled();
-            subtask.isSubtarefa = true;
+            subtask.parentId = task!.id;
             setSelectedSubtask(subtask);
             console.log("created subtask: " + subtask.id);
         }
         createSubtask();
     }, []);
 
-    const tryCloseSubtask = useCallback(() => {
-        console.log("exiting subtask, unsaved changes:" + unsavedSubtaskChanges.current);
-        if (unsavedSubtaskChanges.current) {
-            Alert.alert(
-                'Tem certeza que deseja cancelar a edição da tarefa?',
-                `Todas as alterações não salvas serão perdidas.`,
-                [
-                    { text: 'Não', style: 'cancel' },
-                    {
-                        text: 'Sim, sair sem salvar', onPress: () => {
-                            unsavedSubtaskChanges.current = false;
-                            setSelectedSubtask(null);
-                        }
-                    }
-                ]
-            );
-            return;
-        }
-        unsavedSubtaskChanges.current = false;
-        setSelectedSubtask(null);
-    }, [unsavedSubtaskChanges.current]);
-
     const saveSubtask = useCallback(async (subtask?: Tarefa) => {
         console.log("subtask save cancelation: " + !selectedSubtask + ", " + !subtask);
         let newtask: Tarefa | undefined;
+
+
         if (!subtask) {//if (!selectedSubtask || !subtask) {
             let updated = await GetSubtarefas(task!);
-            await setSubtasks(updated || []);
+            //console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
+            setSubtasks(updated || []);
 
-            await setTask(prevTask => {
+            setTask(prevTask => {
                 if (!prevTask) return prevTask;
                 let updatedStatus: Tarefa['estado'] = 'EmProgresso';
                 if (updated) {
@@ -174,9 +179,10 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             });
             console.log("new subtask count: ", newtask?.subtarefas?.length);
             if (newtask) await TrySalvarTarefa(newtask);
-            tryCloseSubtask();
+            tryClose();
             return;
         }
+        /*
 
         unsavedSubtaskChanges.current = false;
 
@@ -195,7 +201,9 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             updatedSubtasks = [...current, subtask];
         }
 
-        await setSubtasks(updatedSubtasks);
+        console.log("----- UPDATED SUBTASKS? ", updatedSubtasks.length);
+
+        setSubtasks(updatedSubtasks);
 
         const prevTask = task;
 
@@ -220,9 +228,9 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             setTask(newtask);
         }
         console.log("2new subtask count: ", newtask?.subtarefas?.length);
-        if (newtask) await TrySalvarTarefa(newtask);
-        tryCloseSubtask();
-    }, [selectedSubtask, setTask, tryCloseSubtask]);
+        if (newtask) await TrySalvarTarefa(newtask);*/
+        tryClose();
+    }, [selectedSubtask, setTask]);
 
     const updateField = useCallback((field: keyof Tarefa, value: any) => {
         setTask(prev => prev ? { ...prev, [field]: value } : null);
@@ -300,7 +308,7 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
         }
     }, []);
 
-    const importTasksJSON = useCallback(async (tarefas: Tarefa[]) => {
+    /*const importTasksJSON = useCallback(async (tarefas: Tarefa[]) => {
         if (tarefas) {
             unsavedChanges.current = false;
             for (const t of tarefas) {
@@ -314,9 +322,10 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             }
         }
         else { }
-    }, []);
+    }, []);*/
 
-    const handleExit = async () => {
+    const tryClose = async (IsSaving?: boolean) => { // NOT for cancelling
+        console.log("exiting task, unsaved changes:" + unsavedChanges.current);
         let errorField = '';
         if (!task?.titulo) errorField = 'Título';
         else if (!task?.data_vencimento) errorField = 'Data de Vencimento';
@@ -329,22 +338,61 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             );
             return;
         }
+        if (unsavedChanges.current && !IsSaving) {
 
+            let res = await new Promise<boolean>((resolve) => {
+                Alert.alert(
+                    'Tem certeza que deseja cancelar a edição da tarefa?',
+                    'Todas as alterações não salvas serão perdidas.',
+                    [
+                        {
+                            text: 'Cancelar',
+                            onPress: () => resolve(true),
+                        },
+                        {
+                            text: 'Sair sem Salvar',
+                            onPress: () => resolve(false),
+                        }
+                    ]
+                )
+            });
+            if (res) {handleCancelExit(); return;};
+            unsavedChanges.current = false;
+        }
+        handleSaveExit();
+    }
+
+    const handleSaveExit = async () => {
         try {
             if (task) {
                 let updated = task;
-                if (depthDisplay) {
-                    updated.isSubtarefa = true;
+                if (parent) {
+                    updated.parentId = parent.id;
+                    if (parent.subtarefas) {
+                        let included = false;
+                        for (const sid of parent.subtarefas) {
+                            if (sid === task.id) {
+                                included = true; break;
+                            }
+                        }
+                        if (!included) {
+                            parent.subtarefas.push(task.id);
+                        }
+                    }
+                    else parent.subtarefas = [task.id];
                 }
 
                 unsavedChanges.current = false;
+                console.log(`SAVING BOTH RIGHT NOW ${updated.parentId} -- `, parent?.subtarefas?.length); // theres something fucking this up
                 await TrySalvarTarefa(updated);
+                if (parent) await TrySalvarTarefa(parent);
 
                 if (onClose) {
                     onClose(updated);
                 }
             }
             else {
+                console.log("no task?????????");
                 if (onClose) {
                     onClose();
                 }
@@ -359,6 +407,10 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
             );
         }
     };
+
+    const handleCancelExit = () => {
+        onClose?.();
+    }
 
     let LowerContent;
 
@@ -394,7 +446,6 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
                         </Text>
                         <View >
                             <SubTaskList tarefaPai={task!} ModalType="edit"
-                                depthDisplay={depthDisplay ? depthDisplay + tarefa?.titulo + " > " : tarefa?.titulo + " > "}
                                 onUpdateSubtask={saveSubtask} />
                         </View>
                         {addsubtask}
@@ -441,99 +492,100 @@ export default function TaskManager({ tarefa, onClose, depthDisplay, onUnsavedCh
 
     if (!task) return (<Text>Carregando...</Text>)
     else return (
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View style={[styles.container, styles.coloredBackground]}>
-                <Text style={styles.secondaryText}>{depthDisplay}</Text>
-                {!isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
-                <Text style={styles.title}> {isCreating ?
-                    (depthDisplay ? 'Criar Sub-Tarefa' : 'Criar Tarefa') :
-                    (depthDisplay ? 'Editar Sub-Tarefa' : 'Editar Tarefa')}
-                </Text>
+        <Modal transparent={true} animationType="slide" onRequestClose={() =>tryClose()}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={[styles.container, styles.coloredBackground]}>
+                    <Text style={styles.secondaryText}>{depthDisplay}</Text>
+                    {!isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
+                    <Text style={styles.title}> {isCreating ?
+                        (depthDisplay ? 'Criar Sub-Tarefa' : 'Criar Tarefa') :
+                        (depthDisplay ? 'Editar Sub-Tarefa' : 'Editar Tarefa')}
+                    </Text>
 
-                {isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>}
+                    {/*isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>*/}
 
-                {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
+                    {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
+                        {selectedSubtask && (
+                            <TaskManager tarefa={null} onClose={saveSubtask} parent={task}/>
+                        )}
+                        
+                    <View style={styles.formContainer}>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Título:</Text>
+                            <TextInput
+                                placeholder="Ex: Reunião de Alinhamento"
+                                placeholderTextColor="#999"
+                                value={task?.titulo}
+                                inputMode="text"
+                                onChangeText={text => updateField('titulo', text)}
+                                style={styles.input}
+                            />
+                        </View>
 
-                <Modal visible={selectedSubtask !== null} transparent={true} animationType="slide" onRequestClose={tryCloseSubtask}>
-                    <TaskManager tarefa={null} onClose={saveSubtask} depthDisplay={depthDisplay ? depthDisplay + tarefa?.titulo + " > " : tarefa?.titulo + " > "} onUnsavedChanges={(e) => { unsavedSubtaskChanges.current = e; }} />
-                </Modal>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Descrição Geral:</Text>
+                            <TextInput
+                                placeholder="Detalhes adicionais da tarefa..."
+                                placeholderTextColor="#999"
+                                value={task?.descricao_geral}
+                                inputMode="text"
+                                onChangeText={text => updateField('descricao_geral', text)}
+                                style={[styles.input, { height: Math.max(40, descriptionHeight) }]}
+                                multiline
+                                onContentSizeChange={(e) => setDescriptionHeight(e.nativeEvent.contentSize.height)}
+                            />
+                        </View>
 
-                <View style={styles.formContainer}>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Título:</Text>
-                        <TextInput
-                            placeholder="Ex: Reunião de Alinhamento"
-                            placeholderTextColor="#999"
-                            value={task?.titulo}
-                            inputMode="text"
-                            onChangeText={text => updateField('titulo', text)}
-                            style={styles.input}
-                        />
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Data de Vencimento:</Text>
+                            <TextInput
+                                placeholder="DD/MM/AAAA HH:MM:SS"
+                                placeholderTextColor="#999"
+                                value={textDates.data_vencimento}
+                                inputMode="text"
+                                onChangeText={text => tryUpdateDate('data_vencimento', text)}
+                                style={styles.input}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Categorias (separadas por vírgula):</Text>
+                            <TextInput
+                                placeholder="Ex: Trabalho, Faculdade"
+                                placeholderTextColor="#999"
+                                value={categoriesString}
+                                inputMode="text"
+                                onChangeText={text => {
+                                    setCategoriesString(text);
+                                    tryUpdateCategories(text);
+                                }}
+                                style={styles.input}
+                            />
+                        </View>
+
+                        {LowerContent}
+
+                        <TouchableOpacity
+                            style={[styles.button, styles.highlightColor2]}
+                            onPress={() => tryClose(true)}
+                        >
+                            <Text style={styles.label}>{isCreating ? 'Salvar Nova Tarefa' : 'Salvar Alterações'}</Text>
+                        </TouchableOpacity>
                     </View>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Descrição Geral:</Text>
-                        <TextInput
-                            placeholder="Detalhes adicionais da tarefa..."
-                            placeholderTextColor="#999"
-                            value={task?.descricao_geral}
-                            inputMode="text"
-                            onChangeText={text => updateField('descricao_geral', text)}
-                            style={[styles.input, { height: Math.max(40, descriptionHeight) }]}
-                            multiline
-                            onContentSizeChange={(e) => setDescriptionHeight(e.nativeEvent.contentSize.height)}
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Data de Vencimento:</Text>
-                        <TextInput
-                            placeholder="DD/MM/AAAA HH:MM:SS"
-                            placeholderTextColor="#999"
-                            value={textDates.data_vencimento}
-                            inputMode="text"
-                            onChangeText={text => tryUpdateDate('data_vencimento', text)}
-                            style={styles.input}
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Categorias (separadas por vírgula):</Text>
-                        <TextInput
-                            placeholder="Ex: Trabalho, Faculdade"
-                            placeholderTextColor="#999"
-                            value={categoriesString}
-                            inputMode="text"
-                            onChangeText={text => {
-                                setCategoriesString(text);
-                                tryUpdateCategories(text);
-                            }}
-                            style={styles.input}
-                        />
-                    </View>
-
-                    {LowerContent}
-
-                    <TouchableOpacity
-                        style={[styles.button, styles.highlightColor2]}
-                        onPress={handleExit}
-                    >
-                        <Text style={styles.label}>{isCreating ? 'Salvar Nova Tarefa' : 'Salvar Alterações'}</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/*
+                    {/*
                 <TouchableOpacity style={[styles.button, styles.highlightColor2]} onPress={() => setOpenTreeView(true)}><Text style={styles.label}>Visualização de Árvore</Text></TouchableOpacity>
                 */}
-            </View>
+                </View>
 
-            {!isCreating && (
-                <Modal visible={openTreeView} transparent={true} animationType="slide" onRequestClose={() => setOpenTreeView(false)}>
-                    <TaskTreeView tarefa={task} />
-                </Modal>
-            )}
+                {!isCreating && (
+                    <Modal visible={openTreeView} transparent={true} animationType="slide" onRequestClose={() => setOpenTreeView(false)}>
+                        <TaskTreeView tarefa={task} />
+                    </Modal>
+                )}
 
-        </ScrollView >
+            </ScrollView >
+        </Modal>
     );
 }
 

@@ -12,7 +12,7 @@ import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, dele
  * Tenta sincronizar o banco AsyncStorage com os demais bancos.
  * @returns Lista atualizada das tarefas. Em caso de erro severo, retorna a lista vazia.
  */
-export async function TrySalvar(): Promise<Tarefa[]> {
+export async function TrySalvar(ForceRefresh?: boolean): Promise<Tarefa[]> {
     try {
         console.log("[SAVECONTROL] Iniciando sincronização de tarefas...");
         //const isAuth = IsAuth();
@@ -39,7 +39,8 @@ export async function TrySalvar(): Promise<Tarefa[]> {
         }
 
         //console.log("Emitting tarefasUpdated from TrySalvar");
-        DeviceEventEmitter.emit('tarefasUpdated');
+        if (ForceRefresh)
+            DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -52,7 +53,7 @@ export async function TrySalvar(): Promise<Tarefa[]> {
  * @param result tarefa a ser salva.
  * @returns Lista atualizada das tarefas. Em caso de erro severo, retorna a lista vazia.
  */
-export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
+export async function TrySalvarTarefa(result: Tarefa, ForceRefresh?: boolean): Promise<Tarefa[]> {
     try {
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         tarefasLocais[result.id] = result;
@@ -65,7 +66,8 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
         catch (err) {
             console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
         }
-        DeviceEventEmitter.emit('tarefasUpdated');
+        if (ForceRefresh) 
+            DeviceEventEmitter.emit('tarefasUpdated');
         //console.log("Emitting tarefasUpdated from TrySalvarTarefa");
         return await StorageAPI.CarregarTarefasArray() || [];
     }

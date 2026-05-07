@@ -50,9 +50,9 @@ export const gerenciamentoTarefasSchema: FunctionDeclaration = {
                                 type: SchemaType.STRING
                             }
                         },
-                        isSubtarefa: {
-                            type: SchemaType.BOOLEAN,
-                            description: "Define se esta tarefa é uma subtarefa de outra (true) ou se é uma tarefa principal (false)."
+                        parentId: {
+                            type: SchemaType.STRING,
+                            description: "O ID do pai da tarefa, caso esta seja uma subtarefa. Para tarefas principais, este campo deve ser omitido ou nulo."
                         }
                     },
                     required: ["id", "titulo", "data_vencimento"]

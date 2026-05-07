@@ -4,6 +4,7 @@ import Svg, { Line, Rect, Text, G } from 'react-native-svg';
 
 import { Tarefa } from '../types/tarefa';
 import { GetAllSubtarefas } from '../services/TarefaService';
+import { CarregarTarefas } from '../services/LocalStorageService';
 
 // Tipos que representam os nós e arestas
 type PositionedNode = {
@@ -41,10 +42,10 @@ function buildGraph(rootId: string, taskMap: Map<string, Tarefa>, viewportWidth:
   // função que retorna a posição central de um nó, recyrsivamente
   function walk(taskId: string, depth = 0): number {
     const t = taskMap.get(taskId);
-    if(!t) {console.log("didn't find task with id ", taskId, " when building tree"); return 0;}
+    if (!t) { console.log("didn't find task with id ", taskId, " when building tree"); return 0; }
 
     const y = depth * (NODE_H + V_GAP);
-    console.log("depth: ", depth, "y: ", y);
+    //console.log("depth: ", depth, "y: ", y);
     const children = t.subtarefas ?? [];
 
     // folha
@@ -97,31 +98,47 @@ export default function TaskTreeView({ tarefa }: Props) {
   const { width, height } = Dimensions.get('window');
 
   const [task] = useState(tarefa);
+  const [root, setRoot] = useState<Tarefa>(tarefa);
   const [subtasks, setSubtasks] = useState({});
   const [taskmap, setTaskmap] = useState<Map<string, Tarefa>>();
 
   // Carregamento Inicial
   useEffect(() => {
     const initialize = async () => {
-      const res = await GetAllSubtarefas(task);
-      let array: Tarefa[] = [];
-      array.push(task);
-      if (res) {
-        setSubtasks(res);
-        array = array.concat(res);
+      let tarefas = await CarregarTarefas();
+      if (tarefas) {
+        let root = GetRootTask(tarefa, tarefas);
+        setRoot(root);
+        console.log("root task for treeview: ", root.titulo);
+        const res = await GetAllSubtarefas(root);
+        let array: Tarefa[] = [];
+        array.push(root);
+        if (res) {
+          setSubtasks(res);
+          array = array.concat(res);
+        }
+        console.log("taskMap OG array: ", array.length);
+        let mapped = ToTaskMap(array);
+        console.log(mapped.size);
+        setTaskmap(mapped);
       }
-      console.log("taskMap OG array: ", array.length);
-      let mapped = ToTaskMap(array);
-      console.log("taskMap: ", mapped.keys.length)
-      setTaskmap(ToTaskMap(array));
     };
 
     initialize();
-  }, [task]);
+  }, [tarefa]);
 
-  function ToTaskMap(tarefa: Tarefa[]): Map<string, Tarefa>{
+  function GetRootTask(tarefa: Tarefa, tarefas: Record<string, Tarefa>): Tarefa {
+    if (tarefa.parentId) {
+      let parent = tarefas[tarefa.parentId];
+      if (parent) return GetRootTask(parent, tarefas);
+      else return tarefa;
+    }
+    else return tarefa;
+  }
+
+  function ToTaskMap(tarefa: Tarefa[]): Map<string, Tarefa> {
     return new Map(tarefa.map(t => [t.id, t]));
-}
+  }
 
   // Arvore mock somente para Teste
   /*const mocktree: TaskNode = {
@@ -147,13 +164,13 @@ export default function TaskTreeView({ tarefa }: Props) {
   // USADO SOMENTE PARA TESTE, SUBSTITUIR PELA ÁRVORE REAL QUANDO POSSÍVEL
   //const tree = mocktree;*/
 
-  
+
 
   // construção da árvore (atualiza se mudar a arvore ou largura da arvore)
   const { nodes, edges } = useMemo(() => {
-  if (!taskmap) return { nodes: [], edges: [] };
-  return buildGraph(task.id, taskmap, width);
-}, [taskmap, width]);
+    if (!taskmap) return { nodes: [], edges: [] };
+    return buildGraph(root.id, taskmap, width);
+  }, [taskmap, width]);
 
   // Mapa de nós de tarefas
   const nodeMap = useMemo(
@@ -164,9 +181,9 @@ export default function TaskTreeView({ tarefa }: Props) {
   const maxX = Math.max(...nodes.map(n => n.x + NODE_W));
   const maxY = Math.max(...nodes.map(n => n.y + NODE_H));
 
-if (!taskmap) {
-  return <View style={{ flex: 1 }} />;
-}
+  if (!taskmap) {
+    return <View style={{ flex: 1 }} />;
+  }
 
   return (
     <View style={styles.container}>

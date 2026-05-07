@@ -43,7 +43,7 @@ export async function salvarTarefaFirestore(tarefa: Tarefa): Promise<void> {
       categorias: tarefa.categorias || [],
       estado: tarefa.estado,
       subtarefas: tarefa.subtarefas || [],
-      isSubtarefa: tarefa.isSubtarefa,
+      parentId: tarefa.parentId || null,
       updatedAt: firestore.FieldValue.serverTimestamp()
     };
 
@@ -73,7 +73,7 @@ export async function buscarTarefasFirestore(): Promise<Tarefa[]> {
         categorias: data.categorias || [],
         estado: data.estado || 'NaoIniciado',
         subtarefas: data.subtarefas || [],
-        isSubtarefa: data.isSubtarefa || false
+        parentId: data.parentId || null
       });
     });
 
@@ -94,6 +94,7 @@ export async function atualizarTarefaFirestore(id: string, dados: Partial<Tarefa
     if (dados.categorias) updateData.categorias = dados.categorias;
     if (dados.estado) updateData.estado = dados.estado;
     if (dados.data_finalizado) updateData.data_finalizado = firestore.Timestamp.fromMillis(dados.data_finalizado);
+    if (dados.parentId) updateData.parentId = dados.parentId;
     
     updateData.updatedAt = firestore.FieldValue.serverTimestamp();
 

@@ -45,8 +45,8 @@ export default function ListaTarefas() {
     useEffect(() => {
         console.log("'tarefasUpdated' listener added");
         //carregarTarefas();
-        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido");carregarTarefas()});
-        return () => { console.log("'tarefasUpdated' listener removed"); subscription.remove()} ;
+        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
+        return () => { console.log("'tarefasUpdated' listener removed"); subscription.remove() };
     }, [carregarTarefas]);
 
     //const isLogged = !!auth().currentUser;
@@ -65,31 +65,14 @@ export default function ListaTarefas() {
     }, []);
 
     const handleCloseModal = useCallback(() => {
-        if (isCreating && unsavedChanges.current) {
-            console.log("Unsaved changes");
-            Alert.alert(
-                'Tem certeza que deseja cancelar a criação da tarefa?',
-                `Todas as alterações não salvas serão perdidas.`,
-                [
-                    { text: 'Não', style: 'cancel' },
-                    {
-                        text: 'Sim, sair sem salvar', onPress: () => {
-                            unsavedChanges.current = false;
-                            setIsCreating(false);
-                        }
-                    }
-                ]
-            );
-            return;
-        }
-        unsavedChanges.current = false;
         setIsCreating(false);
     }, [isCreating, unsavedChanges.current]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
-        if (result) {
+        /*if (result) {
             try {
-                let atualizadas = await TrySalvarTarefa(result);
+                let atualizadas = await TryCarregarTarefasArray();
+                //let atualizadas = await TrySalvarTarefa(result, true);
                 if (atualizadas.length > 0) {
                     setTarefas((OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true))));
                 }
@@ -107,7 +90,7 @@ export default function ListaTarefas() {
             }
             catch (e) { console.log("ERRO ao recarregar tarefas após tentativa de salvamento: " + e); }
         }
-        unsavedChanges.current = false;
+        unsavedChanges.current = false;*/
         handleCloseModal();
     }, [handleCloseModal]);
 
@@ -142,11 +125,9 @@ export default function ListaTarefas() {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-            <Modal visible={isCreating} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-                {isCreating && (
-                    <TaskManager tarefa={null} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
-                )}
-            </Modal>
+            {isCreating && (
+                <TaskManager tarefa={null} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+            )}
 
             <TarefaList
                 tarefas={tarefasFiltradas}

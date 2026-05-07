@@ -75,23 +75,26 @@ const Configuracoes = () => {
           await TrySalvar();
         }
         else {
-          console.log("Sucessful logoff");
-          if (await handleLogout()) { // manter dados
-            await LocalStorageService.CarregarTarefas();
-          }
-          else { // limpar dados
-            await LocalStorageService.ClearLocalData();
-            await LocalStorageService.ClearCacheData();
-          }
-          auth().signOut();
+          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem."))
+          {
+            console.log("Sucessful logoff");
+            if (await handleLogout()) { // manter dados
+              await LocalStorageService.CarregarTarefas();
+            }
+            else { // limpar dados
+              await LocalStorageService.ClearLocalData();
+              await LocalStorageService.ClearCacheData();
+            }
+            auth().signOut();
 
-          await TrySalvar();
-          setSettings(prev => ({
-            ...prev,
-            [index]: false
-          }));
-          setUser(null);
-
+            await TrySalvar(true);
+            setSettings(prev => ({
+              ...prev,
+              [index]: false
+            }));
+            setUser(null);
+          }
+          else return;
         }
         //console.log("Emitting from config");
         //DeviceEventEmitter.emit('tarefasUpdated');
@@ -110,6 +113,27 @@ const Configuracoes = () => {
 
     loadSettings();
   }, []);
+
+  function YouSure(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      Alert.alert(
+        title,
+        message,
+        [
+          {
+            text: "Não",
+            style: "cancel",
+            onPress: () => resolve(false),
+          },
+          {
+            text: "Sim",
+            style: "destructive",
+            onPress: () => resolve(true),
+          }
+        ]
+      );
+    });
+  }
 
   function handleLogout(): Promise<boolean> {
     return new Promise((resolve) => {

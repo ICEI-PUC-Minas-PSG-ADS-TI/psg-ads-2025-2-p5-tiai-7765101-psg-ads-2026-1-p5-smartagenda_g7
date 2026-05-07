@@ -54,28 +54,30 @@ export const useTaskModals = (onRefresh?: () => void) => {
     }, [modalMode]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
-        if (result) {
+        /*if (result) {
             try {
                 await TrySalvarTarefa(result);
             } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
-        }
-        
+        }*/
+
         if (onRefresh) onRefresh();
-        
+
         unsavedChanges.current = false;
         setSelectedTask(null);
         setModalMode('none');
     }, [onRefresh]);
 
     const modals = (
-        <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-            {modalMode === 'details' && selectedTask && (
-                <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
-            )}
+        <View>
+            <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
+                {modalMode === 'details' && selectedTask && (
+                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
+                )}
+            </Modal>
             {modalMode === 'edit' && selectedTask && (
-                <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+                <TaskManager tarefa={selectedTask} onClose={handleSaveTask}/>
             )}
-        </Modal>
+        </View>
     );
 
     return {
@@ -97,11 +99,11 @@ const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefres
                 contentContainerStyle={styles.listContainer}
                 ListHeaderComponent={ListHeaderComponent}
                 ListEmptyComponent={() => (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
-                </View>
-            )}
-        />
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
+                    </View>
+                )}
+            />
             {modals}
         </>
     );

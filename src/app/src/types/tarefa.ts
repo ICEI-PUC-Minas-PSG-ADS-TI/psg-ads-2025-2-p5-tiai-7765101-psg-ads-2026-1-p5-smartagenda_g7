@@ -8,6 +8,7 @@ export type Tarefa = {
     data_vencimento: number; // Ditto acima.
     data_finalizado?: number; // Ditto acima. Só deve ser preenchido quando a tarefa for finalizada.
     subtarefas?: string[]; // IDs das subtarefas, caso existam. O formato de cada tarefa é o mesmo.
-    isSubtarefa: boolean; // Indica se a tarefa é uma subtarefa ou não. Principalmente para filtra-las na lista de tarefas.
+    parentId?: string; // ID da tarefa pai, caso seja uma subtarefa. O formato é o mesmo de uma tarefa normal.
+    //isSubtarefa: boolean; // Indica se a tarefa é uma subtarefa ou não. Principalmente para filtra-las na lista de tarefas.
 }
 
