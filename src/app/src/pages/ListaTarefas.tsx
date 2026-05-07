@@ -26,7 +26,7 @@ export default function ListaTarefas() {
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
-
+            console.log("Carregando tarefas...");
             const tarefasCarregadas = await TryCarregarTarefasArray();
             if (!tarefasCarregadas) {
                 console.log("[ListaTarefas] ATENÇÃO: Nenhuma tarefa encontrada, ou ocorreu um erro.");
@@ -44,7 +44,7 @@ export default function ListaTarefas() {
 
     useEffect(() => {
         console.log("'tarefasUpdated' listener added");
-        //carregarTarefas();
+        carregarTarefas();
         const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
         return () => { console.log("'tarefasUpdated' listener removed"); subscription.remove() };
     }, [carregarTarefas]);
@@ -66,7 +66,7 @@ export default function ListaTarefas() {
 
     const handleCloseModal = useCallback(() => {
         setIsCreating(false);
-    }, [isCreating, unsavedChanges.current]);
+    }, [isCreating]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
         /*if (result) {
@@ -92,7 +92,7 @@ export default function ListaTarefas() {
         }
         unsavedChanges.current = false;*/
         handleCloseModal();
-    }, [handleCloseModal]);
+    }, []);
 
     const categoriasDisponiveis = useMemo(() => {
         const cats = new Set<string>();

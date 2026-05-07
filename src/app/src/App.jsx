@@ -7,7 +7,7 @@ import auth from '@react-native-firebase/auth';
 import Routes from './routes';
 import LoginScreen from './pages/Login';
 import CadastroScreen from './pages/Cadastro';
-import StorageAPI from './services/LocalStorageService';
+import StorageAPI, { CarregarConfiguracao } from './services/LocalStorageService';
 import { onUserAuthenticated } from './services/UserService';
 import SaveControlService from './services/SaveControlService';
 
@@ -20,21 +20,34 @@ function App() {
 
   useEffect(() => {
     let subscriber;
-    try {
-      subscriber = auth().onAuthStateChanged(async (authUser) => {
-        setUser(authUser);
-
-        if (authUser && authUser.uid !== lastUid.current) {
-          lastUid.current = authUser.uid;
-          await onUserAuthenticated(authUser);
-          await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
-          console.log("Trying to sync after auth change...");
-          await SaveControlService.TrySalvar(true); // Sincroniza e emite evento para atualizar UI
-        }
-      });
-    } catch (err) {
-      Alert.alert('Não foi possível se conectar ao Firebase', `Erro: ${err.message}`);
+    const getcfg = async () => {
+      return await CarregarConfiguracao();
     }
+    let cfg = getcfg();
+    if (cfg.UseBackup) {
+      try {
+        subscriber = auth().onAuthStateChanged(async (authUser) => {
+          setUser(authUser);
+          if (authUser && authUser.uid !== lastUid.current) {
+            lastUid.current = authUser.uid;
+            await onUserAuthenticated(authUser);
+            await StorageAPI.Iniciar(); // Recarrega os dados locais apontando para o usuário logado
+            console.log("Trying to sync after auth change...");
+            await SaveControlService.TrySalvar(true); // Sincroniza e emite evento para atualizar UI
+          }
+        });
+      } catch (err) {
+        Alert.alert('Não foi possível se conectar ao Firebase', `Erro: ${err.message}`);
+      }
+    }
+    else {
+      console.log("AHOYYY");
+      const loadlocal = async () => {
+        await StorageAPI.Iniciar();
+      }
+      loadlocal();
+    }
+
 
     // Listener para abrir a tela de login a partir de outros componentes
     const eventListener = DeviceEventEmitter.addListener('showLogin', () => {
@@ -46,7 +59,7 @@ function App() {
       if (subscriber) subscriber();
       eventListener.remove();
     };
-  }, []);
+  }, [user]);
 
   if (showCadastro) {
     return (

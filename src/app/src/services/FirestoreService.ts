@@ -1,6 +1,7 @@
 import firestore from '@react-native-firebase/firestore';
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import auth,  { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { Tarefa } from '../types/tarefa';
+import { getApp } from '@react-native-firebase/app';
 
 /**
  * Helper centralizado para obter a referência correta do usuário logado.
@@ -17,7 +18,7 @@ const getTarefasRef = () => {
 };
 export function GetCurrentUser(): FirebaseAuthTypes.User | null {
   try {
-return auth().currentUser;
+    return getApp().auth().currentUser;
   }
   catch {
     console.log("No user authenticated");
