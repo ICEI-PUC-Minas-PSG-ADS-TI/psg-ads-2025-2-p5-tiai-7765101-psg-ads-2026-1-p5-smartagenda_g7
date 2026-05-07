@@ -1,7 +1,7 @@
 // Serviço para Funções controladas de salvamento de tarefas, tanto em memória (Async Storage) quanto em arquivo local (JSON), e possivelmente no futuro, Firebase Firestore.
 
 import auth from '@react-native-firebase/auth';
-import { Alert } from 'react-native';
+import { Alert, DeviceEventEmitter } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas, GetFinalizadas } from '../services/TarefaService';
 import StorageAPI from '../services/LocalStorageService';
@@ -15,11 +15,12 @@ import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, dele
 export async function TrySalvar(): Promise<Tarefa[]> {
     try {
         console.log("[SAVECONTROL] Iniciando sincronização de tarefas...");
-        const isAuth = IsAuth();
+        //const isAuth = IsAuth();
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         await StorageAPI.SalvarTarefas(tarefasLocais);
         let local = await StorageAPI.CarregarTarefas();
-        if (isAuth) {
+
+        if (auth().currentUser) {
             let firebase = await buscarTarefasFirestore();
             let onlyfirebase = firebase ? firebase.filter(f => !local || !local[f.id]) : [];
             if (onlyfirebase.length > 0) {
@@ -36,8 +37,8 @@ export async function TrySalvar(): Promise<Tarefa[]> {
                 console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
             }
         }
-        else console.log("Usuário não autenticado, buscando somente tarefas locais");
 
+        DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -55,16 +56,15 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
         const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
         tarefasLocais[result.id] = result;
         await StorageAPI.SalvarTarefas(tarefasLocais);
-        const isAuth = IsAuth();
-        if (isAuth) {
-            try {
+        try {
+            if (auth().currentUser) {
                 salvarTarefaFirestore(result).catch(() => { });
             }
-            catch (err) {
-                console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
-            }
         }
-
+        catch (err) {
+            console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
+        }
+        DeviceEventEmitter.emit('tarefasUpdated');
         return await StorageAPI.CarregarTarefasArray() || [];
     }
     catch (err) {
@@ -77,8 +77,7 @@ export async function TrySalvarTarefa(result: Tarefa): Promise<Tarefa[]> {
 export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tarefa[]> {
     try {
         const isAuth = IsAuth();
-        if (!isAuth)
-        {
+        if (!isAuth) {
             //return await StorageAPI.CarregarTarefasArray() || []
         }
 
@@ -87,7 +86,9 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
         let tarefasLocais;
 
         try {
-            tarefasFirebase = await buscarTarefasFirestore() || [];
+            if (auth().currentUser) {
+                tarefasFirebase = await buscarTarefasFirestore() || [];
+            }
         }
         catch (err) {
             console.log("[SAVECONTROL] Erro ao carregar tarefas do Firestore: " + err);
@@ -100,39 +101,7 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
             console.log("[SAVECONTROL] Erro ao carregar tarefas locais: " + err);
         }
 
-        if (tarefasFirebase && tarefasFirebase.length > 0) {
-            if (tarefasLocais && tarefasLocais.length > 0) {
-                // Ambas as fontes têm tarefas, comparar e decidir qual usar
-                switch (CompareAndCheck(tarefasFirebase, tarefasLocais)) {
-                    case -1: //firebase wins
-                        console.log("[SAVECONTROL] Diferenças detectadas, mas optando por usar os dados do Firebase.");
-                        res = tarefasFirebase;
-                        break;
-                    case 1: //local wins
-                        console.log("[SAVECONTROL] Diferenças detectadas, mas optando por usar os dados Locais.");
-                        res = tarefasLocais;
-                        break;
-                    case 0: //draw, use firebase
-                        console.log("[SAVECONTROL] Nenhuma diferença significativa detectada entre os dados locais e do Firebase, usando os dados do Firebase por padrão.");
-                        res = tarefasFirebase;
-                        break;
-                }
-            }
-            else {
-                // Apenas o Firebase tem tarefas, usar essas
-                console.log("[SAVECONTROL] Nenhuma tarefa encontrada localmente, mas tarefas encontradas no Firebase, usando os dados do Firebase.");
-                res = tarefasFirebase;
-            }
-        }
-        else if (tarefasLocais && tarefasLocais.length > 0) {
-            // Apenas o local tem tarefas, usar essas
-            console.log("[SAVECONTROL] Nenhuma tarefa encontrada no Firebase, mas tarefas encontradas localmente, usando os dados locais.");
-            res = tarefasLocais;
-        }
-        else {
-            // what
-            console.log("[SAVECONTROL] Nenhuma tarefa encontrada no Firestore ou localmente.");
-        }
+        res = CompareAndCheck(tarefasFirebase, tarefasLocais);
 
         if (res) {
             // sincronizar dados
@@ -153,7 +122,45 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
     }
 }
 
-export function CompareAndCheck(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): number {
+/**
+ * Compara duas listas de tarefas, caso se diferem, há decisões em qual manter sobre a outra
+ * @param newTasks Novas tarefas, geralmente do firebase
+ * @param oldTasks Velhas tarefas, geralmente locais
+ * @returns Lista escolhida como correta para ser mantida
+ */
+export function CompareAndCheck(newTasks?: Tarefa[], oldTasks?: Tarefa[]): Tarefa[] {
+    if (newTasks && newTasks.length > 0) {
+        if (oldTasks && oldTasks.length > 0) {
+            // Ambas as fontes têm tarefas, comparar e decidir qual usar
+            switch (CompareAndCheckInner(newTasks, oldTasks)) {
+                case -1: //firebase wins
+                    console.log("[SAVECONTROL] Diferenças detectadas, mas optando por usar os dados do Firebase.");
+                    return newTasks;
+                case 1: //local wins
+                    console.log("[SAVECONTROL] Diferenças detectadas, mas optando por usar os dados Locais.");
+                    return oldTasks;
+                case 0: //draw, use firebase
+                    console.log("[SAVECONTROL] Nenhuma diferença significativa detectada entre os dados locais e do Firebase, usando os dados do Firebase por padrão.");
+                    return newTasks;
+            }
+        }
+        else {
+            // Apenas o Firebase tem tarefas, usar essas
+            console.log("[SAVECONTROL] Nenhuma tarefa encontrada localmente, mas tarefas encontradas no Firebase, usando os dados do Firebase.");
+            return newTasks;
+        }
+    }
+    else if (oldTasks && oldTasks.length > 0) {
+        // Apenas o local tem tarefas, usar essas
+        console.log("[SAVECONTROL] Nenhuma tarefa encontrada no Firebase, mas tarefas encontradas localmente, usando os dados locais.");
+        return oldTasks;
+    }
+    // what
+    console.log("[SAVECONTROL] Nenhuma tarefa encontrada no Firestore ou localmente.");
+    return [];
+}
+
+function CompareAndCheckInner(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa[]): number {
     let comparasionstring = "";
     const countFirebase = tarefasFirebase.length;
     const countLocais = tarefasLocais.length;
@@ -166,11 +173,27 @@ export function CompareAndCheck(tarefasFirebase: Tarefa[], tarefasLocais: Tarefa
         let res;
 
         Alert.alert(
-            'Conflito de arquivos detectado!',
-            `Foram encontradas diferenças entre as tarefas salvas localmente e as tarefas salvas na nuvem. ${comparasionstring} Qual fonte de dados você gostaria de usar?`,
+            'Conflito de sincronização',
             [
-                { text: 'Dados em Nuvem', onPress: () => res = -1 },
-                { text: 'Dados Locais', onPress: () => res = 1 }
+                'Encontramos diferenças entre os dados salvos neste dispositivo e os dados salvos na nuvem.',
+                '',
+                comparasionstring,
+                '',
+                'Escolha qual versão deseja manter:'
+            ].join('\n'),
+            [
+                {
+                    text: 'Usar dados da nuvem',
+                    onPress: () => (res = -1),
+                },
+                {
+                    text: 'Usar dados locais',
+                    onPress: () => (res = 1),
+                },
+                {
+                    text: 'Cancelar',
+                    style: 'cancel',
+                },
             ]
         );
     }

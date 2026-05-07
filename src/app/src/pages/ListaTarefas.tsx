@@ -170,7 +170,7 @@ export default function ListaTarefas() {
                 }
             />
 
-            {/* Botão de Login/Logout */}
+            {/* Botão de Login/Logout 
             <TouchableOpacity style={styles.logoutFab} onPress={handleAuthAction} activeOpacity={0.8}>
                 {isLogged ? (
                     <Icon
@@ -187,7 +187,7 @@ export default function ListaTarefas() {
                         style={styles.logoutIcon}
                     />
                 )}
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
 
             {/* Botão de criar tarefa */}
             <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>

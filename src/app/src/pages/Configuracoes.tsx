@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet,  StatusBar, ScrollView, TouchableOpacity, Switch, Alert, TouchableHighlight, } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { GetCurrentUser } from '../services/FirestoreService';
-import LocalStorageService from '../services/LocalStorageService';
-import { SafeAreaProvider } from 'react-native-safe-area-context';  
+import { buscarTarefasFirestore, GetCurrentUser } from '../services/FirestoreService';
+import LocalStorageService, { CarregarTarefas, CarregarTarefasArray } from '../services/LocalStorageService';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CadastroScreen from './Cadastro';
 import LoginScreen from './Login';
 import { LogIn, LogOut } from "lucide-react-native";
-import { TryCarregarTarefasArray } from '../services/SaveControlService';
+import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services/SaveControlService';
+import { Tarefa } from '../types/tarefa';
 import { CompareAndCheck } from '../services/SaveControlService';
+import { LocalSvg } from 'react-native-svg';
 
 type USettings = {
   EnableLocalAI?: boolean,
@@ -20,7 +22,7 @@ const Configuracoes = () => {
   const [settings, setSettings] = useState<USettings>({});
   const [logging, setLogging] = useState(false);
 
-  function Toggle(index: string, value: boolean) {
+  async function Toggle(index: string, value: boolean) {
     switch (index) {
       case "EnableLocalAI": //falta verificar se já está instalado e a quantidade exata a ser instalada
         if (value) Alert.alert("Habilitar IA local", "A IA local offline é consideravelmente mais lenta do que em Cloud, e será necessário baixar uma carga de ~1,5gb em seu dispositivo. Deseja habilitar?",
@@ -44,27 +46,53 @@ const Configuracoes = () => {
         }
         break;
       case "UseBackup":
-        if (value)
-        {
-          let old = LocalStorageService.CarregarTarefasLocal();
+        if (value) {
+          console.log("Suceessful logon");
+          let o = await LocalStorageService.CarregarTarefasLocalGuest();
+          let oldtasks;
+          if (o) {
+            oldtasks = Object.values(o);
+          }
+          let newTasks;
+          try {
+            newTasks = await buscarTarefasFirestore();
+          }
+          catch { }
+          let res = CompareAndCheck(newTasks, oldtasks);
+
+          if (!res) res = [];
+
           let u = GetCurrentUser();
           if (u) setUser(u);
           setSettings(prev => ({
             ...prev,
             [index]: true
           }));
-          TryCarregarTarefasArray();
+          let resmap = Object.fromEntries(
+            res.map(t => [t.id, t])
+          ) as Record<string, Tarefa>;
+          LocalStorageService.SalvarTarefas(resmap)
         }
         else {
-          if (handleLogout())
-          {
-            setSettings(prev => ({
+          console.log("Sucessful logoff");
+          if (await handleLogout()) { // manter dados
+            await LocalStorageService.CarregarTarefas();
+          }
+          else { // limpar dados
+            await LocalStorageService.ClearLocalData();
+            await LocalStorageService.ClearCacheData();
+          }
+          auth().signOut();
+
+          await TrySalvar();
+          setSettings(prev => ({
             ...prev,
             [index]: false
           }));
-            setUser(null);
-          }
+          setUser(null);
+
         }
+        DeviceEventEmitter.emit('tarefasUpdated');
         break;
     }
   }
@@ -81,10 +109,25 @@ const Configuracoes = () => {
     loadSettings();
   }, []);
 
-  function handleLogout() : boolean {
-    Alert.alert("Dados a manter", "Deseja continuar com os dados atuais ou limpar todos os dados?") // ill do it later;
-    auth().signOut();
-    return true;
+  function handleLogout(): Promise<boolean> {
+    return new Promise((resolve) => {
+      Alert.alert(
+        "Dados a manter",
+        "Deseja continuar com os dados atuais ou limpar todos os dados?",
+        [
+          {
+            text: "Manter dados",
+            style: "cancel",
+            onPress: () => resolve(true),
+          },
+          {
+            text: "Limpar dados",
+            style: "destructive",
+            onPress: () => resolve(false),
+          },
+        ]
+      );
+    });
   }
 
   const [showCadastro, setShowCadastro] = useState(false);
@@ -97,11 +140,13 @@ const Configuracoes = () => {
           <CadastroScreen
             onSuccess={() => { Toggle("UseBackup", true); setLogging(false); }}
             onBackToLogin={() => setShowCadastro(false)}
+            onCancel={() => setLogging(false)}
           />
         ) : (
           <LoginScreen
-            onSuccess={() => {Toggle("UseBackup", true); setLogging(false);}}
+            onSuccess={() => { Toggle("UseBackup", true); setLogging(false); }}
             onCadastro={() => setShowCadastro(true)}
+            onBack={() => setLogging(false)}
           />
         )}
       </View>
@@ -114,22 +159,22 @@ const Configuracoes = () => {
 
       <ScrollView>
         {user ? (
-            <TouchableOpacity style={styles.option} onPress={() => Toggle("UseBackup", false)}>
+          <TouchableOpacity style={styles.option} onPress={() => Toggle("UseBackup", false)}>
             <View style={styles.compOption}>
               <Text style={styles.Optiontext}>Desativar Backup em Cloud</Text>
               <Text style={styles.OptionSubtext}>Desconectar a conta de backup em Cloud</Text>
             </View>
             <LogOut color={'#d1d1d1'} size={24} />
-            </TouchableOpacity>
+          </TouchableOpacity>
         ) : (
 
-            <TouchableOpacity style={styles.option}  onPress={() => setLogging(true)}>
+          <TouchableOpacity style={styles.option} onPress={() => setLogging(true)}>
             <View style={styles.compOption}>
               <Text style={styles.Optiontext}>Backup em Cloud</Text>
               <Text style={styles.OptionSubtext}>Realizar backup e sincronização entre dispositivos</Text>
             </View>
             <LogIn color={'#d1d1d1'} size={24} />
-            </TouchableOpacity>
+          </TouchableOpacity>
 
         )}
         <View style={styles.option}>

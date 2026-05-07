@@ -91,8 +91,7 @@ export async function SalvarConfiguracao(cfg: any) {
     }
 }
 
-export async function CarregarConfiguracao(): Promise<any> 
-{
+export async function CarregarConfiguracao(): Promise<any> {
     try {
         let data = await AS.getItem("userSettings");
         if (data) return JSON.parse(data);
@@ -134,21 +133,28 @@ export async function DeletarTarefa(id: string, ignoreSubtasks?: boolean) {
     }
 }
 
-async function DeletarTarefaActual(tarefas: Record<string, Tarefa>, id: string, ignoreSubtasks?: boolean)
-{
-        if (!tarefas) return;
-        if (!ignoreSubtasks) {
-            if (!tarefas[id]) return;
-            const subtarefas = tarefas[id].subtarefas ?? [];
+async function DeletarTarefaActual(tarefas: Record<string, Tarefa>, id: string, ignoreSubtasks?: boolean) {
+    if (!tarefas) return;
+    if (!ignoreSubtasks) {
+        if (!tarefas[id]) return;
+        const subtarefas = tarefas[id].subtarefas ?? [];
 
-            for (const subId of subtarefas) {
-                if (tarefas[subId]) {
-                    await DeletarTarefaActual(tarefas, subId); // confiando que não é possível ter loops de referencia
-                }
+        for (const subId of subtarefas) {
+            if (tarefas[subId]) {
+                await DeletarTarefaActual(tarefas, subId); // confiando que não é possível ter loops de referencia
             }
         }
-        delete tarefas[id];
-        console.log("[LocalStorageService] Deletando tarefa ", id);
+    }
+    delete tarefas[id];
+    console.log("[LocalStorageService] Deletando tarefa ", id);
+}
+
+export async function ClearCacheData() {
+    try {
+        await AS.removeItem(getStorageKey());
+    } catch (err) {
+        console.log("Erro ao limpar cache: " + err);
+    }
 }
 
 // ------------- FUNÇÕES DE FILE SERVICE (SALVAMENTO LOCAL) ------------
@@ -181,6 +187,22 @@ export async function CarregarTarefasLocal(): Promise<Record<string, Tarefa> | n
     }
 }
 
+/**
+ * Carrega as tarefas salvas localmente no dispositivo, e as retorna
+ */
+export async function CarregarTarefasLocalGuest(): Promise<Record<string, Tarefa> | null> {
+    try {
+        const exists = await RNFS.exists(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`);
+        if (!exists) return null;
+
+        let json = await RNFS.readFile(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`);
+        return json ? JSON.parse(json) : null;
+    } catch (err) {
+        console.log("Erro ao Carregar tarefas Localmente no File Service: " + err);
+        return null;
+    }
+}
+
 export async function SalvarConfiguracaoLocal(config: any) {
     try {
         let json = JSON.stringify(config);
@@ -203,10 +225,27 @@ export async function CarregarConfiguracaoLocal(): Promise<any> {
     }
 }
 
+export async function ClearLocalData() {
+    try {
+        const exists = await RNFS.exists(getFilePath());
+        const existsGuest = await RNFS.exists(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`);
+        if (exists) {
+            await RNFS.writeFile(configpath, '');
+        }
+        if (existsGuest) {
+            await RNFS.writeFile(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`, '');
+        }
+    }
+    catch (err) {
+        console.log("Erro ao limpar dados locais: " + err);
+    }
+}
+
 // Somente para poder chamar as funções como classe
 export default {
     CarregarTarefas,
     CarregarTarefasLocal,
+    CarregarTarefasLocalGuest,
     CarregarTarefasArray,
     SalvarTarefas,
     SalvarTarefasLocal,
@@ -215,5 +254,7 @@ export default {
     CarregarConfiguracao,
     CarregarConfiguracaoLocal,
     SalvarConfiguracao,
-    SalvarConfiguracaoLocal
+    SalvarConfiguracaoLocal,
+    ClearLocalData,
+    ClearCacheData
 }
