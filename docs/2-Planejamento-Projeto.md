@@ -180,7 +180,7 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 |  Nitai           |  Tech Lead      | Implementação Inicial da Visualização em Árvore | 30/04 | 07/05 | ✔️ |
 |  Isaque          |  Facilitador Ágil      | Implementação da página de calendários | 30/04 | 05/05 | ✔️ |
 |  Isaque          |  Facilitador Ágil      | Implementação da página de Chat com IA | 30/04 | 06/05 | ✔️ |
-|             |        | Atualizar Diagrama de Classes | 16/04 | 30/04 | ❌ |
+|  Carol           |  Arquiteto de Dados     | Atualizar Diagrama de Classes | 16/04 | 30/04 | ✔️ |
 
 ---
 
