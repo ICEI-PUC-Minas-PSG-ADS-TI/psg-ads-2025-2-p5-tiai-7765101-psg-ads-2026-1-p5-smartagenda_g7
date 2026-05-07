@@ -174,9 +174,12 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|  Nitai           |  Tech Lead      | Implementação de Subtarefas no Gerenciamento de Tarefas | 13/04 | 30/04 | ✔️ |
-|  Nitai           |  Tech Lead      | Implementação de Funções para Importação de tarefas por JSON (para o uso de IA) | 20/04 | 30/04 | ✔️ |
-|             |        | Atualizar DER via Engenharia Reversa | 16/04 | 30/04 | ❌ |
+|  Nitai           |  Tech Lead      | Implementação de Subtarefas no Gerenciamento de Tarefas | 13/04 | 07/05 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação de Funções para Importação de tarefas por JSON (para o uso de IA) | 20/04 | 07/05 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação Inicial da página de configurações | 02/04 | 07/05 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação Inicial da Visualização em Árvore | 30/04 | 07/05 | ✔️ |
+|  Isaque          |  Facilitador Ágil      | Implementação da página de calendários | 30/04 | 05/05 | ✔️ |
+|  Isaque          |  Facilitador Ágil      | Implementação da página de Chat com IA | 30/04 | 06/05 | ✔️ |
 |             |        | Atualizar Diagrama de Classes | 16/04 | 30/04 | ❌ |
 
 ---
