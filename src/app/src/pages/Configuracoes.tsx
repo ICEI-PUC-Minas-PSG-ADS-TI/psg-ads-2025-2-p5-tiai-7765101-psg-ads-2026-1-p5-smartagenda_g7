@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import { buscarTarefasFirestore, GetCurrentUser } from '../services/FirestoreService';
+import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
 import LocalStorageService, { CarregarTarefas, CarregarTarefasArray } from '../services/LocalStorageService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CadastroScreen from './Cadastro';
@@ -10,7 +9,6 @@ import { LogIn, LogOut } from "lucide-react-native";
 import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services/SaveControlService';
 import { Tarefa } from '../types/tarefa';
 import { CompareAndCheck } from '../services/SaveControlService';
-import { LocalSvg } from 'react-native-svg';
 
 type USettings = {
   EnableLocalAI?: boolean,
@@ -85,7 +83,8 @@ const Configuracoes = () => {
               await LocalStorageService.ClearLocalData();
               await LocalStorageService.ClearCacheData();
             }
-            auth().signOut();
+            await Signout();
+            //GetCurrentUser().signOut();
 
             await TrySalvar(true);
             setSettings(prev => ({

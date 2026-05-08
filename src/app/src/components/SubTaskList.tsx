@@ -127,10 +127,10 @@ export default function SubtaskList({ tarefaPai, ModalType, onUpdateSubtask }: P
                     {modalMode === 'details' && selectedTask && (
                         <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
                     )}
-                    {modalMode === 'edit' && (
+                </Modal>
+                {selectedTask !== null && modalMode === 'edit' && (
                         <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} parent={tarefaPai} />
                     )}
-                </Modal>
 
                 <FlatList
                     data={subTarefas}

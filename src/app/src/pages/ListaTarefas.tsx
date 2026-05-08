@@ -19,11 +19,13 @@ export default function ListaTarefas() {
     const [selectedState, setSelectedState] = useState<FiltroEstado>('Todas');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [carregando, setCarregando] = useState(true);
+    const firstLoad = useRef(true);
 
     const [isCreating, setIsCreating] = useState(false);
     const unsavedChanges = useRef(false);
 
     const carregarTarefas = useCallback(async () => {
+        console.log("REEEFREEEESSSHHH");
         try {
             setCarregando(true);
             console.log("Carregando tarefas...");
@@ -43,11 +45,14 @@ export default function ListaTarefas() {
     }, []);
 
     useEffect(() => {
-        console.log("'tarefasUpdated' listener added");
         carregarTarefas();
+    }, [])
+
+    useEffect(() => {
+        //console.log("'tarefasUpdated' listener added");        
         const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
-        return () => { console.log("'tarefasUpdated' listener removed"); subscription.remove() };
-    }, [carregarTarefas]);
+        return () => { /*console.log("'tarefasUpdated' listener removed");*/ subscription.remove() };
+    }, []);
 
     //const isLogged = !!auth().currentUser;
 
@@ -68,29 +73,7 @@ export default function ListaTarefas() {
         setIsCreating(false);
     }, [isCreating]);
 
-    const handleSaveTask = useCallback(async (result?: Tarefa) => {
-        /*if (result) {
-            try {
-                let atualizadas = await TryCarregarTarefasArray();
-                //let atualizadas = await TrySalvarTarefa(result, true);
-                if (atualizadas.length > 0) {
-                    setTarefas((OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true))));
-                }
-                else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
-            } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
-        }
-        else {
-            // call for refresh
-            try {
-                const atualizadas = await TryCarregarTarefasArray();
-                if (atualizadas) {
-                    setTarefas(OrdenarTarefas(await FilterSubTarefasArray(atualizadas, true)));
-                }
-                else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de recarregamento."); }
-            }
-            catch (e) { console.log("ERRO ao recarregar tarefas após tentativa de salvamento: " + e); }
-        }
-        unsavedChanges.current = false;*/
+    const handleSaveTask = useCallback(async (result?: Tarefa) => { // deprecated
         handleCloseModal();
     }, []);
 

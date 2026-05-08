@@ -146,7 +146,6 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
         console.log("subtask save cancelation: " + !selectedSubtask + ", " + !subtask);
         let newtask: Tarefa | undefined;
 
-
         if (!subtask) {//if (!selectedSubtask || !subtask) {
             let updated = await GetSubtarefas(task!);
             //console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
@@ -229,7 +228,7 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
         }
         console.log("2new subtask count: ", newtask?.subtarefas?.length);
         if (newtask) await TrySalvarTarefa(newtask);*/
-        tryClose();
+        //tryClose();
     }, [selectedSubtask, setTask]);
 
     const updateField = useCallback((field: keyof Tarefa, value: any) => {
@@ -330,14 +329,6 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
         if (!task?.titulo) errorField = 'Título';
         else if (!task?.data_vencimento) errorField = 'Data de Vencimento';
 
-        if (errorField !== '') {
-            Alert.alert(
-                'Campos Obrigatórios',
-                `Por favor, preencha o campo "${errorField}".`,
-                [{ text: 'OK', style: 'cancel' }]
-            );
-            return;
-        }
         if (unsavedChanges.current && !IsSaving) {
 
             let res = await new Promise<boolean>((resolve) => {
@@ -356,8 +347,21 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
                     ]
                 )
             });
-            if (res) {handleCancelExit(); return;};
-            unsavedChanges.current = false;
+            if (res) {return;}
+            else 
+            {
+                unsavedChanges.current = false;
+                handleCancelExit();
+            }
+            
+        }
+        if (errorField !== '') {
+            Alert.alert(
+                'Campos Obrigatórios',
+                `Por favor, preencha o campo "${errorField}".`,
+                [{ text: 'OK', style: 'cancel' }]
+            );
+            return;
         }
         handleSaveExit();
     }

@@ -41,7 +41,7 @@ function App() {
       }
     }
     else {
-      console.log("AHOYYY");
+      console.log("Backup não habilitado.");
       const loadlocal = async () => {
         await StorageAPI.Iniciar();
       }

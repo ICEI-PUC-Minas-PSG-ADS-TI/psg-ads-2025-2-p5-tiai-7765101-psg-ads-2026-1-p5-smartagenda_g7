@@ -2,17 +2,17 @@
 import type { Tarefa } from '../types/tarefa';
 import AS from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
-import auth from '@react-native-firebase/auth';
+import { GetCurrentUser } from './FirestoreService';
 
 // ------------- FUNÇÕES AUXILIARES DE CAMINHO (MULTI-USUÁRIO) ------------
 
 const getStorageKey = () => {
-    const user = auth().currentUser;
+    const user = GetCurrentUser();
     return user ? `tarefas_${user.uid}` : 'tarefas_guest';
 };
 
 const getFilePath = () => {
-    const user = auth().currentUser;
+    const user = GetCurrentUser();
     return user
         ? `${RNFS.DocumentDirectoryPath}/tarefas_${user.uid}.json`
         : `${RNFS.DocumentDirectoryPath}/tarefas_guest.json`;

@@ -1,11 +1,9 @@
 // Serviço para Funções controladas de salvamento de tarefas, tanto em memória (Async Storage) quanto em arquivo local (JSON), e possivelmente no futuro, Firebase Firestore.
-
-import auth from '@react-native-firebase/auth';
 import { Alert, DeviceEventEmitter } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas, GetFinalizadas } from '../services/TarefaService';
 import StorageAPI from '../services/LocalStorageService';
-import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, deletarTarefaFirestore, IsAuth } from '../services/FirestoreService';
+import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, deletarTarefaFirestore, IsAuth, GetCurrentUser } from '../services/FirestoreService';
 
 
 /**
@@ -20,7 +18,7 @@ export async function TrySalvar(ForceRefresh?: boolean): Promise<Tarefa[]> {
         await StorageAPI.SalvarTarefas(tarefasLocais);
         let local = await StorageAPI.CarregarTarefas();
 
-        if (auth().currentUser) {
+        if (GetCurrentUser()) {
             let firebase = await buscarTarefasFirestore();
             let onlyfirebase = firebase ? firebase.filter(f => !local || !local[f.id]) : [];
             if (onlyfirebase.length > 0) {
@@ -59,7 +57,7 @@ export async function TrySalvarTarefa(result: Tarefa, ForceRefresh?: boolean): P
         tarefasLocais[result.id] = result;
         await StorageAPI.SalvarTarefas(tarefasLocais);
         try {
-            if (auth().currentUser) {
+            if (GetCurrentUser()) {
                 salvarTarefaFirestore(result).catch(() => { });
             }
         }
@@ -90,7 +88,7 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
         let tarefasLocais;
 
         try {
-            if (auth().currentUser) {
+            if (GetCurrentUser()) {
                 tarefasFirebase = await buscarTarefasFirestore() || [];
             }
         }
