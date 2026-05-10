@@ -253,8 +253,7 @@ export async function SyncState(parent: Tarefa): Promise<Tarefa> {
             updatedStatus = 'NaoIniciado';
     }
     parent.estado = updatedStatus;
-    if (parent.estado == 'Finalizado')
-    {
+    if (parent.estado == 'Finalizado') {
         parent.data_finalizado = Date.now();
     }
     await TrySalvarTarefa(parent);

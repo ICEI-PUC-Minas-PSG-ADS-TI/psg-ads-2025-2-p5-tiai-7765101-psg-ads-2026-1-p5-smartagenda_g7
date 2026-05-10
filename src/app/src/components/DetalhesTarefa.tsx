@@ -38,9 +38,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
             else parent.subtarefas = [updated.id];
             await StorageAPI.SalvarTarefa(updated);
             await SyncState(parent);
-        }
 
-        if (parent) {
             await TrySalvarTarefa(updated);
             await TrySalvarTarefa(parent, true);
         }

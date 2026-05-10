@@ -72,11 +72,11 @@ const Calendario = () => {
   );
 
   useEffect(() => {
-          //console.log("'tarefasUpdated' listener added");  
-          //carregarTarefas();      
-          const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
-          return () => { /*console.log("'tarefasUpdated' listener removed");*/ subscription.remove() };
-      }, []);
+    //console.log("'tarefasUpdated' listener added");  
+    //carregarTarefas();      
+    const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
+    return () => { /*console.log("'tarefasUpdated' listener removed");*/ subscription.remove() };
+  }, []);
 
   const { handleOpenDetails, modals } = useTaskModals(carregarTarefas);
 
@@ -140,7 +140,7 @@ const Calendario = () => {
         if (!map[dateString]) {
           map[dateString] = [];
         }
-        map[dateString] = [...map[dateString], tarefa];
+        map[dateString] = [...map[dateString], { ...tarefa, key: tarefa.titulo }];
       }
     });
 
@@ -164,7 +164,7 @@ const Calendario = () => {
       <Agenda
         items={items}
         selected={selectedDate}
-        //key={JSON.stringify(items).length} // isso aqui faz atualizar sempre, mas é bem lento
+        key={JSON.stringify(items).length} // isso aqui faz atualizar sempre, mas é bem lento
         onDayPress={(day) => setSelectedDate(day.dateString)}
         rowHasChanged={(r1, r2) => {
           if (!r1 || !r2) return true;
@@ -174,9 +174,9 @@ const Calendario = () => {
           console.log("RENDER ITEM", item.id, item.estado);
 
           return (
-          <View style={styles.itemContainer}>
-            <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />
-          </View>)
+            <View style={styles.itemContainer}>
+              <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />
+            </View>)
         }}
         renderEmptyDate={() => (
           <View style={styles.emptyDateContainer}>

@@ -104,7 +104,7 @@ export function useAIChat() {
                             // Salvando as tarefas criadas ativamente
                             if (tarefasCriadas && tarefasCriadas.length > 0) {
                                 for (const t of tarefasCriadas) {
-                                    await SaveControlService.TrySalvarTarefa(t);
+                                    await SaveControlService.TrySalvarTarefa(t, true);
                                 }
                             }
 
@@ -149,7 +149,7 @@ export function useAIChat() {
                                 if (args.data_vencimento) tarefa.data_vencimento = new Date(args.data_vencimento as string).getTime();
                                 if (args.estado) tarefa.estado = args.estado as any;
 
-                                await SaveControlService.TrySalvarTarefa(tarefa);
+                                await SaveControlService.TrySalvarTarefa(tarefa, true);
 
                                 functionResponseData = {
                                     status: 'success',

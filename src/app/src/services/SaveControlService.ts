@@ -64,7 +64,7 @@ export async function TrySalvarTarefa(result: Tarefa, ForceRefresh?: boolean): P
         catch (err) {
             console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
         }
-        if (ForceRefresh) 
+        if (ForceRefresh)
             DeviceEventEmitter.emit('tarefasUpdated');
         //console.log("Emitting tarefasUpdated from TrySalvarTarefa");
         return await StorageAPI.CarregarTarefasArray() || [];
@@ -173,29 +173,30 @@ async function CompareAndCheckInner(tarefasFirebase: Tarefa[], tarefasLocais: Ta
     if (countFirebase != countLocais || finalizadasFirebase != finalizadasLocais) {
         comparasionstring += `Salvo em Nuvem: ${countFirebase} tarefas (${finalizadasFirebase} finalizadas) \nSalvo Localmente: ${countLocais} tarefas (${finalizadasLocais} finalizadas). `;
         let res = await new Promise<number>((resolve) => {
-        Alert.alert(
-            'Conflito de sincronização',
-            [
-                'Encontramos diferenças entre os dados salvos neste dispositivo e os dados salvos na nuvem.',
-                '',
-                comparasionstring,
-                '',
-                'Escolha qual versão deseja manter:'
-            ].join('\n'),
-            [
+            Alert.alert(
+                'Conflito de sincronização',
+                [
+                    'Encontramos diferenças entre os dados salvos neste dispositivo e os dados salvos na nuvem.',
+                    '',
+                    comparasionstring,
+                    '',
+                    'Escolha qual versão deseja manter:'
+                ].join('\n'),
+                [
+                    {
+                        text: 'Usar dados da nuvem',
+                        onPress: () => resolve(-1),
+                    },
+                    {
+                        text: 'Usar dados locais',
+                        onPress: () => resolve(1),
+                    }
+                ],
                 {
-                    text: 'Usar dados da nuvem',
-                    onPress: () => resolve(-1),
-                },
-                {
-                    text: 'Usar dados locais',
-                    onPress: () => resolve(1),
-                }
-            ],
-            {
                     cancelable: false
                 }
-        )});
+            )
+        });
         return res;
     }
 
