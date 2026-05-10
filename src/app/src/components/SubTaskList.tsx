@@ -9,15 +9,17 @@ import SubTarefaMinimal from './SubTarefaMinimal.tsx';
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
 import { OrdenarTarefas, GetSubtarefas } from '../services/TarefaService.ts';
-import { TrySalvarTarefa } from '../services/SaveControlService.ts';
+import { TryCarregarTarefasArray, TrySalvarTarefa } from '../services/SaveControlService.ts';
 
 type Props = {
-    tarefaPai: Tarefa;
+    tarefaPai?: Tarefa;
+    subtasks?: Tarefa[];
     ModalType?: 'details' | 'edit';
     onUpdateSubtask?: (subtarefas?: Tarefa) => void;
+    onSelected?: (tarefa: Tarefa) => void;
 }
 
-export default function SubtaskList({ tarefaPai, ModalType, onUpdateSubtask }: Props) {
+export default function SubtaskList({ tarefaPai, subtasks, ModalType, onSelected, onUpdateSubtask }: Props) {
     const [subTarefas, setSubTarefas] = useState<Tarefa[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [modalMode, setModalMode] = useState<'details' | 'edit'>(ModalType || 'details');
@@ -27,21 +29,30 @@ export default function SubtaskList({ tarefaPai, ModalType, onUpdateSubtask }: P
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
-            let subtasks = await GetSubtarefas(tarefaPai);
+            if (subtasks)
+            {
+                setSubTarefas(subtasks);
+            }
+            else {
+                let res = await GetSubtarefas(tarefaPai!);
+                if (res) subtasks = res;
+            }
             setSubTarefas(subtasks || []);
-            console.log("subTarefas de ", tarefaPai.titulo, ":", subtasks);
+            console.log("subTarefas de ", tarefaPai?.titulo, ":", subtasks);
         } catch (error) {
             console.log("[ListaTarefas] ATENÇÃO: Ocorreu um erro ao carregar as subtarefas: " + error);
         } finally {
             setCarregando(false);
         }
-    }, [tarefaPai]);
+    }, [tarefaPai, subtasks]);
 
     useEffect(() => {
         carregarTarefas();
     }, [carregarTarefas]);
 
     const handleOpenModal = useCallback((tarefa: Tarefa) => {
+        onSelected?.(tarefa);
+        return;
         setSelectedTask(tarefa);
         setModalMode(ModalType || 'details');
     }, [ModalType]);
@@ -76,23 +87,23 @@ export default function SubtaskList({ tarefaPai, ModalType, onUpdateSubtask }: P
         else setModalMode('details');
     }, [modalMode, unsavedChanges.current]);
 
-    const handleSaveTask = useCallback(async (result?: Tarefa) => {
-        if (result) {
+    const handleSaveTask = useCallback(async (refresh?: boolean) => {
+        if (refresh) {
             try {
-                const atualizadas = await TrySalvarTarefa(result);
+                const atualizadas = await TryCarregarTarefasArray();
                 if (atualizadas.length > 0) {
                     
                     const filtradas = atualizadas.filter(t =>
-                        tarefaPai.subtarefas?.includes(t.id)
+                        tarefaPai?.subtarefas?.includes(t.id)
                     );
-                    console.log("[suntasklist] a serem atualizadas: ", filtradas.length);
+                    //console.log("[suntasklist] a serem atualizadas: ", filtradas.length);
                     let ordered = OrdenarTarefas(filtradas);
-                    console.log("[suntasklist] ordenadas: ", ordered.length);
+                    //console.log("[suntasklist] ordenadas: ", ordered.length);
                     setSubTarefas(ordered);
                 }
                 else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
             } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
-            if (onUpdateSubtask) onUpdateSubtask(result);
+            if (onUpdateSubtask) onUpdateSubtask();
         }
         else {
             if (onUpdateSubtask) onUpdateSubtask(); // call for refresh
@@ -125,7 +136,7 @@ export default function SubtaskList({ tarefaPai, ModalType, onUpdateSubtask }: P
 
                 <Modal visible={selectedTask !== null} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
                     {modalMode === 'details' && selectedTask && (
-                        <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
+                        <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={() =>handleSaveTask()} />
                     )}
                 </Modal>
                 {selectedTask !== null && modalMode === 'edit' && (

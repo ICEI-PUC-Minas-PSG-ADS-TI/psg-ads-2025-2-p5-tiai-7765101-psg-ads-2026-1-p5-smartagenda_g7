@@ -13,21 +13,23 @@ import {
 
 // Tipos e Serviços
 import { Tarefa } from '../types/tarefa.ts';
-import { CreateTarefa, LocaleStringToTimestamp, GetSubtarefas, CreateTarefaJSON, GetUniqueID } from '../services/TarefaService.ts';
+import { CreateTarefa, LocaleStringToTimestamp, GetSubtarefas, CreateTarefaJSON, GetUniqueID, SyncState } from '../services/TarefaService.ts';
 import StorageAPI, { CarregarTarefas } from '../services/LocalStorageService';
 import 'react-native-get-random-values';
 import SubTaskList from './SubTaskList.tsx';
 import { TrySalvarTarefa, TrySalvar } from '../services/SaveControlService.ts';
 import TaskTreeView from './TaskTreeView.tsx';
+import { get } from 'react-native/Libraries/NativeComponent/NativeComponentRegistry';
 
 type Props = {
     tarefa?: Tarefa | null;
-    onClose?: (result?: Tarefa) => void;
+    onClose?: (requireRefresh?: boolean) => void;
     parent?: Tarefa;
+    newTask?: boolean; // para criação
     onUnsavedChanges?: (hasUnsavedChanges: boolean) => void;
 };
 
-export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges }: Props) {
+export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsavedChanges }: Props) {
     const CreateTarefaControlled = useCallback(async () => {
         let id = await GetUniqueID();
 
@@ -39,13 +41,13 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
         )
     }, []);
 
-    const isCreating = !tarefa;
+    const isCreating = newTask || false;
     //const [unsavedChanges, setUnsavedChanges] = useState(isCreating);
     const unsavedChanges = useRef(isCreating);
     useEffect(() => {
         onUnsavedChanges?.(unsavedChanges.current);
     }, [unsavedChanges.current, onUnsavedChanges]);
-    const unsavedSubtaskChanges = useRef(false);
+    //const unsavedSubtaskChanges = useRef(false);
 
     const [task, setTask] = useState<Tarefa | null>(
         tarefa ?? null
@@ -60,6 +62,7 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
     // useStates relacionados a subtarefas.
     const [Subtasks, setSubtasks] = useState<Tarefa[]>([]);
     const [selectedSubtask, setSelectedSubtask] = useState<Tarefa | null>(null);
+    const [subtaskCreationMode, setSubtaskCreationMode] = useState(false);
 
     // taskTreeView
     const [openTreeView, setOpenTreeView] = useState(false);
@@ -129,7 +132,7 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
             }
         }
 
-    }, [task, Subtasks]);
+    }, [task]);
 
     const newSubtask = useCallback(() => {
         //if (!task) return;
@@ -137,50 +140,81 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
             let subtask = await CreateTarefaControlled();
             subtask.parentId = task!.id;
             setSelectedSubtask(subtask);
+            setSubtaskCreationMode(true);
             console.log("created subtask: " + subtask.id);
         }
         createSubtask();
     }, []);
 
-    const saveSubtask = useCallback(async (subtask?: Tarefa) => {
-        console.log("subtask save cancelation: " + !selectedSubtask + ", " + !subtask);
+    const ForceRefresh = useCallback(async () => {
+        let tarefas = await CarregarTarefas();
+        if (tarefas && task) {
+            let newtask = tarefas[task.id];
+            if (newtask) setTask(newtask);
+            else console.log("task not found on refresh??");
+        }
+    }, []);
+
+    const saveSubtask = useCallback(async (forcerefresh?: boolean) => {
+        console.log("saving subtask");
         let newtask: Tarefa | undefined;
 
-        if (!subtask) {//if (!selectedSubtask || !subtask) {
-            let updated = await GetSubtarefas(task!);
-            //console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
-            setSubtasks(updated || []);
+        let tarefas = await CarregarTarefas();
+        console.log(tarefas);
+        let updatedparent = tarefas ? tarefas[task!.id] : null;
 
-            setTask(prevTask => {
-                if (!prevTask) return prevTask;
-                let updatedStatus: Tarefa['estado'] = 'EmProgresso';
-                if (updated) {
-                    if (updated.every(t => t.estado === 'Finalizado'))
-                        updatedStatus = 'Finalizado';
-                    else if (updated.every(t => t.estado === 'NaoIniciado'))
-                        updatedStatus = 'NaoIniciado';
+        let updated = updatedparent ? await GetSubtarefas(updatedparent) : await GetSubtarefas(task!);
+        setSubtasks(updated || []);
+        if (forcerefresh) {//if (!selectedSubtask || !subtask) {
+            console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
+            let updatedStatus: Tarefa['estado'] = 'EmProgresso';
+            if (updated) {
+                if (updated.every(t => t.estado === 'Finalizado'))
+                    updatedStatus = 'Finalizado';
+                else if (updated.every(t => t.estado === 'NaoIniciado'))
+                    updatedStatus = 'NaoIniciado';
 
-                    newtask = {
-                        ...prevTask,
-                        estado: updatedStatus,
-                        data_finalizado: updatedStatus === 'Finalizado' ? Date.now() : undefined,
-                        subtarefas: updated.map(t => t.id)
-                    };
-                }
-                else {
-                    newtask = {
-                        ...prevTask,
-                        estado: updatedStatus,
-                        subtarefas: []
-                    };
-                }
-                return newtask;
-            });
+                newtask = {
+                    ...task!,
+                    estado: updatedStatus,
+                    data_finalizado:
+                        updatedStatus === 'Finalizado'
+                            ? Date.now()
+                            : undefined,
+                    subtarefas: updated?.map(t => t.id) ?? undefined
+                };
+            }
+            else {
+                newtask = {
+                    ...task!,
+                    estado: updatedStatus,
+                    subtarefas: []
+                };
+            }
+            setTask(newtask);
             console.log("new subtask count: ", newtask?.subtarefas?.length);
             if (newtask) await TrySalvarTarefa(newtask);
-            tryClose();
-            return;
+            //tryClose();
+            
         }
+        else {
+            /*console.log('ahoy');
+            setSubtasks(prev => {
+                const existingIndex = prev.findIndex(t => t.id === subtask.id);
+                if (existingIndex >= 0) {
+                    const updated = [...prev];
+                    updated[existingIndex] = subtask;
+                    return updated;
+                }
+                return [...prev, subtask];
+            })*/
+        }
+        if (updatedparent) setTask(updatedparent);
+        console.log("old subtask count: ", task?.subtarefas?.length, " | new subtask count: ", updatedparent?.subtarefas?.length);
+        setSubtaskCreationMode(false);
+        setSelectedSubtask(null);
+
+        //if (parent) tryClose();
         /*
 
         unsavedSubtaskChanges.current = false;
@@ -229,7 +263,7 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
         console.log("2new subtask count: ", newtask?.subtarefas?.length);
         if (newtask) await TrySalvarTarefa(newtask);*/
         //tryClose();
-    }, [selectedSubtask, setTask]);
+    }, [setSelectedSubtask, task]);
 
     const updateField = useCallback((field: keyof Tarefa, value: any) => {
         setTask(prev => prev ? { ...prev, [field]: value } : null);
@@ -298,14 +332,12 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
             await StorageAPI.DeletarTarefa(task!.id);
             unsavedChanges.current = false;
             await TrySalvar();
+            onClose?.(true);
         }
         catch (error) {
             console.log(error);
         }
-        if (onClose) {
-            onClose();
-        }
-    }, []);
+    }, [task, onClose]);
 
     /*const importTasksJSON = useCallback(async (tarefas: Tarefa[]) => {
         if (tarefas) {
@@ -347,13 +379,12 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
                     ]
                 )
             });
-            if (res) {return;}
-            else 
-            {
+            if (res) { return; }
+            else {
                 unsavedChanges.current = false;
                 handleCancelExit();
             }
-            
+
         }
         if (errorField !== '') {
             Alert.alert(
@@ -384,15 +415,22 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
                         }
                     }
                     else parent.subtarefas = [task.id];
+                    await StorageAPI.SalvarTarefa(task);
+                    await SyncState(parent);
                 }
 
                 unsavedChanges.current = false;
                 console.log(`SAVING BOTH RIGHT NOW ${updated.parentId} -- `, parent?.subtarefas?.length); // theres something fucking this up
-                await TrySalvarTarefa(updated);
-                if (parent) await TrySalvarTarefa(parent);
+                if (parent) {
+                    await TrySalvarTarefa(updated);
+                    await TrySalvarTarefa(parent);
+                }
+                else {
+                    await TrySalvarTarefa(updated, true);
+                }
 
                 if (onClose) {
-                    onClose(updated);
+                    onClose(true);
                 }
             }
             else {
@@ -446,11 +484,11 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
                 {Subtasks.length > 0 ? (
                     <View>
                         <Text style={styles.secondaryText}>
-                            Subtasks: ({Subtasks.length})
+                            Sub-Tarefas: ({Subtasks.length})
                         </Text>
                         <View >
-                            <SubTaskList tarefaPai={task!} ModalType="edit"
-                                onUpdateSubtask={saveSubtask} />
+                            <SubTaskList tarefaPai={task!} subtasks={Subtasks} onSelected={setSelectedSubtask} ModalType="edit"
+                                onUpdateSubtask={() => saveSubtask()} />
                         </View>
                         {addsubtask}
                     </View>
@@ -496,7 +534,7 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
 
     if (!task) return (<Text>Carregando...</Text>)
     else return (
-        <Modal transparent={true} animationType="slide" onRequestClose={() =>tryClose()}>
+        <Modal transparent={true} animationType="slide" onRequestClose={() => tryClose()}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={[styles.container, styles.coloredBackground]}>
                     <Text style={styles.secondaryText}>{depthDisplay}</Text>
@@ -509,10 +547,10 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
                     {/*isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>*/}
 
                     {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
-                        {selectedSubtask && (
-                            <TaskManager tarefa={null} onClose={saveSubtask} parent={task}/>
-                        )}
-                        
+                    {selectedSubtask && (
+                        <TaskManager tarefa={selectedSubtask} onClose={() => saveSubtask(true)} newTask={subtaskCreationMode} parent={task} />
+                    )}
+
                     <View style={styles.formContainer}>
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Título:</Text>
@@ -570,7 +608,7 @@ export default function TaskManager({ tarefa, onClose, parent, onUnsavedChanges 
                         {LowerContent}
 
                         <TouchableOpacity
-                            style={[styles.button, styles.highlightColor2]}
+                            style={[styles.button, styles.saveColor]}
                             onPress={() => tryClose(true)}
                         >
                             <Text style={styles.label}>{isCreating ? 'Salvar Nova Tarefa' : 'Salvar Alterações'}</Text>
@@ -720,6 +758,9 @@ const styles = StyleSheet.create({
     },
     highlightColor3: {
         backgroundColor: '#6f419e'
+    },
+    saveColor: {
+        backgroundColor: '#43ac6d'
     },
     title: {
         fontSize: 30,

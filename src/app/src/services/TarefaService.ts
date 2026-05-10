@@ -1,8 +1,9 @@
 // Funções relacionadas às Tarefas
 
 import type { Tarefa } from '../types/tarefa';
-import StorageAPI from './LocalStorageService';
+import StorageAPI, { SalvarTarefas } from './LocalStorageService';
 import { v4 as uuidv4 } from 'uuid'; // para geração de ID
+import { TrySalvarTarefa } from './SaveControlService';
 
 export function CreateTarefa(id: string, titulo: string, data_criado: number, data_vencimento: number, parentId?: string, categorias?: string[], descricao_geral?: string, subtarefas?: string[], data_finalizado?: number): Tarefa {
     return {
@@ -235,6 +236,42 @@ function TryFindParent(tarefa: Tarefa, tarefasRecord: Record<string, Tarefa>): T
 }
 
 /**
+ * Sincroniza o estado do pai de acordo com os estados dos filhos
+ * @param parent 
+ * @returns O pai
+ */
+export async function SyncState(parent: Tarefa): Promise<Tarefa> {
+    //if (!parent.subtarefas || parent.subtarefas.length === 0) return parent;
+    let subtasks = await GetSubtarefas(parent);
+    if (!subtasks || subtasks.length === 0) return parent;
+
+    let updatedStatus: Tarefa['estado'] = 'EmProgresso';
+    if (subtasks) {
+        if (subtasks.every(t => t.estado === 'Finalizado'))
+            updatedStatus = 'Finalizado';
+        else if (subtasks.every(t => t.estado === 'NaoIniciado'))
+            updatedStatus = 'NaoIniciado';
+    }
+    parent.estado = updatedStatus;
+    if (parent.estado == 'Finalizado')
+    {
+        parent.data_finalizado = Date.now();
+    }
+    await TrySalvarTarefa(parent);
+
+    if (parent.parentId) {
+        let tarefas = await StorageAPI.CarregarTarefas();
+        if (tarefas && tarefas[parent.parentId]) {
+            await SyncState(tarefas[parent.parentId]);
+        }
+    }
+
+    console.log("updated state for ", parent.titulo, ": ", parent.estado);
+
+    return parent;
+}
+
+/**
  * Obtém as subtarefas diretas de uma tarefa específica.
  * @param id ID da tarefa cujas subtarefas se deseja obter.
  * @returns array de subtarefas, ou null se a tarefa não tiver subtarefas ou se ocorrer algum erro durante o processo.
@@ -284,11 +321,10 @@ export async function GetAllSubtarefas(tarefa: Tarefa): Promise<Tarefa[] | null>
     let tempsub = await GetSubtarefas(tarefa);
     if (!tempsub) return [];
     subtarefas = subtarefas.concat(tempsub);
-    for (let s of subtarefas)
-    {
+    for (let s of subtarefas) {
         let subsub = await GetAllSubtarefas(s);
         if (subsub)
-        subtarefas = subtarefas.concat(subsub);
+            subtarefas = subtarefas.concat(subsub);
     };
 
     //console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
@@ -316,17 +352,14 @@ export async function GetSubtarefasFinalizadas(tarefa: Tarefa): Promise<Tarefa[]
 export async function FilterSubTarefasArray(tarefas: Tarefa[], onlyMaintasks: boolean): Promise<Tarefa[]> {
     let res: Tarefa[] = [];
 
-    for (const t of tarefas)
-    {
-        if (!t.parentId)
-        {
+    for (const t of tarefas) {
+        if (!t.parentId) {
             if (onlyMaintasks) {
                 res.push(t);
                 //console.log("parent");
             }
         }
-        else if (!onlyMaintasks)
-        {
+        else if (!onlyMaintasks) {
             res.push(t);
             //console.log("sub");
         }
@@ -344,17 +377,14 @@ export async function FilterSubTarefasArray(tarefas: Tarefa[], onlyMaintasks: bo
 export async function FilterSubTarefas(tarefas: Tarefa[], onlyMaintasks: boolean): Promise<Record<string, Tarefa>> {
     let res = {} as Record<string, Tarefa>;
 
-    for (const t of tarefas)
-    {
-        if (!t.parentId)
-        {
+    for (const t of tarefas) {
+        if (!t.parentId) {
             if (onlyMaintasks) {
                 res[t.id] = t;
                 //console.log("parent");
             }
         }
-        else if (!onlyMaintasks)
-        {
+        else if (!onlyMaintasks) {
             res[t.id] = t;
             //console.log("sub");
         }

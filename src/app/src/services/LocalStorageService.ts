@@ -41,9 +41,29 @@ export async function SalvarTarefas(tarefas: Record<string, Tarefa>) {
     try {
         await AS.setItem(getStorageKey(), JSON.stringify(tarefas));
         await SalvarTarefasLocal(tarefas);
+        //console.log("[SALVARTAREFAS]Tarefas salvas: ", Object.keys(tarefas).length);
     } catch (err) {
         console.log("Erro ao salvar tarefas no Async Storage: " + err);
     }
+}
+
+export async function SalvarTarefa(tarefa: Tarefa) {
+    try {
+        let tarefas = await CarregarTarefas();
+        if (!tarefas) tarefas = {};
+        tarefas[tarefa.id] = tarefa;
+        await AS.setItem(getStorageKey(), JSON.stringify(tarefas));
+        await SalvarTarefasLocal(tarefas);
+        //console.log("[SALVARTAREFAS]Tarefas salvas: ", Object.keys(tarefas).length);
+    } catch (err) {
+        console.log("Erro ao salvar tarefas no Async Storage: " + err);
+    }
+}
+
+export async function TryGetTarefa(id: string): Promise<Tarefa | null> {
+    let tarefas = await CarregarTarefas();
+    if (tarefas && tarefas[id]) return tarefas[id];
+    return null;
 }
 
 /**
@@ -119,6 +139,8 @@ export async function DeletarTarefa(id: string, ignoreSubtasks?: boolean) {
         // tirar a referencia das tarefas pai
         let tarefas = await CarregarTarefas();
         if (!tarefas) return;
+        console.log("Tarefas antes de deletar: ", Object.keys(tarefas).length);
+        let parentsToUpdate = Object.values(tarefas).filter(t => t.subtarefas?.includes(id));
         Object.values(tarefas).forEach(tarefa => {
             if (tarefa.subtarefas) {
                 tarefa.subtarefas = tarefa.subtarefas.filter(subId => subId !== id);
@@ -126,6 +148,7 @@ export async function DeletarTarefa(id: string, ignoreSubtasks?: boolean) {
         });
         console.log("[LocalStorageService] Removido Referencias à tarefa ", id);
         await DeletarTarefaActual(tarefas, id, ignoreSubtasks);
+        //console.log(JSON.stringify(tarefas, null, 2));
         await SalvarTarefas(tarefas);
     }
     catch (e) {
@@ -152,6 +175,7 @@ async function DeletarTarefaActual(tarefas: Record<string, Tarefa>, id: string, 
 export async function ClearCacheData() {
     try {
         await AS.removeItem(getStorageKey());
+        await AS.removeItem('tarefas_guest');
     } catch (err) {
         console.log("Erro ao limpar cache: " + err);
     }
@@ -248,11 +272,13 @@ export async function ClearLocalData() {
 
 // Somente para poder chamar as funções como classe
 export default {
+    TryGetTarefa,
     CarregarTarefas,
     CarregarTarefasLocal,
     CarregarTarefasLocalGuest,
     CarregarTarefasArray,
     SalvarTarefas,
+    SalvarTarefa,
     SalvarTarefasLocal,
     DeletarTarefa,
     Iniciar,

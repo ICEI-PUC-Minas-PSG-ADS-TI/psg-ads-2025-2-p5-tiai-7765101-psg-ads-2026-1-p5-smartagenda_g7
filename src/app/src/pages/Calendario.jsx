@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { Agenda, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import StorageAPI from '../services/LocalStorageService';
@@ -58,6 +58,7 @@ const Calendario = () => {
   const carregarTarefas = useCallback(async () => {
     try {
       const tarefasArray = await StorageAPI.CarregarTarefasArray();
+      //console.log(tarefasArray);
       setAllTasks(tarefasArray || []);
     } catch (error) {
       console.error("Erro ao carregar tarefas para o calendário: ", error);
@@ -69,6 +70,13 @@ const Calendario = () => {
       carregarTarefas();
     }, [carregarTarefas])
   );
+
+  useEffect(() => {
+          //console.log("'tarefasUpdated' listener added");  
+          //carregarTarefas();      
+          const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
+          return () => { /*console.log("'tarefasUpdated' listener removed");*/ subscription.remove() };
+      }, []);
 
   const { handleOpenDetails, modals } = useTaskModals(carregarTarefas);
 
@@ -132,7 +140,7 @@ const Calendario = () => {
         if (!map[dateString]) {
           map[dateString] = [];
         }
-        map[dateString].push(tarefa);
+        map[dateString] = [...map[dateString], tarefa];
       }
     });
 
@@ -156,16 +164,20 @@ const Calendario = () => {
       <Agenda
         items={items}
         selected={selectedDate}
+        //key={JSON.stringify(items).length} // isso aqui faz atualizar sempre, mas é bem lento
         onDayPress={(day) => setSelectedDate(day.dateString)}
         rowHasChanged={(r1, r2) => {
           if (!r1 || !r2) return true;
-          return r1.id !== r2.id || r1.estado !== r2.estado || r1.titulo !== r2.titulo;
+          return r1 !== r2 || r1.id !== r2.id || r1.estado !== r2.estado || r1.titulo !== r2.titulo;
         }}
-        renderItem={(item) => (
+        renderItem={(item) => {
+          console.log("RENDER ITEM", item.id, item.estado);
+
+          return (
           <View style={styles.itemContainer}>
             <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />
-          </View>
-        )}
+          </View>)
+        }}
         renderEmptyDate={() => (
           <View style={styles.emptyDateContainer}>
             <View style={styles.emptyDateLine} />

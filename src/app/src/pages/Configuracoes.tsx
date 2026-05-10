@@ -70,7 +70,7 @@ const Configuracoes = () => {
             res.map(t => [t.id, t])
           ) as Record<string, Tarefa>;
           LocalStorageService.SalvarTarefas(resmap);
-          await TrySalvar();
+          await TrySalvar(true);
         }
         else {
           if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem."))

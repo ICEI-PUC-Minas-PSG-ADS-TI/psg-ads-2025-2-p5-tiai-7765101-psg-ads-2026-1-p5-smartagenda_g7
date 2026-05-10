@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert, DeviceEventEmitter } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, DeviceEventEmitter } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -25,7 +25,6 @@ export default function ListaTarefas() {
     const unsavedChanges = useRef(false);
 
     const carregarTarefas = useCallback(async () => {
-        console.log("REEEFREEEESSSHHH");
         try {
             setCarregando(true);
             console.log("Carregando tarefas...");
@@ -35,6 +34,7 @@ export default function ListaTarefas() {
                 setTarefas([]);
             }
             else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
+            console.log("Tarefas carregadas: ", tarefasCarregadas.length);
 
         } catch (error) {
             console.log("[ListaTarefas] ATENÇÃO: Ocorreu um erro ao carregar as tarefas: " + error);
@@ -49,7 +49,8 @@ export default function ListaTarefas() {
     }, [])
 
     useEffect(() => {
-        //console.log("'tarefasUpdated' listener added");        
+        //console.log("'tarefasUpdated' listener added");  
+        carregarTarefas();      
         const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
         return () => { /*console.log("'tarefasUpdated' listener removed");*/ subscription.remove() };
     }, []);
@@ -109,7 +110,7 @@ export default function ListaTarefas() {
             <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
             {isCreating && (
-                <TaskManager tarefa={null} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+                <TaskManager tarefa={null} onClose={() =>handleSaveTask()} newTask={isCreating} onUnsavedChanges={(e) => unsavedChanges.current = e} />
             )}
 
             <TarefaList

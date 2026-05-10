@@ -75,7 +75,7 @@ export const useTaskModals = (onRefresh?: () => void) => {
                 )}
             </Modal>
             {modalMode === 'edit' && selectedTask && (
-                <TaskManager tarefa={selectedTask} onClose={handleSaveTask}/>
+                <TaskManager tarefa={selectedTask} onClose={() =>handleSaveTask()}/>
             )}
         </View>
     );
