@@ -5,6 +5,7 @@ import { aiTools } from '../tools/aiToolSchemas';
 import { CreateTarefaJSON } from '../services/TarefaService';
 import LocalStorageService from '../services/LocalStorageService';
 import SaveControlService from '../services/SaveControlService';
+import IAInteracaoService from '../services/IAInteracaoService';
 
 const INITIAL_TEXT = "Olá! Sou seu assistente de Agenda IA. Como posso te ajudar a organizar suas tarefas e rotina hoje?";
 const AI_MODEL = 'gemini-2.5-flash-lite';
@@ -70,22 +71,24 @@ export function useAIChat() {
         try {
             const chat = initChat();
 
+
+              await IAInteracaoService.SalvarInteracao({
+              id: Date.now().toString(),
+
+              tipo: 'pergunta',
+
+              prompt: inputText.trim(),
+              resposta: '',
+
+              dataInteracao: Date.now(),
+
+              executada: true,
+
+              sincronizada: false,
+              localOnly: true
+    });
             // Envia a mensagem do usuário para a IA
             let result = await chat.sendMessage(inputText);
-
-            // Tenta pegar o texto que vem JUNTO com a chamada de função
-            try {
-                const initialText = result.response.text();
-                if (initialText) {
-                    setMessages((prev) => [...prev, {
-                        id: Date.now().toString() + '-init',
-                        text: initialText,
-                        sender: 'assistant',
-                    }]);
-                }
-            } catch (e) {
-                // Se deu aqui, é porque não veio texto. Ignoramos.
-            }
 
             // Verifica se a resposta pede para invocar funções do sistema
             let functionCalls = result.response.functionCalls();
@@ -220,8 +223,26 @@ export function useAIChat() {
             }
 
             if (botText) {
-                const botMessage: Message = {
-                    id: (Date.now() + 1).toString(),
+
+                await IAInteracaoService.SalvarInteracao({
+    id: (Date.now() + 1).toString(),
+
+    tipo: 'resposta',
+
+    prompt: inputText,
+    resposta: botText,
+
+    dataInteracao: Date.now(),
+
+    executada: true,
+
+    sincronizada: true,
+    localOnly: false
+});
+
+const botMessage: Message = {
+
+             id: (Date.now() + 1).toString(),
                     text: botText,
                     sender: 'assistant',
                 };
