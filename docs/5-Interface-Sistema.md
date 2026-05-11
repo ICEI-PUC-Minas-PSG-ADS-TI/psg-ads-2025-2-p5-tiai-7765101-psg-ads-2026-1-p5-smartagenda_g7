@@ -14,19 +14,18 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 **🟢 Sprint 1: Hello World / Tela Inicial**
 * **Funcionalidade:** Ponto de entrada do sistema e navegação principal.
 * **Descrição:** Tela inicial conectada à API, provando que o fluxo base da aplicação está funcionando.
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/cfc35913-aa48-4040-95bd-b2baa41fc4fb" />
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/59ad6fdb-5023-4321-9d1e-0fb329121029" />
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/a1ab16df-3ffa-4ae1-b89e-da4802d2844f" />
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/bd535bc8-3725-4334-bc4e-25c3c3b4dedb" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/cfc35913-aa48-4040-95bd-b2baa41fc4fb" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/59ad6fdb-5023-4321-9d1e-0fb329121029" />
+
 
 > 💡 **Importante:** Uma mesma funcionalidade (fatia) pode render **várias telas** (ex: tela de listagem, formulário de cadastro e modal de sucesso). **Coloque prints de todas as etapas do fluxo.** <br><br>
 
 **🟡 Sprint 2: MVP (Primeira Fatia Vertical)**
 * **Funcionalidade:** *(Ex: Cadastro de Cliente e Listagem)*
 * **Descrição:** Formulário interativo que envia os dados para a API e salva com sucesso no Banco de Dados.
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/1cbd59a7-2059-41aa-8928-6d62fc058ead" />
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/dea1ffbc-9038-4632-8670-3e51a295fcaf" />
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/91aeddeb-1115-4c77-b008-232f4588698c" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/1cbd59a7-2059-41aa-8928-6d62fc058ead" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/dea1ffbc-9038-4632-8670-3e51a295fcaf" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/91aeddeb-1115-4c77-b008-232f4588698c" />
 
 
 > 💡 **Importante:** Uma mesma funcionalidade (fatia) pode render **várias telas** (ex: tela de listagem, formulário de cadastro e modal de sucesso). **Coloque prints de todas as etapas do fluxo.** <br><br>
