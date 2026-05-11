@@ -26,6 +26,8 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 <img width="275"  alt="image" src="https://github.com/user-attachments/assets/1cbd59a7-2059-41aa-8928-6d62fc058ead" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/dea1ffbc-9038-4632-8670-3e51a295fcaf" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/91aeddeb-1115-4c77-b008-232f4588698c" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/6aa17c53-36d5-4e98-974c-c4f75838cd3c" />
+
 
 
 > 💡 **Importante:** Uma mesma funcionalidade (fatia) pode render **várias telas** (ex: tela de listagem, formulário de cadastro e modal de sucesso). **Coloque prints de todas as etapas do fluxo.** <br><br>
