@@ -14,7 +14,7 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 **🟢 Sprint 1: Hello World / Tela Inicial**
 * **Funcionalidade:** Ponto de entrada do sistema e navegação principal.
 * **Descrição:** Tela inicial conectada à API, provando que o fluxo base da aplicação está funcionando.
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/cfc35913-aa48-4040-95bd-b2baa41fc4fb" />
+<img width="275"  alt="image" src="https://github.com/user-attachments/assets/cfc35913-aa48-4040-95bd-b2baa41fc4fb" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/59ad6fdb-5023-4321-9d1e-0fb329121029" />
 
 
@@ -23,7 +23,7 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 **🟡 Sprint 2: MVP (Primeira Fatia Vertical)**
 * **Funcionalidade:** *(Ex: Cadastro de Cliente e Listagem)*
 * **Descrição:** Formulário interativo que envia os dados para a API e salva com sucesso no Banco de Dados.
-<img width="300"  alt="image" src="https://github.com/user-attachments/assets/1cbd59a7-2059-41aa-8928-6d62fc058ead" />
+<img width="275"  alt="image" src="https://github.com/user-attachments/assets/1cbd59a7-2059-41aa-8928-6d62fc058ead" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/dea1ffbc-9038-4632-8670-3e51a295fcaf" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/91aeddeb-1115-4c77-b008-232f4588698c" />
 
