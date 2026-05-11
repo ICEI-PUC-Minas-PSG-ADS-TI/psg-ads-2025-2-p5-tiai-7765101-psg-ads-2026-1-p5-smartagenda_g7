@@ -3,6 +3,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
+import { TrySalvarTarefa } from '../services/SaveControlService.ts';
+import StorageAPI, { TryGetTarefa } from '../services/LocalStorageService.ts';
+import { SyncState } from '../services/TarefaService.ts';
 
 type Props = {
     tarefa: Tarefa;
@@ -12,27 +15,60 @@ type Props = {
 }
 
 export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: Props) {
-    
+
+    const onCompleteInner = async (task: Tarefa) => {
+        let updated = { ...task };
+        let parent: Tarefa | null = null;
+        if (updated.parentId) {
+            parent = await TryGetTarefa(updated.parentId!);
+        }
+        if (parent) {
+            updated.parentId = parent.id;
+            if (parent.subtarefas) {
+                let included = false;
+                for (const sid of parent.subtarefas) {
+                    if (sid === updated.id) {
+                        included = true; break;
+                    }
+                }
+                if (!included) {
+                    parent.subtarefas.push(updated.id);
+                }
+            }
+            else parent.subtarefas = [updated.id];
+            await StorageAPI.SalvarTarefa(updated);
+            await SyncState(parent);
+
+            await TrySalvarTarefa(updated);
+            await TrySalvarTarefa(parent, true);
+        }
+        else {
+            await TrySalvarTarefa(updated, true);
+        }
+
+        onComplete(updated);
+    }
+
     const handleConcluir = () => {
         Alert.alert(
             "Concluir Tarefa",
             `Tem certeza que deseja marcar "${tarefa.titulo}" como concluída?`,
             [
                 { text: "Cancelar", style: "cancel" },
-                { 
-                    text: "Sim, concluir!", 
+                {
+                    text: "Sim, concluir!",
                     style: "default",
                     onPress: () => {
-                        const tarefaAtualizada = { ...tarefa, estado: "Finalizado" as const };
-                        onComplete(tarefaAtualizada);
+                        const tarefaAtualizada = { ...tarefa, data_finalizado: Date.now(), estado: "Finalizado" as const };
+                        onCompleteInner(tarefaAtualizada);
                     }
                 }
             ]
         );
     };
 
-    const dataVencimento = tarefa.data_vencimento 
-        ? new Date(tarefa.data_vencimento).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }) 
+    const dataVencimento = tarefa.data_vencimento
+        ? new Date(tarefa.data_vencimento).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })
         : 'Sem prazo estipulado';
 
     const dataCriacao = new Date(tarefa.data_criado).toLocaleDateString();
@@ -42,7 +78,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
     return (
         <View style={styles.overlay}>
             <View style={styles.container}>
-                
+
                 {/* Cabeçalho do Modal */}
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Detalhes da Tarefa</Text>
@@ -60,7 +96,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
                     </View>
 
                     <Text style={styles.titulo}>{tarefa.titulo}</Text>
-                    
+
                     <View style={styles.dateBox}>
                         <Text style={styles.dateLabel}>🗓 Vence em:</Text>
                         <Text style={styles.dateValue}>{dataVencimento}</Text>
@@ -81,7 +117,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
                             <Text style={styles.btnConcluirText}>✔ Marcar como Concluída</Text>
                         </TouchableOpacity>
                     )}
-                    
+
                     <TouchableOpacity style={styles.btnEditar} onPress={() => onEdit(tarefa)}>
                         <Text style={styles.btnEditarText}>✏️ Editar Tarefa</Text>
                     </TouchableOpacity>

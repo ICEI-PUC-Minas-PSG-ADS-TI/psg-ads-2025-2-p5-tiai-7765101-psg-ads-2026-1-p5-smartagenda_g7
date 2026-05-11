@@ -1,58 +1,44 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, StatusBar, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, DeviceEventEmitter } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Componentes
-import TarefaMinimal from '../components/TarefaMinimal';
+import TarefaList from '../components/TarefaList';
 import TaskManager from '../components/TaskManager';
-import TarefaDetalhes from '../components/DetalhesTarefa';
+import TarefaFilter, { FiltroEstado, aplicarFiltros } from '../components/TarefaFilter';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
-import StorageAPI from '../services/LocalStorageService';
-import { buscarTarefasFirestore, salvarTarefaFirestore } from '../services/FirestoreService';
-
-type FiltroTipo = 'Todas' | 'Pendentes' | 'Concluídas';
-type ModalMode = 'none' | 'details' | 'edit';
-
-const ordenarTarefas = (lista: Tarefa[]) => {
-    return lista.sort((a, b) => {
-        if (!a.data_vencimento) return 1;
-        if (!b.data_vencimento) return -1;
-        return a.data_vencimento - b.data_vencimento;
-    });
-};
+import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
+import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
 
 export default function ListaTarefas() {
     const [tarefas, setTarefas] = useState<Tarefa[]>([]);
-    const [filtroAtivo, setFiltroAtivo] = useState<FiltroTipo>('Todas');
+    const [selectedState, setSelectedState] = useState<FiltroEstado>('Todas');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [carregando, setCarregando] = useState(true);
-    
-    const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
-    const [modalMode, setModalMode] = useState<ModalMode>('none');
+    const firstLoad = useRef(true);
+
+    const [isCreating, setIsCreating] = useState(false);
+    const unsavedChanges = useRef(false);
 
     const carregarTarefas = useCallback(async () => {
         try {
             setCarregando(true);
-            const user = auth().currentUser;
-            if (!user) return;
-
-            const tarefasDoFirebase = await buscarTarefasFirestore();
-            
-            if (tarefasDoFirebase && tarefasDoFirebase.length > 0) {
-                setTarefas(ordenarTarefas([...tarefasDoFirebase]));
-                const tarefasMap: Record<string, Tarefa> = {};
-                tarefasDoFirebase.forEach(t => { tarefasMap[t.id] = t; });
-                await StorageAPI.SalvarTarefas(tarefasMap);
-            } else {
-                const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
-                if (tarefasLocais.length > 0) {
-                    setTarefas(ordenarTarefas(tarefasLocais));
-                }
+            console.log("Carregando tarefas...");
+            const tarefasCarregadas = await TryCarregarTarefasArray();
+            if (!tarefasCarregadas) {
+                console.log("[ListaTarefas] ATENÇÃO: Nenhuma tarefa encontrada, ou ocorreu um erro.");
+                setTarefas([]);
             }
+            else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
+            console.log("Tarefas carregadas: ", tarefasCarregadas.length);
+
         } catch (error) {
-            const tarefasLocais = await StorageAPI.CarregarTarefasArray() || [];
-            setTarefas(ordenarTarefas(tarefasLocais));
+            console.log("[ListaTarefas] ATENÇÃO: Ocorreu um erro ao carregar as tarefas: " + error);
+            setTarefas([]);
         } finally {
             setCarregando(false);
         }
@@ -60,53 +46,55 @@ export default function ListaTarefas() {
 
     useEffect(() => {
         carregarTarefas();
-    }, [carregarTarefas]);
+    }, [])
 
-    const handleLogout = useCallback(() => {
-        auth().signOut();
+    useEffect(() => {
+        //console.log("'tarefasUpdated' listener added");  
+        carregarTarefas();      
+        const subscription = DeviceEventEmitter.addListener('tarefasUpdated', () => { console.log("Evento 'tarefasUpdated' recebido"); carregarTarefas() });
+        return () => { /*console.log("'tarefasUpdated' listener removed");*/ subscription.remove() };
     }, []);
 
-    const handleOpenDetails = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('details'); 
-    }, []);
+    //const isLogged = !!auth().currentUser;
 
-    const handleOpenEdit = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('edit'); 
-    }, []);
+    /*const handleAuthAction = useCallback(async () => {
+        if (isLogged) {
+            await auth().signOut();
+            DeviceEventEmitter.emit('tarefasUpdated'); // Recarregar após deslogar
+        } else {
+            DeviceEventEmitter.emit('showLogin');
+        }
+    }, [isLogged]);*/
 
     const handleCreateNew = useCallback(() => {
-        setSelectedTask(null);
-        setModalMode('edit');
+        setIsCreating(true);
     }, []);
 
     const handleCloseModal = useCallback(() => {
-        setSelectedTask(null);
-        setModalMode('none');
+        setIsCreating(false);
+    }, [isCreating]);
+
+    const handleSaveTask = useCallback(async (result?: Tarefa) => { // deprecated
+        handleCloseModal();
     }, []);
 
-    const handleSaveTask = useCallback(async (result?: Tarefa) => {
-        if (result) {
-            try {
-                const tarefasLocais = await StorageAPI.CarregarTarefas() || {};
-                tarefasLocais[result.id] = result;
-                await StorageAPI.SalvarTarefas(tarefasLocais);
-                salvarTarefaFirestore(result).catch(() => {});
-                const atualizadas = await StorageAPI.CarregarTarefasArray() || [];
-                setTarefas(ordenarTarefas(atualizadas));
-            } catch (error) {}
-        }
-        handleCloseModal();
-    }, [handleCloseModal]);
+    const categoriasDisponiveis = useMemo(() => {
+        const cats = new Set<string>();
+        tarefas.forEach(t => {
+            if (t.categorias) t.categorias.forEach(c => cats.add(c));
+        });
+        return Array.from(cats);
+    }, [tarefas]);
+
+    const handleToggleCategory = useCallback((cat: string) => {
+        setSelectedCategories(prev =>
+            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+        );
+    }, []);
 
     const tarefasFiltradas = useMemo(() => {
-        return tarefas.filter(t => {
-            if (filtroAtivo === 'Pendentes') return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
-            if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
-            return true; 
-        });
-    }, [tarefas, filtroAtivo]);
+        return aplicarFiltros(tarefas, selectedState, selectedCategories);
+    }, [tarefas, selectedState, selectedCategories]);
 
     if (carregando) {
         return (
@@ -121,164 +109,135 @@ export default function ListaTarefas() {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Minhas Tarefas</Text>
-                <Text style={styles.headerSubtitle}>
-                    {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
-                </Text>
+            {isCreating && (
+                <TaskManager tarefa={null} onClose={() =>handleSaveTask()} newTask={isCreating} onUnsavedChanges={(e) => unsavedChanges.current = e} />
+            )}
 
-                <View style={styles.filterContainer}>
-                    {(['Todas', 'Pendentes', 'Concluídas'] as FiltroTipo[]).map((filtro) => (
-                        <TouchableOpacity
-                            key={filtro}
-                            style={[styles.filterChip, filtroAtivo === filtro && styles.filterChipActive]}
-                            onPress={() => setFiltroAtivo(filtro)}>
-                            <Text style={[styles.filterText, filtroAtivo === filtro && styles.filterTextActive]}>{filtro}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <TarefaList
+                tarefas={tarefasFiltradas}
+                onRefresh={carregarTarefas}
+                ListHeaderComponent={
+                    <View style={styles.headerContainer}>
+                        <View style={styles.header}>
+                            <Text style={styles.headerTitle}>Minhas Tarefas</Text>
+                            <Text style={styles.headerSubtitle}>
+                                {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
+                            </Text>
+                        </View>
 
-            <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-                {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
-                )}
-                {modalMode === 'edit' && (
-                    <TaskManager tarefa={selectedTask} onClose={handleSaveTask} />
-                )}
-            </Modal>
-
-            <FlatList
-                data={tarefasFiltradas}
-                renderItem={({ item }) => <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-                ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Nada por aqui ainda.</Text>
+                        <TarefaFilter
+                            selectedState={selectedState}
+                            selectedCategories={selectedCategories}
+                            categoriasDisponiveis={categoriasDisponiveis}
+                            onSelectState={setSelectedState}
+                            onToggleCategory={handleToggleCategory}
+                        />
                     </View>
-                )}
+                }
             />
 
-            {/* Botão de Logout Rápido */}
-            <TouchableOpacity style={styles.logoutFab} onPress={handleLogout} activeOpacity={0.8}>
-                <Text style={styles.logoutIcon}>⎋</Text>
-            </TouchableOpacity>
+            {/* Botão de Login/Logout 
+            <TouchableOpacity style={styles.logoutFab} onPress={handleAuthAction} activeOpacity={0.8}>
+                {isLogged ? (
+                    <Icon
+                        name="logout"
+                        size={24}
+                        color="#ffffffff"
+                        style={styles.logoutIcon}
+                    />
+                ) : (
+                    <Icon
+                        name="person"
+                        size={24}
+                        color="#000"
+                        style={styles.logoutIcon}
+                    />
+                )}
+            </TouchableOpacity>*/}
 
-            {/* Botão de Adicionar (+) */}
+            {/* Botão de criar tarefa */}
             <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>
-                <Text style={styles.fabIcon}>+</Text>
+                <Icon
+                    name="add"
+                    size={28}
+                    color="#ffffffff"
+                    style={styles.fabIcon}
+                />
             </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: '#121212' 
+    container: {
+        flex: 1,
+        backgroundColor: '#121212'
     },
-    loadingContainer: { 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        backgroundColor: '#121212' 
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#121212'
     },
-    loadingText: { 
-        color: '#9F7CFA', 
-        marginTop: 16 
+    loadingText: {
+        color: '#9F7CFA',
+        marginTop: 16
     },
-    header: { 
-        paddingTop: 40, 
-        paddingHorizontal: 24, 
-        paddingBottom: 15, 
-        backgroundColor: '#1E1E1E', 
-        borderBottomWidth: 1, 
-        borderBottomColor: '#2D2D2D' 
+    headerContainer: {
+        paddingBottom: 10,
+        width: '100%'
     },
-    headerTitle: { 
-        fontSize: 28, 
-        fontWeight: 'bold', 
-        color: '#FFFFFF' 
+    header: {
+        paddingTop: 40,
+        paddingHorizontal: 24,
+        paddingBottom: 15,
+        backgroundColor: '#1E1E1E',
+        borderBottomWidth: 1,
+        borderBottomColor: '#2D2D2D'
     },
-    headerSubtitle: { 
-        fontSize: 14, 
-        color: '#9F7CFA', 
-        marginTop: 4, 
-        marginBottom: 16 
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#FFFFFF'
     },
-    filterContainer: { 
-        flexDirection: 'row', 
-        gap: 10 
+    headerSubtitle: {
+        fontSize: 14,
+        color: '#9F7CFA',
+        marginTop: 4,
     },
-    filterChip: { 
-        paddingVertical: 6, 
-        paddingHorizontal: 16, 
-        borderRadius: 20, 
-        backgroundColor: '#2D2D2D', 
-        borderWidth: 1, 
-        borderColor: '#3D3D3D' 
+    fab: {
+        position: 'absolute',
+        bottom: 30,
+        right: 30,
+        backgroundColor: '#9F7CFA',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5
     },
-    filterChipActive: { 
-        backgroundColor: 'rgba(159, 124, 250, 0.2)', 
-        borderColor: '#9F7CFA' 
+    fabIcon: {
+        fontSize: 32,
+        color: '#FFFFFF',
+        lineHeight: 34
     },
-    filterText: { 
-        color: '#A59EC0', 
-        fontSize: 14, 
-        fontWeight: '500' 
-    },
-    filterTextActive: { 
-        color: '#9F7CFA', 
-        fontWeight: 'bold' 
-    },
-    listContainer: { 
-        padding: 16, 
-        paddingBottom: 100 
-    },
-    emptyContainer: { 
-        marginTop: 80, 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-    },
-    emptyText: { 
-        color: '#FFFFFF', 
-        fontSize: 18, 
-        fontWeight: 'bold' 
-    },
-    fab: { 
-        position: 'absolute', 
-        bottom: 30, 
-        right: 30, 
-        backgroundColor: '#9F7CFA', 
-        width: 60, 
-        height: 60, 
-        borderRadius: 30, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        elevation: 5 
-    },
-    fabIcon: { 
-        fontSize: 32, 
-        color: '#FFFFFF', 
-        lineHeight: 34 
-    },
-    logoutFab: { 
-        position: 'absolute', 
-        bottom: 30, 
+    logoutFab: {
+        position: 'absolute',
+        bottom: 30,
         right: 105, // Posicionado à esquerda do FAB principal (60 largura + 30 direita + 15 de gap)
-        backgroundColor: '#2D2D2D', 
-        width: 60, 
-        height: 60, 
-        borderRadius: 30, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+        backgroundColor: '#2D2D2D',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
         elevation: 5,
         borderWidth: 1,
         borderColor: '#3D3D3D'
     },
-    logoutIcon: { 
-        fontSize: 24, 
-        color: '#FFFFFF' 
+    logoutIcon: {
+        fontSize: 24,
+        color: '#FFFFFF'
     }
 });
