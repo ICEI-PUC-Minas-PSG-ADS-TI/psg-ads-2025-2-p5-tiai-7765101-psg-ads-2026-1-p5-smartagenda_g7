@@ -1,32 +1,24 @@
 import React, { useEffect, useState } from 'react';
-
-import {
-    View,
-    Text,
-    FlatList,
-    StyleSheet,
-    SafeAreaView
-} from 'react-native';
-
-import IAInteracaoService, {
-    IAInteracao
-} from '../services/IAInteracaoService';
+import {View,Text,FlatList,StyleSheet,SafeAreaView} from 'react-native';
+import IAInteracaoService, {IAInteracao} from '../services/IAInteracaoService';
 
 export default function HistoricoIA() {
 
     const [historico, setHistorico] = useState<IAInteracao[]>([]);
 
-    useEffect(() => {
-        carregarHistorico();
-    }, []);
+   useEffect(() => {
 
-    async function carregarHistorico() {
+    const unsubscribe =
+        IAInteracaoService.EscutarInteracoesFirebase(
+            (dados) => {
 
-        const dados =
-            await IAInteracaoService.BuscarInteracoesFirebase();
+                setHistorico(dados);
+            }
+        );
 
-        setHistorico(dados);
-    }
+    return unsubscribe;
+
+}, []);
 
     function formatarData(timestamp: number) {
 

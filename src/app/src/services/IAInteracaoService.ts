@@ -125,5 +125,37 @@ if (user) {
         return [];
     }
 }
+static EscutarInteracoesFirebase(
+    callback: (dados: IAInteracao[]) => void
+) {
+
+    const user = auth().currentUser;
+
+    if (!user) {
+        return () => {};
+    }
+
+    return firestore()
+        .collection('usuarios')
+        .doc(user.uid)
+        .collection('ia_interacoes')
+        .orderBy('dataInteracao', 'desc')
+        .onSnapshot(snapshot => {
+
+            const dados = snapshot.docs.map(doc =>
+                doc.data() as IAInteracao
+            );
+
+            callback(dados);
+
+        }, error => {
+
+            console.error(
+                '[IAInteracaoService] Erro ao escutar interações:',
+                error
+            );
+        });
 }
+}
+
 
