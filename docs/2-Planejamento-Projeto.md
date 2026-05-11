@@ -185,6 +185,7 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 | Isaque | Facilitador Agil | Criação e integração da IA com CRUD de tarefas do aplicativo | 29/04 | 10/05 | ✔️ |
 | Isaque | Facilitador Agil | Tornando login/cadastro opcional, salvamento local como base  | 29/04 | 10/05 | ✔️ |
 | Isaque | Facilitador Agil | Atualização de instruções de uso e tecnologias utilizadas  | 10/05 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Criação de APK e envio da Sprint  | 10/05 | 10/05 | ✔️ |
 |  Carol           |  Arquiteto de Dados     | Atualizar Diagrama de Classes | 16/04 | 10/05 | ✔️ |
 |  Carol           |  Arquiteto de Dados     | integração IA com o firebase | 06/05 | 10/05 | ✔️ |
 |  Carol           |  Arquiteto de Dados     | criação da tela de historico de integração da IA | 10/05 | 10/05 | ✔️ |

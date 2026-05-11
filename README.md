@@ -43,7 +43,7 @@ Se você deseja apenas instalar e testar o aplicativo no seu celular Android sem
 
 ### Instalação para Desenvolvimento
 
-Leia as seguintes instruções: [Guia de Configuração e Instalação para Desenvolvimento](src\app\README.md#guia-de-configuração-e-instalação-para-desenvolvimento)
+Leia as seguintes instruções: [Guia de Configuração e Instalação para Desenvolvimento](src/app/README.md#guia-de-configuração-e-instalação-para-desenvolvimento)
 
 # Documentação
 
