@@ -36,7 +36,7 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 <img width="250" alt="image" src="https://github.com/user-attachments/assets/394783c4-2ebc-4fd3-99fa-efd3ef2d7680" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/9fffef36-f7d5-4003-9667-9ab15a45711b" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/191cebb9-a433-4c58-8220-0032bb724763" />
-<img width="250"  alt="image" src="https://github.com/user-attachments/assets/dcdf209a-3af6-4710-801f-d8f00259c21b" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/3fee6dee-afe2-4bb0-859c-eac840132230" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/67f71324-f1e3-4269-b761-3defd7cd907b" />
 
 
