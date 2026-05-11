@@ -38,6 +38,8 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/191cebb9-a433-4c58-8220-0032bb724763" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/3fee6dee-afe2-4bb0-859c-eac840132230" />
 <img width="250"  alt="image" src="https://github.com/user-attachments/assets/67f71324-f1e3-4269-b761-3defd7cd907b" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/e342cbf1-2bbc-4c6a-92bd-cff4146a3a85" />
+
 
 
 
