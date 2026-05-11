@@ -2,7 +2,8 @@ import { FunctionDeclaration, SchemaType, Tool } from '@google/generative-ai';
 
 export const gerenciamentoTarefasSchema: FunctionDeclaration = {
     name: "gerenciar_tarefas",
-    description: "Cria tarefas e subtarefas no aplicativo. Recebe uma lista de tarefas. Para tarefas com subtarefas novas, utilize IDs temporários (ex: 'temp_1', 'temp_2') para conectá-las usando o array de 'subtarefas' da tarefa pai. O sistema vai resolver os IDs reais automaticamente." +  "Use esta ferramenta SEMPRE que o usuário pedir para criar, adicionar, planejar, agendar, montar, organizar ou cadastrar tarefas, compromissos, metas, lembretes, rotinas ou subtarefas. " + "NUNCA responda apenas em texto fingindo que criou uma tarefa. Você DEVE obrigatoriamente chamar esta ferramenta antes de responder ao usuário.",
+    description: "Cria tarefas e subtarefas no aplicativo. Recebe uma lista de tarefas. Para tarefas com subtarefas novas, utilize IDs temporários (ex: 'temp_1', 'temp_2') para conectá-las usando o array de 'subtarefas' da tarefa pai. O sistema vai resolver os IDs reais automaticamente." +  
+    "Use esta ferramenta SEMPRE que o usuário pedir para criar, adicionar, planejar, agendar, montar, organizar ou cadastrar tarefas, compromissos, metas, lembretes, rotinas ou subtarefas. " ,
     
     parameters: {
         type: SchemaType.OBJECT,

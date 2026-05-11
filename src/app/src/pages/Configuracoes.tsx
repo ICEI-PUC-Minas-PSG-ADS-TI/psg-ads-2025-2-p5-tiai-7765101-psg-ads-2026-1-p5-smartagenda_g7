@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
 import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
 import LocalStorageService, { CarregarTarefas, CarregarTarefasArray } from '../services/LocalStorageService';
@@ -10,6 +11,7 @@ import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services
 import { Tarefa } from '../types/tarefa';
 import { CompareAndCheck } from '../services/SaveControlService';
 
+
 type USettings = {
   EnableLocalAI?: boolean,
   UseBackup?: boolean
@@ -19,6 +21,8 @@ const Configuracoes = () => {
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<USettings>({});
   const [logging, setLogging] = useState(false);
+
+  const navigation = useNavigation<any>();
 
   async function Toggle(index: string, value: boolean) {
     switch (index) {
@@ -73,8 +77,7 @@ const Configuracoes = () => {
           await TrySalvar(true);
         }
         else {
-          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem."))
-          {
+          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
             console.log("Sucessful logoff");
             if (await handleLogout()) { // manter dados
               await LocalStorageService.CarregarTarefas();
@@ -209,7 +212,23 @@ const Configuracoes = () => {
             trackColor={{ false: '#555', true: '#4CAF50' }}
             thumbColor={'white'} style={styles.Slider} />
         </View>
-        {/*}
+        {
+
+          <TouchableOpacity
+            style={styles.option}
+            onPress={() => navigation.navigate('HistoricoIA')}
+          >
+            <View style={styles.compOption}>
+              <Text style={styles.Optiontext}>
+                Histórico da IA
+              </Text>
+
+              <Text style={styles.OptionSubtext}>
+                Ver conversas e interações anteriores
+              </Text>
+            </View>
+          </TouchableOpacity>
+        /*}
         <View style={styles.option}>
           <Text style={styles.Optiontext}>Option</Text>
           <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>

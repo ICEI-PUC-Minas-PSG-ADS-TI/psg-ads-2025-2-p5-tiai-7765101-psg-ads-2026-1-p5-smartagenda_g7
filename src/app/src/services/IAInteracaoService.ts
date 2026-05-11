@@ -45,9 +45,9 @@ export default class IAInteracaoService {
   static async SalvarInteracao(interacao: IAInteracao): Promise<void> {
     try {
 
-        // =========================
+   
         // SALVA LOCALMENTE
-        // =========================
+      
 
         const interacoes = await this.CarregarInteracoes();
 
@@ -58,9 +58,9 @@ export default class IAInteracaoService {
             JSON.stringify(interacoes)
         );
 
-        // =========================
+    
         // SALVA NO FIREBASE
-        // =========================
+      
 
         const user = auth().currentUser;
 
@@ -102,4 +102,28 @@ if (user) {
             console.error('[IAInteracaoService] Erro ao limpar histórico:', error);
         }
     }
+
+    static async BuscarInteracoesFirebase(): Promise<IAInteracao[]> {
+    try {
+        const user = auth().currentUser;
+
+        if (!user) {
+            return [];
+        }
+
+        const snapshot = await firestore()
+            .collection('usuarios')
+            .doc(user.uid)
+            .collection('ia_interacoes')
+            .orderBy('dataInteracao', 'desc')
+            .get();
+
+        return snapshot.docs.map(doc => doc.data() as IAInteracao);
+
+    } catch (error) {
+        console.error('[IAInteracaoService] Erro ao buscar interações Firebase:', error);
+        return [];
+    }
 }
+}
+

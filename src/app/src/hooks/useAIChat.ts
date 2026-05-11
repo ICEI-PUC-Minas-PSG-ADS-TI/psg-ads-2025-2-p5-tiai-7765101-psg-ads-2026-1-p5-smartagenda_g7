@@ -8,7 +8,7 @@ import SaveControlService from '../services/SaveControlService';
 import IAInteracaoService from '../services/IAInteracaoService';
 
 const INITIAL_TEXT = "Olá! Sou seu assistente de Agenda IA. Como posso te ajudar a organizar suas tarefas e rotina hoje?";
-const AI_MODEL = 'gemini-2.5-flash-lite';
+const AI_MODEL = 'gemini-2.5-flash';
 const AI_SYSTEM_PROMPT = `
 Você é um assistente proativo de produtividade para um aplicativo. Seu objetivo é ajudar a gerenciar a rotina do usuário e criar tarefas complexas quebrando em subtarefas.
 CONTEXTO: A data atual é ${new Date().toLocaleString()}. Horário BRT, fuso horário UTC-3 
