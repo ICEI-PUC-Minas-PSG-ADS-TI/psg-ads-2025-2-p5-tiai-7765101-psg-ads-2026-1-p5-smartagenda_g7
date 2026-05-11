@@ -28,8 +28,9 @@ Se você deseja apenas instalar e testar o aplicativo no seu celular Android sem
 
 1. **Onde encontrar o APK:**
 
-   Colocamos o APK do app em [src/apk/SmartAgenda.apk](./src/apk/SmartAgenda.apk)
-   *(Você pode baixar este arquivo diretamente para o seu celular).*
+   Colocamos o APK do app em [src/apk/SmartAgenda.zip](/src/apk/SmartAgenda.zip)
+   
+   Após a descompressão, você pode baixar este arquivo diretamente para o seu celular.
 
 2. **Como instalar no dispositivo:**
    * Transfira ou baixe o arquivo `SmartAgenda.apk` para o seu dispositivo Android.
@@ -39,6 +40,10 @@ Se você deseja apenas instalar e testar o aplicativo no seu celular Android sem
    * Como este é um projeto acadêmico e não foi publicado na Google Play Store, o Android exibirá um aviso de segurança do Play Protect.
    * Para prosseguir, toque em **"Mais detalhes"** e depois selecione **"Instalar assim mesmo"**, caso seja uma verificação de segurança, não há problema em verificar.
    * Caso o sistema peça permissão para "Instalar apps desconhecidos" ou "Fontes desconhecidas", conceda a permissão para o seu navegador ou gerenciador de arquivos concluir a instalação.
+
+### Instalação para Desenvolvimento
+
+Leia as seguintes instruções: [Guia de Configuração e Instalação para Desenvolvimento](src/app/README.md#guia-de-configuração-e-instalação-para-desenvolvimento)
 
 # Documentação
 

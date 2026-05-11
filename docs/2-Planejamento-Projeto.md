@@ -150,19 +150,23 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|  Nitai            |  Tech Lead   | Requisitos Funcionais (01-03) | 19/03 | 06/04 | ✔️ |
-|             |        | Requisitos Não Funcionais (XX-XX) | --/03 | 06/04 | ❌ |
-|  Nitai, Isaque, Carol           |  Conjunto      | Histórias de Usuário (01-03) | 19/03 | 06/04 |  ✔️ |
-|             |        | Documentação das Tabelas do Banco de Dados | --/03 | 06/04 | ❌ |
-|             |        | Diagrama de Arquitetura (Doc-4) | --/03 | 06/04 | ❌ |
-|             |        | WireFrame/Mockup da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
-|             |        | Desenvolvimento da Página de Lista de Tarefas | --/03 | 06/04 | ❌ |
-|             |        | WireFrame/Mockup da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
-|             |        | Desenvolvimento da Página de Detalhes de Tarefa | --/03 | 06/04 | ❌ |
-|  Nitai           |  Tech Lead      | WireFrame/Mockup da Página de Gerenciamento de Tarefa | --/03 | 06/04 | ❌ |
-|  Nitai           |  Tech Lead      | Desenvolvimento da Página de Gerenciamento de Tarefa | --/03 | 06/04 | ❌ |
-|             |        | WireFrame/Mockup da Página de Calendário | --/03 | 06/04 | ❌ |
-|             |        | Desenvolvimento da Página de Calendário | --/03 | 06/04 | ❌ |
+| Isaque | Facilitador Agil | Correção de Contexto.md e Lista Macro de Funcionalidades | 03/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Tecnologias Utilizadas e Diagrama de Arquitetura | 03/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Requisitos Não Funcionais, Restrições e Regras de Negócio | 03/04 | 06/04 |  ✔️ |
+| Nitai, Isaque | Conjunto | Requisitos Funcionais | 19/03 | 06/04 | ✔️ |
+| Nitai, Isaque, Carol | Conjunto | Histórias de Usuário | 19/03 | 06/04 |  ✔️ |
+| Carol | Arquiteto de Dados | Documentação das Tabelas do Banco de Dados | 05/04 | 06/04 | ✔️ |
+| Carol | Arquiteto de Dados | WireFrame/Mockup da Página de Cadastro | 05/04 | 06/04 | ✔️ |
+| Carol, Isaque | Conjunto | Desenvolvimento da Página de Cadastro | 05/04 | 06/04 | ✔️ |
+| Carol, Isaque | Conjunto | Integração dos dados ao Firebase | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Implementação do salvamento híbrido no Firebase (Offline-first) | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | WireFrame/Mockup da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | Desenvolvimento da Página de Lista de Tarefas | 05/04 | 06/04 | ✔️ |
+| Isaque | Facilitador Agil | WireFrame/Mockup da Página de Detalhes de Tarefa | 05/03 | 06/04 | ✔️ |
+| Isaque | Facilitador Ágil | Desenvolvimento da Página de Detalhes de Tarefa | 05/04 | 06/04 | ✔️ |
+|  Nitai | Tech Lead | WireFrame/Mockup da Página de Gerenciamento de Tarefa | 23/03 | 06/04 | ✔️ |
+|  Nitai | Tech Lead | Desenvolvimento da Página de Gerenciamento de Tarefa | 20/03 | 06/04 | ✔️ |
+| Isaque | Facilitador Ágil | Exportação do APK | 06/04 | 06/04 | ✔️ |
 
 ---
 
@@ -170,10 +174,21 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|             |        | Implementar Regra de Negócio Y | 06/04 | 15/04 | ❌ |
-|             |        | Implementar Cálculo/Processo Z | 06/04 | 15/04 | ❌ |
-|             |        | Atualizar DER via Engenharia Reversa | 16/04 | 20/04 | ❌ |
-|             |        | Atualizar Diagrama de Classes | 16/04 | 23/04 | ❌ |
+|  Nitai           |  Tech Lead      | Implementação de Subtarefas no Gerenciamento de Tarefas | 13/04 | 07/05 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação de Funções para Importação de tarefas por JSON (para o uso de IA) | 20/04 | 07/05 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação Inicial da página de configurações | 02/04 | 07/05 | ✔️ |
+|  Nitai           |  Tech Lead      | Implementação Inicial da Visualização em Árvore | 30/04 | 07/05 | ✔️ |
+| Isaque | Facilitador Agil | Implementação de footer com navegação | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Implementação da página de calendário com agenda | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Componentização e melhoria de filtros e lista de tarefas | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Implementação da página de Chat IA e IA integrada (Gemini) | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Criação e integração da IA com CRUD de tarefas do aplicativo | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Tornando login/cadastro opcional, salvamento local como base  | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Atualização de instruções de uso e tecnologias utilizadas  | 10/05 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Criação de APK e envio da Sprint  | 10/05 | 10/05 | ✔️ |
+|  Carol           |  Arquiteto de Dados     | Atualizar Diagrama de Classes | 16/04 | 10/05 | ✔️ |
+|  Carol           |  Arquiteto de Dados     | integração IA com o firebase | 06/05 | 10/05 | ✔️ |
+|  Carol           |  Arquiteto de Dados     | criação da tela de historico de integração da IA | 10/05 | 10/05 | ✔️ |
 
 ---
 
