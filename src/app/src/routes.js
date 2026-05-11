@@ -1,16 +1,20 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MessageCircleMore, Calendar, ListTodo, Settings } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Importação das telas
 import ListaTarefas from './pages/ListaTarefas';
 import Calendario from './pages/Calendario';
 import Configuracoes from './pages/Configuracoes';
 import ChatIA from './pages/ChatIA';
+import HistoricoIA from './pages/HistoricoIA';
 
 const Tab = createBottomTabNavigator();
 
 const Routes = () => {
+
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       initialRouteName="Tarefas"
@@ -20,9 +24,9 @@ const Routes = () => {
         tabBarStyle: {
           backgroundColor: '#1E1E1E',
           borderTopColor: '#2D2D2D',
-          paddingBottom: 5,
+          paddingBottom: insets.bottom,
           paddingTop: 5,
-          height: 60,
+          height: 60 + insets.bottom,
         },
         headerShown: false,
       }}
@@ -67,6 +71,17 @@ const Routes = () => {
           ),
         }}
       />
+      <Tab.Screen
+        name="HistoricoIA"
+        component={HistoricoIA}
+        options={{
+          href: null,
+          tabBarItemStyle: {
+            display: 'none',
+          },
+        }}
+      />
+
     </Tab.Navigator>
   );
 };
