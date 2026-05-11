@@ -178,8 +178,13 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 |  Nitai           |  Tech Lead      | Implementação de Funções para Importação de tarefas por JSON (para o uso de IA) | 20/04 | 07/05 | ✔️ |
 |  Nitai           |  Tech Lead      | Implementação Inicial da página de configurações | 02/04 | 07/05 | ✔️ |
 |  Nitai           |  Tech Lead      | Implementação Inicial da Visualização em Árvore | 30/04 | 07/05 | ✔️ |
-|  Isaque          |  Facilitador Ágil      | Implementação da página de calendários | 30/04 | 05/05 | ✔️ |
-|  Isaque          |  Facilitador Ágil      | Implementação da página de Chat com IA | 30/04 | 06/05 | ✔️ |
+| Isaque | Facilitador Agil | Implementação de footer com navegação | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Implementação da página de calendário com agenda | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Componentização e melhoria de filtros e lista de tarefas | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Implementação da página de Chat IA e IA integrada (Gemini) | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Criação e integração da IA com CRUD de tarefas do aplicativo | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Tornando login/cadastro opcional, salvamento local como base  | 29/04 | 10/05 | ✔️ |
+| Isaque | Facilitador Agil | Atualização de instruções de uso e tecnologias utilizadas  | 10/05 | 10/05 | ✔️ |
 |  Carol           |  Arquiteto de Dados     | Atualizar Diagrama de Classes | 16/04 | 30/04 | ✔️ |
 
 ---

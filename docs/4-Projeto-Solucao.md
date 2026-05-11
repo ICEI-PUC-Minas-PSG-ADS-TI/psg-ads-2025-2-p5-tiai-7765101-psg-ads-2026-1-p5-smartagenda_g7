@@ -25,6 +25,7 @@ Descreva as tecnologias, linguagens, frameworks, bibliotecas e serviços escolhi
 | **Banco de Dados (SGBD)** | Firebase Cloud Firestore (NoSQL) |
 | **Back-end API** | Firebase, utilizando Firebase Auth para autenticação de usuários. |
 | **Front-end / Mobile** | React Native e React. |
+| **Inteligência Artificial em Nuvem** | Gemini. |
 | **Inteligência Artificial Local** | Framework React Native AI (@react-native-ai/mlc). |
 | **Ambiente e Emulação** | Android Studio (Android SDK) atuando em conjunto com o Metro Bundler. |
 | **Gestão e Versionamento** | GitHub. |

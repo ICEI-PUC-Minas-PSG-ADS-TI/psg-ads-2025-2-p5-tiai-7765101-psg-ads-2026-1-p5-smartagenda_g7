@@ -40,6 +40,10 @@ Se você deseja apenas instalar e testar o aplicativo no seu celular Android sem
    * Para prosseguir, toque em **"Mais detalhes"** e depois selecione **"Instalar assim mesmo"**, caso seja uma verificação de segurança, não há problema em verificar.
    * Caso o sistema peça permissão para "Instalar apps desconhecidos" ou "Fontes desconhecidas", conceda a permissão para o seu navegador ou gerenciador de arquivos concluir a instalação.
 
+### Instalação para Desenvolvimento
+
+Leia as seguintes instruções: [Guia de Configuração e Instalação para Desenvolvimento](src\app\README.md#guia-de-configuração-e-instalação-para-desenvolvimento)
+
 # Documentação
 
 <ol>
