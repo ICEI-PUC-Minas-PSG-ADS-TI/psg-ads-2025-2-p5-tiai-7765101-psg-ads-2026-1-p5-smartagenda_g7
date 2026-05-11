@@ -132,16 +132,9 @@ O arquivo .sql ou .js deve ser salvo na pasta: src/bd
 ---
 ### 4.4.2 Representação do Modelo Físico de Dados (Entrega na Sprint 3 - Core)
 
+### 📎 Representação do Modelo Físico de Dados
+
 <img width="3300" height="3086" alt="Diagrama em branco (14)" src="https://github.com/user-attachments/assets/66a3aafa-074e-4daf-a410-76fbde102262" />
 
 
 ---
-
-### 📎 Representação do Modelo Físico de Dados
-🚨 O grupo deverá inserir aqui a imagem do diagrama físico de dados.
-
----
-🔧**Ferramentas Sugeridas**
-- MySQL Workbench (engenharia reversa automática)
-- DbDesigner
-- Lucidchart
