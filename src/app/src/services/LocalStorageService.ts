@@ -129,6 +129,24 @@ export async function CarregarConfiguracao(): Promise<any> {
     }
 }
 
+export async function SalvarTema(themeType: string) {
+    try {
+        await AS.setItem("userTheme", themeType);
+    } catch (err) {
+        console.log("Erro ao salvar tema no Async Storage: " + err);
+    }
+}
+
+export async function CarregarTema(): Promise<string | null> {
+    try {
+        let theme = await AS.getItem("userTheme");
+        return theme;
+    } catch (err) {
+        console.log("Erro ao carregar tema no Async Storage: " + err);
+        return null;
+    }
+}
+
 /**
  * Deleta uma tarefa, removendo do Async Storage, mas não imediatamente localmente ou no firebase, mas no proximo salvamento local, será atualizado
  * @param id Id da tarefa a ser deletada
@@ -288,5 +306,7 @@ export default {
     SalvarConfiguracaoLocal,
     ClearLocalData,
     ClearCacheData,
-    TarefaExists
+    TarefaExists,
+    SalvarTema,
+    CarregarTema
 }
