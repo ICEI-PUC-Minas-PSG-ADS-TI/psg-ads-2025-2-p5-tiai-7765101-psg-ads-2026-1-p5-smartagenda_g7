@@ -6,6 +6,7 @@ import { Tarefa } from '../types/tarefa.ts';
 import { TrySalvarTarefa } from '../services/SaveControlService.ts';
 import StorageAPI, { TryGetTarefa } from '../services/LocalStorageService.ts';
 import { SyncState } from '../services/TarefaService.ts';
+import { useTheme } from '../theme/ThemeContext';
 
 type Props = {
     tarefa: Tarefa;
@@ -15,6 +16,7 @@ type Props = {
 }
 
 export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: Props) {
+    const { theme } = useTheme();
 
     const onCompleteInner = async (task: Tarefa) => {
         let updated = { ...task };
@@ -77,49 +79,49 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
 
     return (
         <View style={styles.overlay}>
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
 
                 {/* Cabeçalho do Modal */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Detalhes da Tarefa</Text>
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>X</Text>
+                    <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Detalhes da Tarefa</Text>
+                    <TouchableOpacity onPress={onClose} style={[styles.closeButton, { backgroundColor: theme.colors.surfaceVariant }]}>
+                        <Text style={[styles.closeButtonText, { color: theme.colors.text }]}>X</Text>
                     </TouchableOpacity>
                 </View>
 
                 <ScrollView style={styles.content}>
                     {/* Status Badge */}
                     <View style={styles.statusContainer}>
-                        <Text style={[styles.statusBadge, isFinalizada ? styles.statusFinalizado : styles.statusPendente]}>
+                        <Text style={[styles.statusBadge, isFinalizada ? styles.statusFinalizado : { backgroundColor: `${theme.colors.primary}33`, color: theme.colors.primary }]}>
                             {isFinalizada ? 'CONCLUÍDA' : (tarefa.estado === 'EmProgresso' ? 'EM PROGRESSO' : 'A FAZER')}
                         </Text>
                     </View>
 
-                    <Text style={styles.titulo}>{tarefa.titulo}</Text>
+                    <Text style={[styles.titulo, { color: theme.colors.text }]}>{tarefa.titulo}</Text>
 
-                    <View style={styles.dateBox}>
-                        <Text style={styles.dateLabel}>🗓 Vence em:</Text>
-                        <Text style={styles.dateValue}>{dataVencimento}</Text>
+                    <View style={[styles.dateBox, { backgroundColor: theme.colors.surfaceVariant, borderLeftColor: theme.colors.primary }]}>
+                        <Text style={[styles.dateLabel, { color: theme.colors.textSecondary }]}>🗓 Vence em:</Text>
+                        <Text style={[styles.dateValue, { color: theme.colors.text }]}>{dataVencimento}</Text>
                     </View>
 
-                    <Text style={styles.sectionTitle}>Descrição</Text>
-                    <Text style={styles.descricao}>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Descrição</Text>
+                    <Text style={[styles.descricao, { color: theme.colors.text }]}>
                         {tarefa.descricao_geral ? tarefa.descricao_geral : 'Nenhuma descrição fornecida para esta tarefa.'}
                     </Text>
 
-                    <Text style={styles.footerInfo}>Criada em {dataCriacao}</Text>
+                    <Text style={[styles.footerInfo, { color: theme.colors.textSecondary }]}>Criada em {dataCriacao}</Text>
                 </ScrollView>
 
                 {/* Botões de Ação */}
                 <View style={styles.actionContainer}>
                     {!isFinalizada && (
-                        <TouchableOpacity style={styles.btnConcluir} onPress={handleConcluir}>
+                        <TouchableOpacity style={[styles.btnConcluir, { backgroundColor: theme.colors.success }]} onPress={handleConcluir}>
                             <Text style={styles.btnConcluirText}>✔ Marcar como Concluída</Text>
                         </TouchableOpacity>
                     )}
 
-                    <TouchableOpacity style={styles.btnEditar} onPress={() => onEdit(tarefa)}>
-                        <Text style={styles.btnEditarText}>✏️ Editar Tarefa</Text>
+                    <TouchableOpacity style={[styles.btnEditar, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.border }]} onPress={() => onEdit(tarefa)}>
+                        <Text style={[styles.btnEditarText, { color: theme.colors.text }]}>✏️ Editar Tarefa</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -135,7 +137,6 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     container: {
-        backgroundColor: '#1E1E1E',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         height: '85%',
@@ -150,11 +151,9 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#FFFFFF',
     },
     closeButton: {
         padding: 8,
-        backgroundColor: '#2D2D2D',
         borderRadius: 20,
         width: 36,
         height: 36,
@@ -162,7 +161,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     closeButtonText: {
-        color: '#FFFFFF',
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -187,48 +185,38 @@ const styles = StyleSheet.create({
         color: '#4CAF50',
     },
     statusPendente: {
-        backgroundColor: 'rgba(159, 124, 250, 0.2)',
-        color: '#9F7CFA',
     },
     titulo: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#FFFFFF',
         marginBottom: 20,
     },
     dateBox: {
-        backgroundColor: '#2D2D2D',
         padding: 16,
         borderRadius: 12,
         marginBottom: 24,
         borderLeftWidth: 4,
-        borderLeftColor: '#9F7CFA',
     },
     dateLabel: {
         fontSize: 14,
-        color: '#A59EC0',
         marginBottom: 4,
     },
     dateValue: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#FFFFFF',
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#FFFFFF',
         marginBottom: 10,
     },
     descricao: {
         fontSize: 16,
-        color: '#D1D1D1',
         lineHeight: 24,
         marginBottom: 30,
     },
     footerInfo: {
         fontSize: 12,
-        color: '#666666',
         textAlign: 'center',
         marginTop: 20,
         marginBottom: 10,
@@ -238,7 +226,6 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     btnConcluir: {
-        backgroundColor: '#4CAF50', // Verde para conclusão
         paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
@@ -249,15 +236,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     btnEditar: {
-        backgroundColor: '#2D2D2D',
         paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#3D3D3D',
     },
     btnEditarText: {
-        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
     }

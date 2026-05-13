@@ -10,9 +10,11 @@ import CadastroScreen from './pages/Cadastro';
 import StorageAPI, { CarregarConfiguracao } from './services/LocalStorageService';
 import { onUserAuthenticated } from './services/UserService';
 import SaveControlService from './services/SaveControlService';
+import { ThemeProvider, useTheme } from './theme/ThemeContext';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+function AppContent() {
+  const { theme, themeType } = useTheme();
+  const isDarkMode = themeType === 'dark';
   const [user, setUser] = useState(null);
   const [showCadastro, setShowCadastro] = useState(false);
   const [showLogin, setShowLogin] = useState(false); // Initially false, so app opens normally
@@ -64,8 +66,8 @@ function App() {
   if (showCadastro) {
     return (
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <CadastroScreen
             onSuccess={() => setShowCadastro(false)}
             onBackToLogin={() => {
@@ -82,8 +84,8 @@ function App() {
   if (showLogin) {
     return (
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <LoginScreen
             onSuccess={() => {
               console.log('Logado com sucesso!');
@@ -104,8 +106,8 @@ function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <Routes />
         </View>
       </NavigationContainer>
@@ -116,8 +118,13 @@ function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212'
   }
 });
 
-export default App;
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}

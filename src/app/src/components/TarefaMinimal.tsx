@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
+import { useTheme } from '../theme/ThemeContext';
 
 type Props = {
     tarefa: Tarefa;
@@ -14,6 +15,7 @@ type Props = {
  * @param onPress Função a ser chamada ao clicar na tarefa. Normalmente usada para abrir os detalhes da tarefa. Retorna a própria tarefa.
  */
 export default function TarefaMinimal({ tarefa, onPress }: Props) {
+    const { theme } = useTheme();
 
     const onPressMiddleMan = () => {
         if (onPress) onPress(tarefa);
@@ -23,12 +25,12 @@ export default function TarefaMinimal({ tarefa, onPress }: Props) {
     const getEstadoConfig = (estado: string) => {
         switch (estado) {
             case 'EmProgresso':
-                return { bg: 'rgba(159, 124, 250, 0.2)', text: '#9F7CFA', label: 'Em Progresso' };
+                return { bg: `${theme.colors.primary}33`, text: theme.colors.primary, label: 'Em Progresso' };
             case 'Finalizado':
-                return { bg: 'rgba(76, 175, 80, 0.2)', text: '#4CAF50', label: 'Concluída' };
+                return { bg: `${theme.colors.success}33`, text: theme.colors.success, label: 'Concluída' };
             case 'NaoIniciado':
             default:
-                return { bg: '#2D2D2D', text: '#A59EC0', label: 'A Fazer' };
+                return { bg: theme.colors.surfaceVariant, text: theme.colors.textSecondary, label: 'A Fazer' };
         }
     };
 
@@ -43,12 +45,12 @@ export default function TarefaMinimal({ tarefa, onPress }: Props) {
 
     return (
         <TouchableOpacity onPress={onPressMiddleMan} activeOpacity={0.7}>
-            <View style={[styles.card, tarefa.estado === 'Finalizado' && styles.cardFinalizado]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, tarefa.estado === 'Finalizado' && { borderColor: theme.colors.success }]}>
                 
                 {/* Título e Status */}
                 <View style={styles.header}>
                     <Text 
-                        style={[styles.title, tarefa.estado === 'Finalizado' && styles.textStrikethrough]} 
+                        style={[styles.title, { color: theme.colors.text }, tarefa.estado === 'Finalizado' && { textDecorationLine: 'line-through', color: theme.colors.textSecondary }]} 
                         numberOfLines={1}>
                         {tarefa.titulo}
                     </Text>
@@ -62,14 +64,14 @@ export default function TarefaMinimal({ tarefa, onPress }: Props) {
 
                 {/* Descrição */}
                 {tarefa.descricao_geral ? (
-                    <Text style={styles.description} numberOfLines={2}>
+                    <Text style={[styles.description, { color: theme.colors.textSecondary }]} numberOfLines={2}>
                         {tarefa.descricao_geral}
                     </Text>
                 ) : null}
 
                 {/* Data */}
-                <View style={styles.footer}>
-                    <Text style={styles.dateText}>
+                <View style={[styles.footer, { borderTopColor: theme.colors.border }]}>
+                    <Text style={[styles.dateText, { color: theme.colors.textSecondary }]}>
                         Vence em: {dataFormatada}
                     </Text>
                 </View>
@@ -81,20 +83,15 @@ export default function TarefaMinimal({ tarefa, onPress }: Props) {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#1E1E1E',
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#2D2D2D',
         elevation: 2, 
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 3,
-    },
-    cardFinalizado: {
-        borderColor: '#18381A', // Borda pouco esverdeada
     },
     header: {
         flexDirection: 'row',
@@ -105,13 +102,8 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#FFFFFF',
         flex: 1,
         marginRight: 10,
-    },
-    textStrikethrough: {
-        textDecorationLine: 'line-through',
-        color: '#888888',
     },
     badge: {
         paddingHorizontal: 10,
@@ -126,7 +118,6 @@ const styles = StyleSheet.create({
     },
     description: {
         fontSize: 14,
-        color: '#A59EC0', // Roxo meio cinza
         marginBottom: 12,
         lineHeight: 20,
     },
@@ -134,13 +125,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         borderTopWidth: 1,
-        borderTopColor: '#2D2D2D',
         paddingTop: 12,
         marginTop: 4,
     },
     dateText: {
         fontSize: 13,
-        color: '#cacaca',
         fontWeight: '500',
     }
 });

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {View,Text,FlatList,StyleSheet,SafeAreaView} from 'react-native';
 import IAInteracaoService, {IAInteracao} from '../services/IAInteracaoService';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function HistoricoIA() {
-
+    const { theme } = useTheme();
     const [historico, setHistorico] = useState<IAInteracao[]>([]);
 
    useEffect(() => {
@@ -26,9 +27,9 @@ export default function HistoricoIA() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
-            <Text style={styles.titulo}>
+            <Text style={[styles.titulo, { color: theme.colors.text }]}>
                 Histórico da IA
             </Text>
 
@@ -37,21 +38,21 @@ export default function HistoricoIA() {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
 
-                    <View style={styles.card}>
+                    <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
 
                         {!!item.prompt && (
-                            <Text style={styles.prompt}>
+                            <Text style={[styles.prompt, { color: theme.colors.primary }]}>
                                 {item.prompt}
                             </Text>
                         )}
 
                         {!!item.resposta && (
-                            <Text style={styles.resposta}>
+                            <Text style={[styles.resposta, { color: theme.colors.text }]}>
                                 {item.resposta}
                             </Text>
                         )}
 
-                        <Text style={styles.data}>
+                        <Text style={[styles.data, { color: theme.colors.textSecondary }]}>
                             {formatarData(item.dataInteracao)}
                         </Text>
 
@@ -67,39 +68,33 @@ const styles = StyleSheet.create({
 
     container: {
         flex: 1,
-        backgroundColor: '#000',
         padding: 16,
     },
 
     titulo: {
-        color: '#FFF',
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
     },
 
     card: {
-        backgroundColor: '#1E1E1E',
         borderRadius: 12,
         padding: 14,
         marginBottom: 12,
     },
 
     prompt: {
-        color: '#BB86FC',
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 8,
     },
 
     resposta: {
-        color: '#FFF',
         fontSize: 15,
         marginBottom: 10,
     },
 
     data: {
-        color: '#999',
         fontSize: 12,
     },
 });

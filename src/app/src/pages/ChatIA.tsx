@@ -13,8 +13,10 @@ import {
 } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { useAIChat, Message } from '../hooks/useAIChat';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function ChatIA() {
+    const { theme } = useTheme();
     const [inputText, setInputText] = useState('');
     const { messages, sendMessage, isLoading } = useAIChat();
     const netInfo = useNetInfo();
@@ -29,21 +31,24 @@ export default function ChatIA() {
     const renderMessage = ({ item }: { item: Message }) => {
         const isUser = item.sender === 'user';
         return (
-            <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-                <Text style={styles.messageText}>{item.text}</Text>
+            <View style={[styles.messageBubble, isUser ?
+                { alignSelf: 'flex-end', backgroundColor: theme.colors.primary, borderBottomRightRadius: 4 } :
+                { alignSelf: 'flex-start', backgroundColor: theme.colors.surfaceVariant, borderBottomLeftRadius: 4 }]}>
+
+                <Text style={[styles.messageText, { color: isUser ? '#FFFFFF' : theme.colors.text }]}>{item.text}</Text>
             </View>
         );
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.surface }]}>
             <KeyboardAvoidingView
-                style={styles.container}
+                style={[styles.container, { backgroundColor: theme.colors.background }]}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Assistente de Agenda IA</Text>
+                <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>Assistente de Agenda IA</Text>
                 </View>
 
                 {/* Lista de Mensagens */}
@@ -58,24 +63,24 @@ export default function ChatIA() {
                 {/* Loading Indicator */}
                 {isLoading && (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="small" color="#9F7CFA" />
-                        <Text style={styles.loadingText}>A IA está pensando...</Text>
+                        <ActivityIndicator size="small" color={theme.colors.primary} />
+                        <Text style={[styles.loadingText, { color: theme.colors.primary }]}>A IA está pensando...</Text>
                     </View>
                 )}
 
                 {/* Input e Botão de Envio */}
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border }]}>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: theme.colors.surfaceVariant, color: theme.colors.text }]}
                         placeholder="Digite sua mensagem..."
-                        placeholderTextColor="#888"
+                        placeholderTextColor={theme.colors.textSecondary}
                         value={inputText}
                         onChangeText={setInputText}
                         multiline
                         editable={!isLoading}
                     />
                     <TouchableOpacity
-                        style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
+                        style={[styles.sendButton, { backgroundColor: theme.colors.primary }, isLoading && styles.sendButtonDisabled]}
                         onPress={handleSend}
                         activeOpacity={0.8}
                         disabled={isLoading}
@@ -86,9 +91,9 @@ export default function ChatIA() {
 
                 {!isConnected && (
                     <View style={styles.overlayBlur}>
-                        <View style={styles.offlineBox}>
-                            <Text style={styles.offlineTitle}>Sem Conexão</Text>
-                            <Text style={styles.offlineText}>
+                        <View style={[styles.offlineBox, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary }]}>
+                            <Text style={[styles.offlineTitle, { color: theme.colors.primary }]}>Sem Conexão</Text>
+                            <Text style={[styles.offlineText, { color: theme.colors.text }]}>
                                 A Inteligência Artificial requer internet para funcionar.
                                 Conecte-se à rede para usar o Chat IA.
                             </Text>
@@ -103,23 +108,18 @@ export default function ChatIA() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#1E1E1E',
     },
     container: {
         flex: 1,
-        backgroundColor: '#121212',
     },
     header: {
         paddingTop: 20,
         paddingHorizontal: 24,
         paddingBottom: 15,
-        backgroundColor: '#1E1E1E',
         borderBottomWidth: 1,
-        borderBottomColor: '#2D2D2D',
         alignItems: 'center',
     },
     headerTitle: {
-        color: '#9F7CFA',
         fontSize: 18,
         fontWeight: 'bold',
     },
@@ -133,34 +133,19 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         marginBottom: 12,
     },
-    userBubble: {
-        alignSelf: 'flex-end',
-        backgroundColor: '#9F7CFA',
-        borderBottomRightRadius: 4,
-    },
-    assistantBubble: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#2D2D2D',
-        borderBottomLeftRadius: 4,
-    },
     messageText: {
-        color: '#FFFFFF',
         fontSize: 16,
         lineHeight: 22,
     },
     inputContainer: {
         flexDirection: 'row',
         padding: 12,
-        backgroundColor: '#1E1E1E',
         borderTopWidth: 1,
-        borderTopColor: '#2D2D2D',
         alignItems: 'center',
         paddingBottom: Platform.OS === 'ios' ? 24 : 12,
     },
     input: {
         flex: 1,
-        backgroundColor: '#2D2D2D',
-        color: '#FFFFFF',
         borderRadius: 20,
         paddingHorizontal: 16,
         paddingTop: 12,
@@ -170,7 +155,6 @@ const styles = StyleSheet.create({
     },
     sendButton: {
         marginLeft: 12,
-        backgroundColor: '#9F7CFA',
         borderRadius: 20,
         paddingVertical: 12,
         paddingHorizontal: 16,
@@ -192,7 +176,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     loadingText: {
-        color: '#9F7CFA',
         marginLeft: 8,
         fontSize: 14,
     },
@@ -204,22 +187,18 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     offlineBox: {
-        backgroundColor: '#1E1E1E',
         padding: 24,
         borderRadius: 16,
         alignItems: 'center',
         marginHorizontal: 30,
         borderWidth: 2,
-        borderColor: '#9F7CFA',
     },
     offlineTitle: {
-        color: '#9F7CFA',
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 12,
     },
     offlineText: {
-        color: '#FFFFFF',
         fontSize: 16,
         textAlign: 'center',
         lineHeight: 24,

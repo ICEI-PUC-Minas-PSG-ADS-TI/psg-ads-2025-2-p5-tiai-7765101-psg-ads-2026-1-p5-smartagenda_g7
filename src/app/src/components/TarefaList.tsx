@@ -1,10 +1,10 @@
 import { Tarefa } from '../types/tarefa';
 import TarefaDetalhes from './DetalhesTarefa';
 import TaskManager from './TaskManager';
-import { TrySalvarTarefa } from '../services/SaveControlService';
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, Modal, Alert } from 'react-native';
 import TarefaMinimal from './TarefaMinimal';
+import { useTheme } from '../theme/ThemeContext';
 
 interface TarefaListProps {
     tarefas: Tarefa[];
@@ -75,7 +75,7 @@ export const useTaskModals = (onRefresh?: () => void) => {
                 )}
             </Modal>
             {modalMode === 'edit' && selectedTask && (
-                <TaskManager tarefa={selectedTask} onClose={() =>handleSaveTask()}/>
+                <TaskManager tarefa={selectedTask} onClose={() => handleSaveTask()} />
             )}
         </View>
     );
@@ -89,6 +89,7 @@ export const useTaskModals = (onRefresh?: () => void) => {
 
 const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent }) => {
     const { handleOpenDetails, modals } = useTaskModals(onRefresh);
+    const { theme } = useTheme();
 
     return (
         <>
@@ -100,7 +101,7 @@ const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefres
                 ListHeaderComponent={ListHeaderComponent}
                 ListEmptyComponent={() => (
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
+                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
                     </View>
                 )}
             />
@@ -120,7 +121,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     emptyText: {
-        color: '#FFFFFF',
         fontSize: 18,
         fontWeight: 'bold'
     }

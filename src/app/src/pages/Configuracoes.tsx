@@ -10,6 +10,7 @@ import { LogIn, LogOut } from "lucide-react-native";
 import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services/SaveControlService';
 import { Tarefa } from '../types/tarefa';
 import { CompareAndCheck } from '../services/SaveControlService';
+import { useTheme } from '../theme/ThemeContext';
 
 
 type USettings = {
@@ -18,6 +19,7 @@ type USettings = {
 }
 
 const Configuracoes = () => {
+  const { theme, themeType, toggleTheme } = useTheme();
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<USettings>({});
   const [logging, setLogging] = useState(false);
@@ -162,8 +164,8 @@ const Configuracoes = () => {
 
   if (logging) return (
     <SafeAreaProvider>
-      <StatusBar barStyle={'dark-content'} />
-      <View style={styles.container}>
+      <StatusBar barStyle={theme.type === 'dark' ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {showCadastro ? (
           <CadastroScreen
             onSuccess={() => { Toggle("UseBackup", true); setLogging(false); }}
@@ -182,48 +184,58 @@ const Configuracoes = () => {
   )
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Configurações</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Configurações</Text>
 
       <ScrollView>
         {user ? (
-          <TouchableOpacity style={styles.option} onPress={() => Toggle("UseBackup", false)}>
+          <TouchableOpacity style={[styles.option, { borderColor: theme.colors.border }]} onPress={() => Toggle("UseBackup", false)}>
             <View style={styles.compOption}>
-              <Text style={styles.Optiontext}>Desativar Backup em Cloud</Text>
-              <Text style={styles.OptionSubtext}>Desconectar a conta de backup em Cloud</Text>
+              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Desativar Backup em Cloud</Text>
+              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Desconectar a conta de backup em Cloud</Text>
             </View>
-            <LogOut color={'#d1d1d1'} size={24} />
+            <LogOut color={theme.colors.textSecondary} size={24} />
           </TouchableOpacity>
         ) : (
 
-          <TouchableOpacity style={styles.option} onPress={() => setLogging(true)}>
+          <TouchableOpacity style={[styles.option, { borderColor: theme.colors.border }]} onPress={() => setLogging(true)}>
             <View style={styles.compOption}>
-              <Text style={styles.Optiontext}>Backup em Cloud</Text>
-              <Text style={styles.OptionSubtext}>Realizar backup e sincronização entre dispositivos</Text>
+              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Backup em Cloud</Text>
+              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Realizar backup e sincronização entre dispositivos</Text>
             </View>
-            <LogIn color={'#d1d1d1'} size={24} />
+            <LogIn color={theme.colors.textSecondary} size={24} />
           </TouchableOpacity>
 
         )}
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Habilitar IA Local Offline</Text>
+        <View style={[styles.option, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar IA Local Offline</Text>
           <Switch value={settings?.EnableLocalAI}
             onValueChange={(val) => Toggle("EnableLocalAI", val)}
-            trackColor={{ false: '#555', true: '#4CAF50' }}
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
+            thumbColor={'white'} style={styles.Slider} />
+        </View>
+        <View style={[styles.option, { borderColor: theme.colors.border }]}>
+          <View style={styles.compOption}>
+             <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Tema Escuro</Text>
+             <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Ativar ou desativar o modo escuro</Text>
+          </View>
+          <Switch value={themeType === 'dark'}
+            onValueChange={toggleTheme}
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
             thumbColor={'white'} style={styles.Slider} />
         </View>
         {
 
           <TouchableOpacity
-            style={styles.option}
+            style={[styles.option, { borderColor: theme.colors.border }]}
             onPress={() => navigation.navigate('HistoricoIA')}
           >
             <View style={styles.compOption}>
-              <Text style={styles.Optiontext}>
+              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>
                 Histórico da IA
               </Text>
 
-              <Text style={styles.OptionSubtext}>
+              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>
                 Ver conversas e interações anteriores
               </Text>
             </View>
@@ -248,24 +260,19 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#121212',
   },
   title: {
-    color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   text: {
-    color: 'white'
   },
   Optiontext: {
-    color: 'white',
     alignItems: "flex-start",
     width: "70%"
   },
   OptionSubtext: {
-    color: '#d1d1d1',
     alignItems: "flex-start",
   },
   option: {
@@ -273,7 +280,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexWrap: "nowrap",
     width: "100%",
-    borderColor: "grey",
     borderBottomWidth: 1,
     paddingHorizontal: 20,
     paddingVertical: 20
