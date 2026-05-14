@@ -24,12 +24,13 @@ import { get } from 'react-native/Libraries/NativeComponent/NativeComponentRegis
 type Props = {
     tarefa?: Tarefa | null;
     onClose?: (requireRefresh?: boolean) => void;
-    parent?: Tarefa;
+    Parent?: Tarefa;
     newTask?: boolean; // para criação
     onUnsavedChanges?: (hasUnsavedChanges: boolean) => void;
+    blockRefresh?: boolean;
 };
 
-export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsavedChanges }: Props) {
+export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsavedChanges, blockRefresh }: Props) {
     const CreateTarefaControlled = useCallback(async () => {
         let id = await GetUniqueID();
 
@@ -52,6 +53,7 @@ export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsave
     const [task, setTask] = useState<Tarefa | null>(
         tarefa ?? null
     );
+    const [parent, setParent] = useState<Tarefa | null>(Parent ?? null);
     const [depthDisplay, setDepthDisplay] = useState<string | undefined>(undefined);
 
     // relacionados aos textos que precisam ser transformados nos campos
@@ -67,14 +69,7 @@ export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsave
     // taskTreeView
     const [openTreeView, setOpenTreeView] = useState(false);
 
-    useEffect(() => {
-        if (tarefa) {
-            setTask(tarefa);
-        }
-
-        if (parent) {
-            //console.log("parented here");
-            const getParentChain = async (t: Tarefa, chain: string): Promise<string> => {
+    const getParentChain = async (t: Tarefa, chain: string): Promise<string> => {
                 let tarefas = await StorageAPI.CarregarTarefas();
                 if (tarefas)
                     return await getParentChainInner(t, chain, tarefas)
@@ -87,11 +82,29 @@ export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsave
                 if (!parent) return chain;
                 return getParentChain(parent, parent.titulo + " > " + chain);
             }
+
+    useEffect(() => {
+        if (tarefa) {
+            setTask(tarefa);
+        }
+
+        if (parent) {
+            //console.log("parented here");
             if (tarefa)
                 getParentChain(tarefa, "").then((fullChain) => { setDepthDisplay(fullChain); });
             else
                 getParentChain(parent, `${parent.titulo} >`).then((fullChain) => { setDepthDisplay(fullChain); });
         }
+        else if (tarefa?.parentId)
+        {
+            StorageAPI.TryGetTarefa(tarefa.parentId).then((p) => {
+                if (p) {
+                    setParent(p);
+                }
+            });
+            //getParentChain(tarefa, "").then((fullChain) => { setDepthDisplay(fullChain); });
+        }
+        
         //else console.log("no parents?");
     }, [tarefa, parent]);
 
@@ -425,9 +438,8 @@ export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsave
                     await TrySalvarTarefa(updated);
                     await TrySalvarTarefa(parent);
                 }
-                else {
-                    await TrySalvarTarefa(updated, true);
-                }
+                else
+                    await TrySalvarTarefa(updated, !blockRefresh);
 
                 if (onClose) {
                     onClose(true);
@@ -548,7 +560,7 @@ export default function TaskManager({ tarefa, onClose, parent, newTask, onUnsave
 
                     {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
                     {selectedSubtask && (
-                        <TaskManager tarefa={selectedSubtask} onClose={() => saveSubtask(true)} newTask={subtaskCreationMode} parent={task} />
+                        <TaskManager tarefa={selectedSubtask} onClose={() => saveSubtask(true)} newTask={subtaskCreationMode} Parent={task} />
                     )}
 
                     <View style={styles.formContainer}>

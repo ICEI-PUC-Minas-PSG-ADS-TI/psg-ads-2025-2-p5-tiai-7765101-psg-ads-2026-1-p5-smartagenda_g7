@@ -19,6 +19,7 @@ type Props = {
  * @param onPress Função a ser chamada ao clicar na tarefa. Normalmente usada para abrir os detalhes da tarefa. Retorna a própria tarefa.
  */
 export default function SubTarefaMinimal({ tarefa, onPress }: Props) {
+    const { theme } = useTheme();
 
     const onPressMiddleMan = () => {
         if (onPress) onPress(tarefa);
@@ -28,12 +29,12 @@ export default function SubTarefaMinimal({ tarefa, onPress }: Props) {
     const getEstadoConfig = (estado: string) => {
         switch (estado) {
             case 'EmProgresso':
-                return { bg: 'rgba(159, 124, 250, 0.2)', text: '#9F7CFA', label: 'Em Progresso' };
+                return { bg: 'rgba(159, 124, 250, 0.2)', text: theme.colors.primary, label: 'Em Progresso' };
             case 'Finalizado':
-                return { bg: 'rgba(76, 175, 80, 0.2)', text: '#4CAF50', label: 'Concluída' };
+                return { bg: 'rgba(76, 175, 80, 0.2)', text: theme.colors.success, label: 'Concluída' };
             case 'NaoIniciado':
             default:
-                return { bg: '#2D2D2D', text: '#A59EC0', label: 'A Fazer' };
+                return { bg: '#2D2D2D', text: theme.colors.textSecondary, label: 'A Fazer' };
         }
     };
 

@@ -8,6 +8,7 @@ import { CarregarTarefas } from '../services/LocalStorageService';
 import { SubTarefaMinimalSVG } from './SubTarefaMinimal';
 import { useTheme } from '../theme/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTaskModals } from './TarefaList';
 
 // Tipos que representam os nós e arestas
 type PositionedNode = {
@@ -115,9 +116,13 @@ export default function TaskTreeView({ tarefa, modalMode }: Props) {
   const [taskmap, setTaskmap] = useState<Map<string, Tarefa>>();
   const [zoom, setZoom] = useState(1);
 
-  // Carregamento Inicial
-  useEffect(() => {
-    const initialize = async () => {
+  const onRefresh = async () => {
+    await initialize();
+  }
+
+  const { handleOpenDetails, handleOpenEdit, modals } = useTaskModals(onRefresh);
+
+  const initialize = async () => {
       let tarefas = await CarregarTarefas();
       if (tarefas) {
         let root = GetRootTask(tarefa, tarefas);
@@ -138,6 +143,8 @@ export default function TaskTreeView({ tarefa, modalMode }: Props) {
       }
     };
 
+  // Carregamento Inicial
+  useEffect(() => {
     initialize();
   }, [tarefa]);
 
@@ -205,6 +212,7 @@ export default function TaskTreeView({ tarefa, modalMode }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {modals}
       <ScrollView horizontal  >
         <ScrollView>
           <Svg width={(maxX + 100)*zoom} height={(maxY + 100) * zoom}>
@@ -233,7 +241,7 @@ export default function TaskTreeView({ tarefa, modalMode }: Props) {
             {/* Exibição dos nós, substituir por SubTarefaMinimal assim que possível */}
             {nodes.map((n) => (
               <G key={n.id} transform={`translate(${n.x}, ${n.y})`}>
-                <SubTarefaMinimalSVG tarefa={n.tarefa} basewidth={NODE_W} baseheight={NODE_H} />
+                <SubTarefaMinimalSVG tarefa={n.tarefa} basewidth={NODE_W} baseheight={NODE_H} onPress={(e) => modalMode == 'details' ? handleOpenDetails(e, true) : handleOpenEdit(e, true)} />
               </G>
             ))}
             </G>

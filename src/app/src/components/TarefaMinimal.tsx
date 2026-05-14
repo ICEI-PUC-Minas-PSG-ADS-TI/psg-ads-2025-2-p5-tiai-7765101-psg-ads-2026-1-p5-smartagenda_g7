@@ -7,6 +7,8 @@ import { useTheme } from '../theme/ThemeContext';
 type Props = {
     tarefa: Tarefa;
     onPress?: (tarefa: Tarefa) => void;
+    small?: boolean;
+    showDate?: boolean;
 };
 
 /**
@@ -14,7 +16,7 @@ type Props = {
  * @param tarefa A tarefa a ser exibida
  * @param onPress Função a ser chamada ao clicar na tarefa. Normalmente usada para abrir os detalhes da tarefa. Retorna a própria tarefa.
  */
-export default function TarefaMinimal({ tarefa, onPress }: Props) {
+export default function TarefaMinimal({ tarefa, onPress, small, showDate }: Props) {
     const { theme } = useTheme();
 
     const onPressMiddleMan = () => {

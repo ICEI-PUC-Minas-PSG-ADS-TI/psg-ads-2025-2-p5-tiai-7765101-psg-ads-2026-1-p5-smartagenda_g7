@@ -1,12 +1,13 @@
 // Todos os Detalhes das Tarefas. Podendo ser usado como Modal ou Página
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
 import { TrySalvarTarefa } from '../services/SaveControlService.ts';
 import StorageAPI, { TryGetTarefa } from '../services/LocalStorageService.ts';
-import { SyncState } from '../services/TarefaService.ts';
+import { SyncState, GetSubtarefas } from '../services/TarefaService.ts';
 import { useTheme } from '../theme/ThemeContext';
+import {TarefaListSafe} from '../components/TarefaList.tsx';
 
 type Props = {
     tarefa: Tarefa;
@@ -17,6 +18,18 @@ type Props = {
 
 export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: Props) {
     const { theme } = useTheme();
+
+    const [Subtasks, setSubtasks] = useState<Tarefa[]>([]);
+    const [SelectedSubtask, setSelectedSubtask] = useState<Tarefa | null>(null);
+
+    useEffect(() => {
+        const getallsubtasks = async () => {
+            let subtasks = await GetSubtarefas(tarefa);
+            console.log("updated with ", subtasks?.length, " subtasks");
+            if (subtasks && subtasks.length > 0) setSubtasks(subtasks);
+        }
+        getallsubtasks();
+    }, []);
 
     const onCompleteInner = async (task: Tarefa) => {
         let updated = { ...task };
@@ -110,6 +123,17 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
                     </Text>
 
                     <Text style={[styles.footerInfo, { color: theme.colors.textSecondary }]}>Criada em {dataCriacao}</Text>
+
+                    {Subtasks.length > 0 && (
+                        <View>
+                            <Text style={{ color: theme.colors.text }}>
+                                Sub-Tarefas: ({Subtasks.length})
+                            </Text>
+                            <View >
+                                <TarefaListSafe parent={tarefa} tarefas={Subtasks} onRefresh={() => {}} subtaskStyling={true} />
+                            </View>
+                        </View>
+                    )}
                 </ScrollView>
 
                 {/* Botões de Ação */}
