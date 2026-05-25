@@ -12,7 +12,7 @@ import {
   Alert
 } from 'react-native';
 
-import { localGenerateText } from '../services/GENAIService';
+import { localGenerateText } from '../services/LocalGenAIService';
 
 export default function AIScreen() {
   const [prompt, setPrompt] = useState('');

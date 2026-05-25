@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ScrollView, Modal, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
 import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
-import LocalStorageService, { CarregarTarefas, CarregarTarefasArray } from '../services/LocalStorageService';
+import LocalStorageService, { CarregarTarefas, CarregarTarefasArray, SalvarConfiguracao } from '../services/LocalStorageService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CadastroScreen from './Cadastro';
 import LoginScreen from './Login';
@@ -11,6 +11,7 @@ import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services
 import { Tarefa } from '../types/tarefa';
 import { CompareAndCheck } from '../services/SaveControlService';
 import { useTheme } from '../theme/ThemeContext';
+import { initLocalModel, IsDownloaded, UninstallModel } from '../services/LocalGenAIService';
 
 
 type USettings = {
@@ -23,30 +24,67 @@ const Configuracoes = () => {
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<USettings>({});
   const [logging, setLogging] = useState(false);
+  const [loadingText, setLoadingText] = useState("");
 
   const navigation = useNavigation<any>();
 
   async function Toggle(index: string, value: boolean) {
     switch (index) {
       case "EnableLocalAI": //falta verificar se já está instalado e a quantidade exata a ser instalada
-        if (value) Alert.alert("Habilitar IA local", "A IA local offline é consideravelmente mais lenta do que em Cloud, e será necessário baixar uma carga de ~1,5gb em seu dispositivo. Deseja habilitar?",
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-              text: 'Habilitar', onPress: () => {
-                setSettings(prev => ({
-                  ...prev,
-                  [index]: value
-                }));
-              }
+        if (value) {
+          const onlywhendownloaded = async () => {
+            const isdownloaded = await IsDownloaded();
+            if (isdownloaded) {
+              setSettings(prev => ({
+                ...prev,
+                ["EnableLocalAI"]: true
+              }));
             }
-          ]
-        );
+            else {
+              Alert.alert("Habilitar IA local", [
+                "A IA local offline é uma função experimental.",
+                "",
+                "• O desempenho é CONSIDERAVELMENTE mais lento que o modo Cloud.",
+                "• Algumas funções são limitadas em sua complexidade.",
+                "• Será necessário baixar uma carga de aproximadamente 2 GB no dispositivo.",
+                "",
+                "Deseja continuar?"
+              ].join("\n"),
+                [
+                  { text: 'Cancelar', style: 'cancel' },
+                  {
+                    text: 'Habilitar e Baixar Modelo', onPress: () => {
+                      DownloadLocalAI();
+                    }
+                  }
+                ]
+              );
+            }
+          }
+          onlywhendownloaded();
+        }
         else {
           setSettings(prev => ({
             ...prev,
             [index]: value
           }));
+
+          const onlywhendownloaded2 = async () => {
+            const isdownloaded = await IsDownloaded();
+            if (isdownloaded) {
+              Alert.alert("Desisntalar modelo", "Deseja adicionalmente desinstalar a carga de ~2gb de seu dispositivo?",
+                [
+                  { text: 'Desativar SEM DESISNTALAR', style: 'cancel' },
+                  {
+                    text: 'Desativar E DESISNTALAR O MODELO', onPress: async () => {
+                      await UninstallModel();
+                    }
+                  }
+                ]
+              );
+            }
+          }
+          onlywhendownloaded2();
         }
         break;
       case "UseBackup":
@@ -118,6 +156,13 @@ const Configuracoes = () => {
     loadSettings();
   }, []);
 
+  useEffect(() => {
+    const salvarcfg = async () => {
+      await SalvarConfiguracao(settings);
+    }
+    salvarcfg();
+  }, [settings])
+
   function YouSure(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
       Alert.alert(
@@ -137,6 +182,23 @@ const Configuracoes = () => {
         ]
       );
     });
+  }
+
+  function DownloadLocalAI() {
+    const dld = async () => {
+      await initLocalModel((m) => {
+        if (m == "Preparing model...") {
+          setLoadingText("");
+          setSettings(prev => ({
+            ...prev,
+            ["EnableLocalAI"]: true
+          }));
+          return;
+        }
+        setLoadingText(m)
+      });
+    }
+    dld();
   }
 
   function handleLogout(): Promise<boolean> {
@@ -187,6 +249,12 @@ const Configuracoes = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Configurações</Text>
 
+      <Modal visible={loadingText !== ""} transparent={true} animationType="slide" onRequestClose={() => { }}>
+        <View style={[styles.modal]}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{loadingText}</Text>
+        </View>
+      </Modal>
+
       <ScrollView>
         {user ? (
           <TouchableOpacity style={[styles.option, { borderColor: theme.colors.border }]} onPress={() => Toggle("UseBackup", false)}>
@@ -216,8 +284,8 @@ const Configuracoes = () => {
         </View>
         <View style={[styles.option, { borderColor: theme.colors.border }]}>
           <View style={styles.compOption}>
-             <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Tema Escuro</Text>
-             <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Ativar ou desativar o modo escuro</Text>
+            <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Tema Escuro</Text>
+            <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Ativar ou desativar o modo escuro</Text>
           </View>
           <Switch value={themeType === 'dark'}
             onValueChange={toggleTheme}
@@ -292,6 +360,19 @@ const styles = StyleSheet.create({
     width: "30%",
     justifyContent: "flex-end",
     alignItems: "flex-end",
+  },
+  modal: {
+    flex: 1,
+    maxHeight: 100,
+    padding: 30,
+    margin: 'auto',
+    backgroundColor: 'black',
+    borderRadius: 10,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    alignContent: 'center',
+    borderColor: 'white',
+    borderWidth: 2
   }
 });
 

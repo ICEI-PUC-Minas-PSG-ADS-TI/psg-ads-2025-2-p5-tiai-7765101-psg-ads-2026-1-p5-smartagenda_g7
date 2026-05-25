@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI, ChatSession } from '@google/generative-ai';
 import { GEMINI_API_KEY } from '@env';
 import { aiTools } from '../tools/aiToolSchemas';
@@ -6,6 +6,8 @@ import { CreateTarefaJSON } from '../services/TarefaService';
 import LocalStorageService from '../services/LocalStorageService';
 import SaveControlService from '../services/SaveControlService';
 import IAInteracaoService from '../services/IAInteracaoService';
+import { GeminiProvider, AIprovider, LocalProvider } from '../services/HybridAIService';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 const INITIAL_TEXT = "Olá! Sou seu assistente de Agenda IA. Como posso te ajudar a organizar suas tarefas e rotina hoje?";
 const AI_MODEL = 'gemini-2.5-flash';
@@ -28,7 +30,10 @@ export interface Message {
 // Inicializando a instância do SDK do Gemini com a chave de API das variáveis de ambiente
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-export function useAIChat() {
+// Não há verificações de conexão, só utilize LOCAL para forçar o uso da IA Local.
+export function useAIChat(local?: Boolean) {
+    const Provider = useRef<AIprovider | null>(null);
+
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -39,22 +44,27 @@ export function useAIChat() {
     const [isLoading, setIsLoading] = useState(false);
 
     // Armazenando a sessão do chat para reter o histórico
-    const chatSessionRef = useRef<ChatSession | null>(null);
+    //const chatSessionRef = useRef<ChatSession | null>(null);
 
-    const initChat = () => {
-        if (!chatSessionRef.current) {
-            const model = genAI.getGenerativeModel({
-                model: AI_MODEL,
-                tools: aiTools,
-                systemInstruction: AI_SYSTEM_PROMPT,
-            });
+    const initProvider = () => {
+        if (!Provider.current) {
 
-            chatSessionRef.current = model.startChat({
-                history: [],
-            });
+            if (local) {
+                console.log("Using Local AI");
+                Provider.current = new LocalProvider();
+            }
+            else Provider.current = new GeminiProvider();
         }
-        return chatSessionRef.current;
+        return Provider.current;
     };
+
+    useEffect(() => {
+        if (local) {
+                console.log("Using Local AI");
+                Provider.current = new LocalProvider();
+            }
+            else Provider.current = new GeminiProvider();
+    }, [local])
 
     const sendMessage = async (inputText: string) => {
         if (!inputText.trim()) return;
@@ -69,29 +79,34 @@ export function useAIChat() {
         setIsLoading(true);
 
         try {
-            const chat = initChat();
+            //const chat = initChat();
+            const provider = initProvider();
 
+            await IAInteracaoService.SalvarInteracao({
+                id: Date.now().toString(),
 
-              await IAInteracaoService.SalvarInteracao({
-              id: Date.now().toString(),
+                tipo: 'pergunta',
 
-              tipo: 'pergunta',
+                prompt: inputText.trim(),
+                resposta: '',
 
-              prompt: inputText.trim(),
-              resposta: '',
+                dataInteracao: Date.now(),
 
-              dataInteracao: Date.now(),
+                executada: true,
 
-              executada: true,
+                sincronizada: false,
+                localOnly: true
+            }, !local);
 
-              sincronizada: false,
-              localOnly: true
-    });
             // Envia a mensagem do usuário para a IA
-            let result = await chat.sendMessage(inputText);
+            //console.log("sending it");
+            let result = await provider.sendMessage(inputText, []);
+            if (!result) {
+                throw new Error("Resposta vazia do provedor de IA");
+            }
 
             // Verifica se a resposta pede para invocar funções do sistema
-            let functionCalls = result.response.functionCalls();
+            let functionCalls = result.toolCalls;
 
             while (functionCalls && functionCalls.length > 0) {
                 for (const call of functionCalls) {
@@ -191,58 +206,57 @@ export function useAIChat() {
                         }
 
                         // Envia a resposta de volta ao Gemini após processar e salvar tudo
-                        result = await chat.sendMessage([{
-                            functionResponse: {
-                                name: callName,
-                                response: functionResponseData
-                            }
-                        }]);
+                        result = await provider.sendToolResult({
+                            toolName: callName,
+                            result: functionResponseData
+                        });
 
                     } catch (err) {
                         console.error(`[useAIChat] Erro na tool ${callName}:`, err);
-                        result = await chat.sendMessage([{
-                            functionResponse: {
-                                name: callName,
-                                response: { status: 'error', message: String(err) }
+                        result = await provider.sendToolResult({
+                            toolName: callName,
+                            result: {
+                                status: 'error',
+                                message: String(err)
                             }
-                        }]);
+                        });
                     }
                 }
 
                 // Em casos onde a IA responde com mais uma chamada de função (ex: chamou tool errada e tenta dnv)
-                functionCalls = result.response.functionCalls();
-            }
+                functionCalls = result.toolCalls;
+            }//*/
 
             // Após sair do loop das tools, pegamos a resposta final
             let botText = "";
             try {
-                botText = result.response.text();
+                if (result.text) botText = result.text;
+                else botText = "Pronto! Suas tarefas foram processadas.";
+
             } catch (e) {
                 // Se falhar ao extrair o texto, usamos um fallback para não deixar o usuário no vácuo
                 botText = "Pronto! Suas tarefas foram processadas.";
             }
-
             if (botText) {
-
                 await IAInteracaoService.SalvarInteracao({
-    id: (Date.now() + 1).toString(),
+                    id: (Date.now() + 1).toString(),
 
-    tipo: 'resposta',
+                    tipo: 'resposta',
 
-    prompt: inputText,
-    resposta: botText,
+                    prompt: inputText,
+                    resposta: botText,
 
-    dataInteracao: Date.now(),
+                    dataInteracao: Date.now(),
 
-    executada: true,
+                    executada: true,
 
-    sincronizada: true,
-    localOnly: false
-});
+                    sincronizada: true,
+                    localOnly: !!local
+                }, !local);
 
-const botMessage: Message = {
+                const botMessage: Message = {
 
-             id: (Date.now() + 1).toString(),
+                    id: (Date.now() + 1).toString(),
                     text: botText,
                     sender: 'assistant',
                 };

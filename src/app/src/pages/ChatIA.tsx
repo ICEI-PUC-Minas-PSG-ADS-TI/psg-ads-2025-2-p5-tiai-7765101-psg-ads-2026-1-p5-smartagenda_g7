@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -14,16 +14,45 @@ import {
 import { useNetInfo } from '@react-native-community/netinfo';
 import { useAIChat, Message } from '../hooks/useAIChat';
 import { useTheme } from '../theme/ThemeContext';
+import { CarregarConfiguracao } from '../services/LocalStorageService'
 
 export default function ChatIA() {
     const { theme } = useTheme();
     const [inputText, setInputText] = useState('');
-    const { messages, sendMessage, isLoading } = useAIChat();
+    const [useLocalAI, setUseLocalAI] = useState<boolean>(false);
+    const [allowOffline, setAllowOffline] = useState<boolean>(false);
     const netInfo = useNetInfo();
     const isConnected = netInfo.isConnected ?? true;
 
+    const getConfig = async () => {
+            const config = await CarregarConfiguracao();
+            setAllowOffline(config?.EnableLocalAI === true);
+
+            if (!isConnected) {
+                setUseLocalAI(config?.EnableLocalAI === true);
+            }
+            else {
+                setUseLocalAI(false);
+            }
+        };
+
+    useEffect(() => {
+        getConfig();
+    }, [isConnected]);
+
+    const { messages, sendMessage, isLoading } = useAIChat(useLocalAI);
+
     const handleSend = () => {
         if (!inputText.trim()) return;
+        if (netInfo.isConnected)
+        {
+            if (useLocalAI) setUseLocalAI(false);
+        }
+        else if (allowOffline)
+        {
+            setUseLocalAI(true);
+        }
+        else console.log("You shouldn't see this");
         sendMessage(inputText);
         setInputText('');
     };
@@ -89,7 +118,7 @@ export default function ChatIA() {
                     </TouchableOpacity>
                 </View>
 
-                {!isConnected && (
+                {(!isConnected && !useLocalAI) && (
                     <View style={styles.overlayBlur}>
                         <View style={[styles.offlineBox, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary }]}>
                             <Text style={[styles.offlineTitle, { color: theme.colors.primary }]}>Sem Conexão</Text>

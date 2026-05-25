@@ -30,6 +30,7 @@ export default class IAInteracaoService {
         try {
             const data = await AsyncStorage.getItem(STORAGE_KEY);
 
+
             if (!data) {
                 return {};
             }
@@ -42,43 +43,42 @@ export default class IAInteracaoService {
         }
     }
 
-  static async SalvarInteracao(interacao: IAInteracao): Promise<void> {
-    try {
+    static async SalvarInteracao(interacao: IAInteracao, connected?: boolean): Promise<void> {
+        try {
 
-   
-        // SALVA LOCALMENTE
-      
+            // SALVA LOCALMENTE
 
-        const interacoes = await this.CarregarInteracoes();
+            const interacoes = await this.CarregarInteracoes();
 
-        interacoes[interacao.id] = interacao;
+            interacoes[interacao.id] = interacao;
 
-        await AsyncStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(interacoes)
-        );
+            await AsyncStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(interacoes)
+            );
 
-    
-        // SALVA NO FIREBASE
-      
 
-        const user = auth().currentUser;
+            // SALVA NO FIREBASE
 
-if (user) {
-    await firestore()
-        .collection('usuarios')
-        .doc(user.uid)
-        .collection('ia_interacoes')
-        .doc(interacao.id)
-        .set(interacao);
-}
+            if (connected) {
+                const user = auth().currentUser;
 
-        console.log('[IAInteracaoService] Interação salva localmente e no Firebase.');
+                if (user) {
+                    await firestore()
+                        .collection('usuarios')
+                        .doc(user.uid)
+                        .collection('ia_interacoes')
+                        .doc(interacao.id)
+                        .set(interacao);
+                }
+            }
 
-    } catch (error) {
-        console.error('[IAInteracaoService] Erro ao salvar interação:', error);
+            console.log('[IAInteracaoService] Interação salva localmente ', connected ? 'e no Firebase.' : '');
+
+        } catch (error) {
+            console.error('[IAInteracaoService] Erro ao salvar interação:', error);
+        }
     }
-}
 
     static async ListarInteracoes(): Promise<IAInteracao[]> {
         try {
@@ -104,58 +104,58 @@ if (user) {
     }
 
     static async BuscarInteracoesFirebase(): Promise<IAInteracao[]> {
-    try {
+        try {
+            const user = auth().currentUser;
+
+            if (!user) {
+                return [];
+            }
+
+            const snapshot = await firestore()
+                .collection('usuarios')
+                .doc(user.uid)
+                .collection('ia_interacoes')
+                .orderBy('dataInteracao', 'desc')
+                .get();
+
+            return snapshot.docs.map(doc => doc.data() as IAInteracao);
+
+        } catch (error) {
+            console.error('[IAInteracaoService] Erro ao buscar interações Firebase:', error);
+            return [];
+        }
+    }
+    static EscutarInteracoesFirebase(
+        callback: (dados: IAInteracao[]) => void
+    ) {
+
         const user = auth().currentUser;
 
         if (!user) {
-            return [];
+            return () => { };
         }
 
-        const snapshot = await firestore()
+        return firestore()
             .collection('usuarios')
             .doc(user.uid)
             .collection('ia_interacoes')
             .orderBy('dataInteracao', 'desc')
-            .get();
+            .onSnapshot(snapshot => {
 
-        return snapshot.docs.map(doc => doc.data() as IAInteracao);
+                const dados = snapshot.docs.map(doc =>
+                    doc.data() as IAInteracao
+                );
 
-    } catch (error) {
-        console.error('[IAInteracaoService] Erro ao buscar interações Firebase:', error);
-        return [];
+                callback(dados);
+
+            }, error => {
+
+                console.error(
+                    '[IAInteracaoService] Erro ao escutar interações:',
+                    error
+                );
+            });
     }
-}
-static EscutarInteracoesFirebase(
-    callback: (dados: IAInteracao[]) => void
-) {
-
-    const user = auth().currentUser;
-
-    if (!user) {
-        return () => {};
-    }
-
-    return firestore()
-        .collection('usuarios')
-        .doc(user.uid)
-        .collection('ia_interacoes')
-        .orderBy('dataInteracao', 'desc')
-        .onSnapshot(snapshot => {
-
-            const dados = snapshot.docs.map(doc =>
-                doc.data() as IAInteracao
-            );
-
-            callback(dados);
-
-        }, error => {
-
-            console.error(
-                '[IAInteracaoService] Erro ao escutar interações:',
-                error
-            );
-        });
-}
 }
 
 

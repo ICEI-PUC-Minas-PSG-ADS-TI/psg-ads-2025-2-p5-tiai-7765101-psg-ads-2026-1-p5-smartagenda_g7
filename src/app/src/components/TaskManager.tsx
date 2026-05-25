@@ -70,18 +70,18 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     const [openTreeView, setOpenTreeView] = useState(false);
 
     const getParentChain = async (t: Tarefa, chain: string): Promise<string> => {
-                let tarefas = await StorageAPI.CarregarTarefas();
-                if (tarefas)
-                    return await getParentChainInner(t, chain, tarefas)
-                else return chain;
-            }
-            const getParentChainInner = async (t: Tarefa, chain: string, tarefas: Record<string, Tarefa>): Promise<string> => {
+        let tarefas = await StorageAPI.CarregarTarefas();
+        if (tarefas)
+            return await getParentChainInner(t, chain, tarefas)
+        else return chain;
+    }
+    const getParentChainInner = async (t: Tarefa, chain: string, tarefas: Record<string, Tarefa>): Promise<string> => {
 
-                if (!tarefas) return chain;
-                let parent = tarefas[t.parentId!];
-                if (!parent) return chain;
-                return getParentChain(parent, parent.titulo + " > " + chain);
-            }
+        if (!tarefas) return chain;
+        let parent = tarefas[t.parentId!];
+        if (!parent) return chain;
+        return getParentChain(parent, parent.titulo + " > " + chain);
+    }
 
     useEffect(() => {
         if (tarefa) {
@@ -95,8 +95,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
             else
                 getParentChain(parent, `${parent.titulo} >`).then((fullChain) => { setDepthDisplay(fullChain); });
         }
-        else if (tarefa?.parentId)
-        {
+        else if (tarefa?.parentId) {
             StorageAPI.TryGetTarefa(tarefa.parentId).then((p) => {
                 if (p) {
                     setParent(p);
@@ -104,7 +103,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
             });
             //getParentChain(tarefa, "").then((fullChain) => { setDepthDisplay(fullChain); });
         }
-        
+
         //else console.log("no parents?");
     }, [tarefa, parent]);
 
@@ -119,8 +118,16 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         initialize();
     }, [task, CreateTarefaControlled]);
 
+    const getallsubtasks = async () => {
+        if (!task) return;
+        let subtasks = await GetSubtarefas(task);
+        console.log("updated with ", subtasks?.length, " subtasks");
+        if (subtasks && subtasks.length > 0) setSubtasks(subtasks);
+    }
+
     // Sincroniza os estados quando a tarefa passada via props mudar
     useEffect(() => {
+
         if (!task) return;
         const baseTask = task;
         if (!baseTask) { console.log("null task!!"); return; }  // geralmente acontece na primeira renderização, quando ainda não foi criada a tarefa vazia. se só aparecer uma vez, tá ok.
@@ -135,17 +142,23 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         setCategoriesString(baseTask.categorias ? baseTask.categorias.join(', ') : '');
 
         if (baseTask.subtarefas && baseTask.subtarefas.length > 0) {
-            if (Subtasks.length != baseTask.subtarefas.length) {
-                const getallsubtasks = async () => {
-                    let subtasks = await GetSubtarefas(baseTask!);
-                    console.log("updated with ", subtasks?.length, " subtasks");
-                    if (subtasks && subtasks.length > 0) setSubtasks(subtasks);
-                }
+            //if (Subtasks.length != baseTask.subtarefas.length) {
+
                 getallsubtasks();
-            }
+            //}
         }
 
     }, [task]);
+
+    const refresh = () => {
+        const refr = async () => {
+            let tarefas = await CarregarTarefas();
+            if (tarefas) {
+                setTask(tarefas[task!.id])
+            }
+        }
+        refr();
+    }
 
     const newSubtask = useCallback(() => {
         //if (!task) return;
@@ -208,7 +221,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
             console.log("new subtask count: ", newtask?.subtarefas?.length);
             if (newtask) await TrySalvarTarefa(newtask);
             //tryClose();
-            
+
         }
         else {
             /*console.log('ahoy');
@@ -633,7 +646,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                 </View>
 
                 {!isCreating && (
-                    <Modal visible={openTreeView} transparent={true} animationType="slide" onRequestClose={() => setOpenTreeView(false)}>
+                    <Modal visible={openTreeView} transparent={true} animationType="slide" onRequestClose={() => { setOpenTreeView(false); refresh() }}>
                         <TaskTreeView tarefa={task} />
                     </Modal>
                 )}

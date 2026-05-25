@@ -126,8 +126,8 @@ export default function TaskTreeView({ tarefa, modalMode }: Props) {
       let tarefas = await CarregarTarefas();
       if (tarefas) {
         let root = GetRootTask(tarefa, tarefas);
+        if (root == tarefa) root = tarefas[tarefa.id];
         setRoot(root);
-        console.log("root task for treeview: ", root.titulo);
         const res = await GetAllSubtarefas(root);
         let array: Tarefa[] = [];
         array.push(root);

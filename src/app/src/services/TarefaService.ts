@@ -85,12 +85,22 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
     let id;
     if (typeof obj.id === "string" && obj.id.trim() !== "")
         id = obj.id;
-    else return undefined; // esse ID não é real, mas ainda é importante para conectar as subtarefas, vou ver ainda se dá pra passar
+    else if (obj.subtarefas && obj.subtarefas.length > 0)
+    {
+        let i = 0;
+        for (let o of obj.subtarefas)
+        {
+            i += o;
+        }
+        id = `${i}`
+    }
+    else id = "1";
+        //return undefined; // esse ID não é real, mas ainda é importante para conectar as subtarefas, vou ver ainda se dá pra passar
 
     const titulo =
         typeof obj.titulo === "string"
             ? obj.titulo
-            : "Sem título";
+            : "Tarefa";
 
     // O estado é computado, não é necessário
     /*const estado =
@@ -115,10 +125,13 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
             ? new Date(obj.data_criado).getTime()
             : Date.now();
 
-    const data_vencimento =
-        typeof obj.data_vencimento === "string"
-            ? new Date(obj.data_vencimento).getTime()
-            : Date.now();
+    let finalVal = typeof obj.data_vencimento === "string" ? (new Date(obj.data_vencimento).getTime())
+            : (typeof obj.vence_dias_de_hoje === "number" ? Date.now() + (obj.vence_dias_de_hoje*86400000) 
+            : (typeof obj.vence_data_DDMMYYYY === "string" ? LocaleStringToTimestamp(obj.vence_data_DDMMYYY)
+            : Date.now() + (7 * 86400000) ))
+    if (!finalVal) finalVal = Date.now() + (7 * 86400000)
+
+    const data_vencimento = finalVal;
 
     const data_finalizado =
         typeof obj.data_finalizado === "string"
@@ -242,6 +255,7 @@ function TryFindParent(tarefa: Tarefa, tarefasRecord: Record<string, Tarefa>): T
  */
 export async function SyncState(parent: Tarefa): Promise<Tarefa> {
     //if (!parent.subtarefas || parent.subtarefas.length === 0) return parent;
+    console.log("syncing state");
     let subtasks = await GetSubtarefas(parent);
     if (!subtasks || subtasks.length === 0) return parent;
 
