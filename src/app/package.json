@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@notifee/react-native": "^9.1.8",
     "@react-native-ai/llama": "^0.12.0",
     "@react-native-ai/mlc": "^0.12.0",
     "@react-native-async-storage/async-storage": "^2.2.0",

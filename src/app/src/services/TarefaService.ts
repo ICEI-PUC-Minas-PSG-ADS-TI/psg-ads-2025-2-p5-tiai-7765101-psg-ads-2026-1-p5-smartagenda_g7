@@ -4,6 +4,7 @@ import type { Tarefa } from '../types/tarefa';
 import StorageAPI, { SalvarTarefas } from './LocalStorageService';
 import { v4 as uuidv4 } from 'uuid'; // para geração de ID
 import { TrySalvarTarefa } from './SaveControlService';
+import { ScheduleDaily, Schedule, CancelScheduled } from './NotificationService';
 
 export function CreateTarefa(id: string, titulo: string, data_criado: number, data_vencimento: number, parentId?: string, categorias?: string[], descricao_geral?: string, subtarefas?: string[], data_finalizado?: number): Tarefa {
     return {
@@ -85,17 +86,15 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
     let id;
     if (typeof obj.id === "string" && obj.id.trim() !== "")
         id = obj.id;
-    else if (obj.subtarefas && obj.subtarefas.length > 0)
-    {
+    else if (obj.subtarefas && obj.subtarefas.length > 0) {
         let i = 0;
-        for (let o of obj.subtarefas)
-        {
+        for (let o of obj.subtarefas) {
             i += o;
         }
         id = `${i}`
     }
     else id = "1";
-        //return undefined; // esse ID não é real, mas ainda é importante para conectar as subtarefas, vou ver ainda se dá pra passar
+    //return undefined; // esse ID não é real, mas ainda é importante para conectar as subtarefas, vou ver ainda se dá pra passar
 
     const titulo =
         typeof obj.titulo === "string"
@@ -126,9 +125,9 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
             : Date.now();
 
     let finalVal = typeof obj.data_vencimento === "string" ? (new Date(obj.data_vencimento).getTime())
-            : (typeof obj.vence_dias_de_hoje === "number" ? Date.now() + (obj.vence_dias_de_hoje*86400000) 
+        : (typeof obj.vence_dias_de_hoje === "number" ? Date.now() + (obj.vence_dias_de_hoje * 86400000)
             : (typeof obj.vence_data_DDMMYYYY === "string" ? LocaleStringToTimestamp(obj.vence_data_DDMMYYY)
-            : Date.now() + (7 * 86400000) ))
+                : Date.now() + (7 * 86400000)))
     if (!finalVal) finalVal = Date.now() + (7 * 86400000)
 
     const data_vencimento = finalVal;
@@ -382,9 +381,9 @@ export async function FilterSubTarefasArray(tarefas: Tarefa[], onlyMaintasks: bo
 }
 
 /**
- * Filtra todas as tarefas para retornar apenas as tarefas principais (isSubtarefa = false) ou apenas as subtarefas (isSubtarefa = true), dependendo do valor de onlyMaintasks. Retorna null se ocorrer algum erro durante o processo.
+ * Filtra todas as tarefas para retornar apenas as tarefas principais/raiz ou apenas as subtarefas, dependendo do valor de onlyMaintasks. Retorna null se ocorrer algum erro durante o processo.
  * @param tarefas array das tarefas
- * @param onlyMaintasks true = returna somente principais, false = retorna somente subtarefas
+ * @param onlyMaintasks true = returna somente principais/raiz, false = retorna somente subtarefas
  * @returns Dicionário das tarefas filtradas, indexado por ID.
  */
 export async function FilterSubTarefas(tarefas: Tarefa[], onlyMaintasks: boolean): Promise<Record<string, Tarefa>> {
@@ -456,6 +455,129 @@ export function OrdenarTarefas(lista: Tarefa[]): Tarefa[] {
 
 export function GetFinalizadas(tarefas: Tarefa[]): Tarefa[] {
     return tarefas.filter(t => t.estado === "Finalizado");
+}
+
+/**
+ * Retorna somente as tarefas que não possuem sub-tarefas
+ */
+export async function GetFolhas(tarefas: Tarefa[]): Promise<Tarefa[]> {
+    let res: Tarefa[] = [];
+    for (const t of tarefas) {
+        if (t.subtarefas) {
+            let sub = await GetSubtarefas(t)
+            if (sub) res.concat(await GetFolhas(sub))
+            else console.error("couldn't get subtarefas of ", t.titulo);
+        }
+        else res.push(t);
+    }
+    return res;
+}
+
+/**
+ * Marca notificações para a tarefa selecionada (Por enquanto 7 dias antes, 2 dias antes, 1 dia antes)
+ */
+export async function BuildScheduledNotifications(tarefa: Tarefa) {
+    await RemoveNotifications(tarefa, false);
+    let newNoti: Record<string, string> = {};
+    const day = 86400000;
+    // TODO: Integrar com a IA para os textos de notificação
+    newNoti['7days'] = await Schedule(tarefa.titulo, "Falta somente uma semana para essa tarefa vencer!", tarefa.data_vencimento - (day * 7));
+    newNoti['2days'] = await Schedule(tarefa.titulo, "Falta somente dois dias para essa tarefa vencer!", tarefa.data_vencimento - (day * 2));
+    newNoti['1day'] = await Schedule(tarefa.titulo, "Último dia até o vencimento da tarefa!", tarefa.data_vencimento - (day));
+    if (tarefa.notificacoesIds) tarefa.notificacoesIds = {...tarefa.notificacoesIds, ...newNoti};
+    else tarefa.notificacoesIds = newNoti;
+    for (const [key, val] of Object.entries(tarefa.notificacoesIds))
+    {
+        if (val == '') { delete tarefa.notificacoesIds[key]};
+    }
+}
+
+/**
+ * Define notificações diárias para a tarefa selecionada (Por enquanto todos os dias ao Meio Dia)
+ */
+export async function BuildDailyNotifications(tarefa: Tarefa)
+{
+    await RemoveNotifications(tarefa, true);
+    let newNoti: Record<string, string> = {};
+    // TODO: Integrar com a IA para os textos de notificação
+    // TODO: Deixar o usuário definir o horário diário, e os dias da semana.
+    let time = new Date();
+    time.setDate(time.getDate() + 1);
+    time.setHours(12, 0, 0, 0);
+    newNoti['Daily_1'] = await ScheduleDaily(tarefa.titulo, "Faça um pouquinho hoje!", time.getTime());
+    if (tarefa.notificacoesIds) tarefa.notificacoesIds = {...tarefa.notificacoesIds, ...newNoti};
+    else tarefa.notificacoesIds = newNoti;
+    for (const [key, val] of Object.entries(tarefa.notificacoesIds))
+    {
+        if (val == '') { delete tarefa.notificacoesIds[key]};
+    }
+}
+
+/**
+ * Atualiza as notificações marcadas definidas em todas as tarefas passadas.
+ */
+export async function RefreshScheduledNotifications(tarefas: Tarefa[]) 
+{
+    for (const t of tarefas)
+    {
+        await BuildScheduledNotifications(t);
+        console.log(t.notificacoesIds);
+    }
+}
+
+/**
+ * Atualiza as notificações diárias definidas em todas as tarefas passadas.
+ */
+export async function RefreshDailyNotifications(tarefas: Tarefa[]) {
+    for (const t of tarefas)
+    {
+        await BuildDailyNotifications(t);
+        console.log(t.notificacoesIds);
+    }
+}
+
+/**
+ * Desabilita as notificações diárias definidas em todas as tarefas passadas.
+ */
+export async function DisableAllDailyNotifications(tarefas: Tarefa[])
+{
+    for (const t of tarefas)
+    {
+        await RemoveNotifications(t, true);
+    }
+}
+
+/**
+ * Desabilita as notificações marcadas definidas em todas as tarefas passadas.
+ */
+export async function DisableAllScheduledNotifications(tarefas: Tarefa[])
+{
+    for (const t of tarefas)
+    {
+        await RemoveNotifications(t, false);
+    }
+}
+
+/**
+ * Remove notificações de uma tarefa, especifique se somente as diárias ou somente as marcadas
+ */
+async function RemoveNotifications(tarefa: Tarefa, daily: boolean)
+{
+    if (tarefa.notificacoesIds) {
+        for (const [key, noti] of Object.entries(tarefa.notificacoesIds)) {
+            if (daily) {
+                if (key.startsWith("Daily")){
+                    await CancelScheduled(noti);
+                    delete tarefa.notificacoesIds[key];
+                }
+            }
+            else if (!key.startsWith("Daily")) {
+                await CancelScheduled(noti);
+                delete tarefa.notificacoesIds[key];
+            }
+        }
+    }
+    else console.log("ah shit");
 }
 
 function GetDummyJSON1(): string {

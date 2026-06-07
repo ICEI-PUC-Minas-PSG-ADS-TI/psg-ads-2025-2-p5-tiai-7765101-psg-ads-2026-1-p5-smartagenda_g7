@@ -1,23 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, ScrollView, Modal, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
-import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
-import LocalStorageService, { CarregarTarefas, CarregarTarefasArray, SalvarConfiguracao } from '../services/LocalStorageService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, StatusBar, ScrollView, Modal, TouchableOpacity, Switch, Alert } from 'react-native';
+
+import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
+import LocalStorageService, { SalvarConfiguracao } from '../services/LocalStorageService';
+import { TrySalvar, CompareAndCheck } from '../services/SaveControlService';
+import { initLocalModel, IsDownloaded, UninstallModel } from '../services/LocalGenAIService';
+import { Notify, Schedule } from '../services/NotificationService';
+import { DisableAllDailyNotifications, DisableAllScheduledNotifications, RefreshDailyNotifications, RefreshScheduledNotifications } from '../services/TarefaService';
+
 import CadastroScreen from './Cadastro';
 import LoginScreen from './Login';
 import { LogIn, LogOut } from "lucide-react-native";
-import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services/SaveControlService';
 import { Tarefa } from '../types/tarefa';
-import { CompareAndCheck } from '../services/SaveControlService';
+import { USettings } from '../types/usettings';
 import { useTheme } from '../theme/ThemeContext';
-import { initLocalModel, IsDownloaded, UninstallModel } from '../services/LocalGenAIService';
 
-
-type USettings = {
-  EnableLocalAI?: boolean,
-  UseBackup?: boolean
-}
 
 const Configuracoes = () => {
   const { theme, themeType, toggleTheme } = useTheme();
@@ -30,7 +29,7 @@ const Configuracoes = () => {
 
   async function Toggle(index: string, value: boolean) {
     switch (index) {
-      case "EnableLocalAI": //falta verificar se já está instalado e a quantidade exata a ser instalada
+      case "EnableLocalAI":
         if (value) {
           const onlywhendownloaded = async () => {
             const isdownloaded = await IsDownloaded();
@@ -141,6 +140,41 @@ const Configuracoes = () => {
         //console.log("Emitting from config");
         //DeviceEventEmitter.emit('tarefasUpdated');
         break;
+      case "EnableDailyNotify":
+        setSettings(prev => ({
+          ...prev,
+          [index]: value
+        }));
+        let tarefas1 = await LocalStorageService.CarregarTarefasArray()
+        if (tarefas1)
+        {
+          if (value) {
+          
+          await RefreshDailyNotifications(tarefas1);
+        }
+        else {
+          await DisableAllDailyNotifications(tarefas1);
+        }
+        await LocalStorageService.SalvarTarefasArray(tarefas1);
+        }
+        break;
+      case "EnableScheduledNotify":
+        setSettings(prev => ({
+          ...prev,
+          [index]: value
+        }));
+        let tarefas2 = await LocalStorageService.CarregarTarefasArray()
+        if (tarefas2) {
+          if (value) {
+            await RefreshScheduledNotifications(tarefas2);
+          }
+          else {
+            await DisableAllScheduledNotifications(tarefas2);
+          }
+          await LocalStorageService.SalvarTarefasArray(tarefas2);
+        }
+        break;
+
     }
   }
 
@@ -275,10 +309,26 @@ const Configuracoes = () => {
           </TouchableOpacity>
 
         )}
+        {/* DESATIVADO POR INVIABILIDADE}
         <View style={[styles.option, { borderColor: theme.colors.border }]}>
           <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar IA Local Offline</Text>
           <Switch value={settings?.EnableLocalAI}
             onValueChange={(val) => Toggle("EnableLocalAI", val)}
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
+            thumbColor={'white'} style={styles.Slider} />
+        </View>
+        */}
+        <View style={[styles.option, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar Notificações Marcadas</Text>
+          <Switch value={settings.EnableScheduledNotify ?? true}
+            onValueChange={async (v) => await Toggle("EnableScheduledNotify", v)}
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
+            thumbColor={'white'} style={styles.Slider} />
+        </View>
+        <View style={[styles.option, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar Notificações Diárias</Text>
+          <Switch value={settings.EnableDailyNotify ?? false}
+            onValueChange={async (v) => await Toggle("EnableDailyNotify", v)}
             trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
             thumbColor={'white'} style={styles.Slider} />
         </View>

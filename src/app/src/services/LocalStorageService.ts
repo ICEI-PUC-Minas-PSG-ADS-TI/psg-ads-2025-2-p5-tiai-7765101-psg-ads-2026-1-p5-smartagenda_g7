@@ -47,6 +47,17 @@ export async function SalvarTarefas(tarefas: Record<string, Tarefa>) {
     }
 }
 
+export async function SalvarTarefasArray(tarefas: Tarefa[]) {
+    try {
+        let res = Object.fromEntries(tarefas.map((t) => [t.id, t]))
+        await AS.setItem(getStorageKey(), JSON.stringify(res));
+        await SalvarTarefasLocal(res);
+        //console.log("[SALVARTAREFAS]Tarefas salvas: ", Object.keys(tarefas).length);
+    } catch (err) {
+        console.log("Erro ao salvar tarefas no Async Storage: " + err);
+    }
+}
+
 export async function SalvarTarefa(tarefa: Tarefa) {
     try {
         let tarefas = await CarregarTarefas();
@@ -296,6 +307,7 @@ export default {
     CarregarTarefasLocalGuest,
     CarregarTarefasArray,
     SalvarTarefas,
+    SalvarTarefasArray,
     SalvarTarefa,
     SalvarTarefasLocal,
     DeletarTarefa,

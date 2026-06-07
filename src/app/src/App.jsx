@@ -11,6 +11,7 @@ import StorageAPI, { CarregarConfiguracao } from './services/LocalStorageService
 import { onUserAuthenticated } from './services/UserService';
 import SaveControlService from './services/SaveControlService';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
+import { Init } from './services/NotificationService';
 
 function AppContent() {
   const { theme, themeType } = useTheme();
@@ -25,6 +26,11 @@ function AppContent() {
     const getcfg = async () => {
       return await CarregarConfiguracao();
     }
+    const initNotifications = async () => {
+      await Init();
+    }
+    initNotifications();
+
     let cfg = getcfg();
     if (cfg.UseBackup) {
       try {
@@ -49,7 +55,32 @@ function AppContent() {
       }
       loadlocal();
     }
-
+    if (cfg.EnableDailyNotify !== undefined) {
+      const setdailynoty = async (value) => {
+        if (value) {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await RefreshDailyNotifications(tarefas);
+        }
+        else {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await DisableAllDailyNotifications(tarefas);
+        }
+      }
+      setdailynoty(cfg.EnableDailyNotify)
+    }
+    if (cfg.EnableScheduledNotify !== undefined) {
+      const setschedulednoty = async (value) => {
+        if (value) {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await RefreshScheduledNotifications(tarefas);
+        }
+        else {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await DisableAllScheduledNotifications(tarefas);
+        }
+      }
+      setschedulednoty(cfg.EnableScheduledNotify)
+    }
 
     // Listener para abrir a tela de login a partir de outros componentes
     const eventListener = DeviceEventEmitter.addListener('showLogin', () => {
