@@ -484,42 +484,41 @@ export async function BuildScheduledNotifications(tarefa: Tarefa) {
     newNoti['7days'] = await Schedule(tarefa.titulo, "Falta somente uma semana para essa tarefa vencer!", tarefa.data_vencimento - (day * 7));
     newNoti['2days'] = await Schedule(tarefa.titulo, "Falta somente dois dias para essa tarefa vencer!", tarefa.data_vencimento - (day * 2));
     newNoti['1day'] = await Schedule(tarefa.titulo, "Último dia até o vencimento da tarefa!", tarefa.data_vencimento - (day));
-    if (tarefa.notificacoesIds) tarefa.notificacoesIds = {...tarefa.notificacoesIds, ...newNoti};
+    //newNoti['10sec'] = await Schedule(tarefa.titulo, "lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum", Date.now() + 10000);
+    if (tarefa.notificacoesIds) tarefa.notificacoesIds = { ...tarefa.notificacoesIds, ...newNoti };
     else tarefa.notificacoesIds = newNoti;
-    for (const [key, val] of Object.entries(tarefa.notificacoesIds))
-    {
-        if (val == '') { delete tarefa.notificacoesIds[key]};
+    for (const [key, val] of Object.entries(tarefa.notificacoesIds)) {
+        if (val == '') { delete tarefa.notificacoesIds[key] };
     }
 }
 
 /**
  * Define notificações diárias para a tarefa selecionada (Por enquanto todos os dias ao Meio Dia)
  */
-export async function BuildDailyNotifications(tarefa: Tarefa)
-{
+export async function BuildDailyNotifications(tarefa: Tarefa) {
     await RemoveNotifications(tarefa, true);
     let newNoti: Record<string, string> = {};
     // TODO: Integrar com a IA para os textos de notificação
     // TODO: Deixar o usuário definir o horário diário, e os dias da semana.
     let time = new Date();
-    time.setDate(time.getDate() + 1);
     time.setHours(12, 0, 0, 0);
+    if (time.getTime() <= Date.now()) {
+        time.setDate(time.getDate() + 1);
+    }
+
     newNoti['Daily_1'] = await ScheduleDaily(tarefa.titulo, "Faça um pouquinho hoje!", time.getTime());
-    if (tarefa.notificacoesIds) tarefa.notificacoesIds = {...tarefa.notificacoesIds, ...newNoti};
+    if (tarefa.notificacoesIds) tarefa.notificacoesIds = { ...tarefa.notificacoesIds, ...newNoti };
     else tarefa.notificacoesIds = newNoti;
-    for (const [key, val] of Object.entries(tarefa.notificacoesIds))
-    {
-        if (val == '') { delete tarefa.notificacoesIds[key]};
+    for (const [key, val] of Object.entries(tarefa.notificacoesIds)) {
+        if (val == '') { delete tarefa.notificacoesIds[key] };
     }
 }
 
 /**
  * Atualiza as notificações marcadas definidas em todas as tarefas passadas.
  */
-export async function RefreshScheduledNotifications(tarefas: Tarefa[]) 
-{
-    for (const t of tarefas)
-    {
+export async function RefreshScheduledNotifications(tarefas: Tarefa[]) {
+    for (const t of tarefas) {
         await BuildScheduledNotifications(t);
         console.log(t.notificacoesIds);
     }
@@ -529,8 +528,7 @@ export async function RefreshScheduledNotifications(tarefas: Tarefa[])
  * Atualiza as notificações diárias definidas em todas as tarefas passadas.
  */
 export async function RefreshDailyNotifications(tarefas: Tarefa[]) {
-    for (const t of tarefas)
-    {
+    for (const t of tarefas) {
         await BuildDailyNotifications(t);
         console.log(t.notificacoesIds);
     }
@@ -539,10 +537,8 @@ export async function RefreshDailyNotifications(tarefas: Tarefa[]) {
 /**
  * Desabilita as notificações diárias definidas em todas as tarefas passadas.
  */
-export async function DisableAllDailyNotifications(tarefas: Tarefa[])
-{
-    for (const t of tarefas)
-    {
+export async function DisableAllDailyNotifications(tarefas: Tarefa[]) {
+    for (const t of tarefas) {
         await RemoveNotifications(t, true);
     }
 }
@@ -550,10 +546,8 @@ export async function DisableAllDailyNotifications(tarefas: Tarefa[])
 /**
  * Desabilita as notificações marcadas definidas em todas as tarefas passadas.
  */
-export async function DisableAllScheduledNotifications(tarefas: Tarefa[])
-{
-    for (const t of tarefas)
-    {
+export async function DisableAllScheduledNotifications(tarefas: Tarefa[]) {
+    for (const t of tarefas) {
         await RemoveNotifications(t, false);
     }
 }
@@ -561,12 +555,11 @@ export async function DisableAllScheduledNotifications(tarefas: Tarefa[])
 /**
  * Remove notificações de uma tarefa, especifique se somente as diárias ou somente as marcadas
  */
-async function RemoveNotifications(tarefa: Tarefa, daily: boolean)
-{
+async function RemoveNotifications(tarefa: Tarefa, daily: boolean) {
     if (tarefa.notificacoesIds) {
         for (const [key, noti] of Object.entries(tarefa.notificacoesIds)) {
             if (daily) {
-                if (key.startsWith("Daily")){
+                if (key.startsWith("Daily")) {
                     await CancelScheduled(noti);
                     delete tarefa.notificacoesIds[key];
                 }
