@@ -29,10 +29,11 @@ export async function TrySalvar(ForceRefresh?: boolean): Promise<Tarefa[]> {
                 await deletarTarefaFirestore(t.id).catch((e) => { console.log("[SAVECONTROL] Falha ao deletar tarefa do Firestore durante sincronização: " + e) });
             })
             try {
+                //console.log('[SAVECONTROL] Salvado no firebase..');
                 await sincronizarTarefas(tarefasLocais);
             }
             catch (err) {
-                console.log("[SAVECONTROL] Erro ao salvar tarefa no Firestore (Mas salvo localmente OK): " + err);
+                console.log("[SAVECONTROL] Erro ao salvar tarefas no Firestore (Mas salvo localmente OK): " + err);
             }
         }
 

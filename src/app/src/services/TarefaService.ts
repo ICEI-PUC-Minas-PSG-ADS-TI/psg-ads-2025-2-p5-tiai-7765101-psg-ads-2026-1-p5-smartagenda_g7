@@ -4,7 +4,8 @@ import type { Tarefa } from '../types/tarefa';
 import StorageAPI, { SalvarTarefas } from './LocalStorageService';
 import { v4 as uuidv4 } from 'uuid'; // para geração de ID
 import { TrySalvarTarefa } from './SaveControlService';
-import { ScheduleDaily, Schedule, CancelScheduled } from './NotificationService';
+import { ScheduleDaily, Schedule, CancelNotification } from './NotificationService';
+import LocalStorageService from './LocalStorageService';
 
 export function CreateTarefa(id: string, titulo: string, data_criado: number, data_vencimento: number, parentId?: string, categorias?: string[], descricao_geral?: string, subtarefas?: string[], data_finalizado?: number): Tarefa {
     return {
@@ -278,7 +279,7 @@ export async function SyncState(parent: Tarefa): Promise<Tarefa> {
         }
     }
 
-    console.log("updated state for ", parent.titulo, ": ", parent.estado);
+    //console.log("updated state for ", parent.titulo, ": ", parent.estado);
 
     return parent;
 }
@@ -318,7 +319,7 @@ export async function GetSubtarefas(tarefa: Tarefa): Promise<Tarefa[] | null> {
         else console.log(`Subtarefa com id ${subId} não encontrada para a tarefa ${tarefa.id}`);
     }
 
-    console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
+    //console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
     return subtarefas;
 }
 
@@ -416,6 +417,31 @@ export async function FilterSubTarefasDicionario(tarefas: Record<string, Tarefa>
     return await FilterSubTarefas(tolist, onlyMaintasks);
 }
 
+export async function CleanupSubtaskReferences(tarefas: Record<string, Tarefa>): Promise<Record<string, Tarefa>> {
+    for (const v of Object.values(tarefas)) {
+        if (v.subtarefas) {
+            v.subtarefas = v.subtarefas.filter((s) => {
+                const exists = s in tarefas;
+
+                if (!exists) {
+                    console.log(
+                        `[CLEANUPSUBTASKREFERENCES] Removed subtask with id '${s}' from task '${v.titulo}', as it was not found.`
+                    );
+                }
+
+                return exists;
+            }
+            );
+        }
+        if (v.parentId !== undefined && !(v.parentId in tarefas)) {
+            console.log("[CLEANUPSUBTASKREFERENCES] Removed parent with id '", v.parentId, " from task ", v.titulo, ", as it was not found.");
+            v.parentId = undefined;
+        }
+    }
+
+    return tarefas;
+}
+
 // eventualmente provavelmente não será necessário, com menus para selecionar a data e hora
 // mas por enquanto é útil para converter as datas de texto editáveis no TaskManager.
 // O formato esperado é "dd/MM/yyyy HH:mm:ss", mas pode haver variações dependendo do locale do dispositivo. 
@@ -462,8 +488,9 @@ export function GetFinalizadas(tarefas: Tarefa[]): Tarefa[] {
  */
 export async function GetFolhas(tarefas: Tarefa[]): Promise<Tarefa[]> {
     let res: Tarefa[] = [];
+    //console.log(tarefas);
     for (const t of tarefas) {
-        if (t.subtarefas) {
+        if (t.subtarefas && t.subtarefas.length > 0) {
             let sub = await GetSubtarefas(t)
             if (sub) res.concat(await GetFolhas(sub))
             else console.error("couldn't get subtarefas of ", t.titulo);
@@ -495,7 +522,7 @@ export async function BuildScheduledNotifications(tarefa: Tarefa) {
 /**
  * Define notificações diárias para a tarefa selecionada (Por enquanto todos os dias ao Meio Dia)
  */
-export async function BuildDailyNotifications(tarefa: Tarefa) {
+export async function BuildTaskSpecificDailyNotifications(tarefa: Tarefa) {
     await RemoveNotifications(tarefa, true);
     let newNoti: Record<string, string> = {};
     // TODO: Integrar com a IA para os textos de notificação
@@ -515,32 +542,106 @@ export async function BuildDailyNotifications(tarefa: Tarefa) {
 }
 
 /**
+ * Define notificações diárias gerais, para as tarefas mais urgentes.
+ */
+export async function BuildGeneralDailyNotifications(): Promise<string[]> {
+    let overallTasks = await LocalStorageService.CarregarTarefasArray();
+    //console.log(overallTasks);
+    if (!overallTasks) { console.log("Couldn't build general daily notifications, no tasks found"); return []; }
+    let leaves = await GetFolhas(overallTasks)
+    let tasks = leaves.filter((t) => t.estado !== 'Finalizado');
+    tasks = OrdenarTarefas(tasks);
+
+    if (tasks.length <= 0) {
+        console.log("No tasks in progress for the daily notification.");
+        return [];
+    }
+    //console.log(tasks);
+
+    let notiIds = [];
+
+    // A integrar com a IA, por enquanto destaca as 3 tarefas mais urgentes, pode ser o fallback.
+    try {
+        let body = `Que tal dar progresso em ${tasks[0].titulo}`;
+        if (tasks.length > 2) body += `, ${tasks[1].titulo} ou ${tasks[2].titulo}`;
+        else if (tasks.length > 1) body += ` ou ${tasks[1].titulo}`;
+        body += '?';
+
+        let time = new Date();
+        time.setHours(9, 0, 0, 0);
+        if (time.getTime() <= Date.now()) {
+            time.setDate(time.getDate() + 1);
+        }
+
+        notiIds.push(await ScheduleDaily("Faça um pouquinho hoje!", body, time.getTime()));
+    }
+    catch (e) { console.error('[BUILDGENERALDAILYNOTIFICATIONS] Couldnt set up daily notification: ', e); }
+    return notiIds;
+
+}
+
+/**
+ * Função mais geral para atualizar todos os tipos de notificações, com os dados atuais e configuração atual
+ */
+export async function RefreshNotifications() {
+    let cfg = await LocalStorageService.CarregarConfiguracao();
+    let tasks = await LocalStorageService.CarregarTarefasArray();
+    if (tasks) {
+        if (cfg.EnableDailyNotify !== undefined) {
+            if (cfg.EnableDailyNotify) await RefreshDailyNotifications(tasks);
+            else await DisableAllDailyNotifications(tasks);
+        }
+        if (cfg.EnableScheduledNotify !== undefined) {
+            if (cfg.EnableScheduledNotify) await RefreshScheduledNotifications(tasks);
+            else await DisableAllScheduledNotifications(tasks);
+        }
+    }
+}
+
+/**
  * Atualiza as notificações marcadas definidas em todas as tarefas passadas.
  */
 export async function RefreshScheduledNotifications(tarefas: Tarefa[]) {
-    for (const t of tarefas) {
+    let filtered = tarefas.filter((t) => t.estado !== 'Finalizado')
+    for (const t of filtered) {
         await BuildScheduledNotifications(t);
-        console.log(t.notificacoesIds);
+        //console.log(t.notificacoesIds);
     }
 }
 
 /**
  * Atualiza as notificações diárias definidas em todas as tarefas passadas.
  */
-export async function RefreshDailyNotifications(tarefas: Tarefa[]) {
-    for (const t of tarefas) {
-        await BuildDailyNotifications(t);
-        console.log(t.notificacoesIds);
+export async function RefreshDailyNotifications(tarefas?: Tarefa[]) {
+    let noti = await BuildGeneralDailyNotifications();
+    if (noti.length > 0) {
+        let cfg = await LocalStorageService.CarregarConfiguracao();
+        if (cfg.ActiveDailyNotifications) cfg.ActiveDailyNotifications = cfg.ActiveDailyNotifications.concat(noti);
+        else cfg.ActiveDailyNotifications = noti;
+        await LocalStorageService.SalvarConfiguracao(cfg);
     }
+    else DisableAllDailyNotifications([]);
+    /*for (const t of tarefas) {
+        await BuildTaskSpecificDailyNotifications(t);
+        console.log(t.notificacoesIds);
+    }*/
 }
 
 /**
  * Desabilita as notificações diárias definidas em todas as tarefas passadas.
  */
-export async function DisableAllDailyNotifications(tarefas: Tarefa[]) {
-    for (const t of tarefas) {
-        await RemoveNotifications(t, true);
+export async function DisableAllDailyNotifications(tarefas?: Tarefa[]) {
+    if (tarefas) {
+        for (const t of tarefas) {
+            await RemoveNotifications(t, true);
+        }
     }
+    let cfg = await LocalStorageService.CarregarConfiguracao();
+    if (cfg.ActiveDailyNotifications) {
+        for (const n of cfg.ActiveDailyNotifications) await CancelNotification(n);
+        cfg.ActiveDailyNotifications = undefined;
+    }
+    await LocalStorageService.SalvarConfiguracao(cfg);
 }
 
 /**
@@ -560,17 +661,16 @@ async function RemoveNotifications(tarefa: Tarefa, daily: boolean) {
         for (const [key, noti] of Object.entries(tarefa.notificacoesIds)) {
             if (daily) {
                 if (key.startsWith("Daily")) {
-                    await CancelScheduled(noti);
+                    await CancelNotification(noti);
                     delete tarefa.notificacoesIds[key];
                 }
             }
             else if (!key.startsWith("Daily")) {
-                await CancelScheduled(noti);
+                await CancelNotification(noti);
                 delete tarefa.notificacoesIds[key];
             }
         }
     }
-    else console.log("ah shit");
 }
 
 function GetDummyJSON1(): string {

@@ -121,7 +121,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     const getallsubtasks = async () => {
         if (!task) return;
         let subtasks = await GetSubtarefas(task);
-        console.log("updated with ", subtasks?.length, " subtasks");
+        //console.log("updated with ", subtasks?.length, " subtasks");
         if (subtasks && subtasks.length > 0) setSubtasks(subtasks);
     }
 
@@ -192,7 +192,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         let updated = updatedparent ? await GetSubtarefas(updatedparent) : await GetSubtarefas(task!);
         setSubtasks(updated || []);
         if (forcerefresh) {//if (!selectedSubtask || !subtask) {
-            console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
+            //console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
             let updatedStatus: Tarefa['estado'] = 'EmProgresso';
             if (updated) {
                 if (updated.every(t => t.estado === 'Finalizado'))

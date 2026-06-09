@@ -12,7 +12,7 @@ import { useTheme } from '../theme/ThemeContext';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
-import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
+import { FilterSubTarefasArray, OrdenarTarefas, RefreshNotifications } from '../services/TarefaService';
 import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
 
 export default function ListaTarefas() {
@@ -36,6 +36,7 @@ export default function ListaTarefas() {
                 setTarefas([]);
             }
             else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
+            await RefreshNotifications();
             console.log("Tarefas carregadas: ", tarefasCarregadas.length);
 
         } catch (error) {

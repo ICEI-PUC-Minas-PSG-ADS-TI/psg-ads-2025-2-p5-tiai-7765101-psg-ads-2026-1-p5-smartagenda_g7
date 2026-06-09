@@ -93,7 +93,7 @@ export async function ScheduleDaily(title: string, body: string, InitialTimestam
 /**
  * Cancela a notificação marcada com o ID especificado.
  */
-export async function CancelScheduled(scheduledId: string) {
+export async function CancelNotification(scheduledId: string) {
     console.log("[NOTIFICATIONSERVICE] Notificação de ID ", scheduledId, " Cancelada.");
     await notifee.cancelTriggerNotification(
         scheduledId

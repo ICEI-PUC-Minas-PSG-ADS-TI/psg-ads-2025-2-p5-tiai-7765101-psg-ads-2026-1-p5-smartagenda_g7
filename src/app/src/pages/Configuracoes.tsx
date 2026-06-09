@@ -8,7 +8,7 @@ import LocalStorageService, { SalvarConfiguracao } from '../services/LocalStorag
 import { TrySalvar, CompareAndCheck } from '../services/SaveControlService';
 import { initLocalModel, IsDownloaded, UninstallModel } from '../services/LocalGenAIService';
 import { Notify, Schedule } from '../services/NotificationService';
-import { DisableAllDailyNotifications, DisableAllScheduledNotifications, RefreshDailyNotifications, RefreshScheduledNotifications } from '../services/TarefaService';
+import { CleanupSubtaskReferences, DisableAllDailyNotifications, DisableAllScheduledNotifications, RefreshDailyNotifications, RefreshNotifications, RefreshScheduledNotifications } from '../services/TarefaService';
 
 import CadastroScreen from './Cadastro';
 import LoginScreen from './Login';
@@ -112,23 +112,37 @@ const Configuracoes = () => {
           let resmap = Object.fromEntries(
             res.map(t => [t.id, t])
           ) as Record<string, Tarefa>;
+          resmap = await CleanupSubtaskReferences(resmap);
           LocalStorageService.SalvarTarefas(resmap);
-          await TrySalvar(true);
+          //console.log(resmap);
+          try {
+            await TrySalvar(true);
+          } finally {
+            await RefreshNotifications();
+          }
+
         }
         else {
-          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
+          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais poderão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
             console.log("Sucessful logoff");
             if (await handleLogout()) { // manter dados
-              await LocalStorageService.CarregarTarefas();
+              let t = await LocalStorageService.CarregarTarefas();
+              await Signout();
+              if (t) await LocalStorageService.SalvarTarefas(t);
             }
             else { // limpar dados
               await LocalStorageService.ClearLocalData();
               await LocalStorageService.ClearCacheData();
+              await Signout();
             }
-            await Signout();
             //GetCurrentUser().signOut();
 
-            await TrySalvar(true);
+            try {
+              await TrySalvar(true);
+            } finally {
+              await RefreshNotifications();
+            }
+
             setSettings(prev => ({
               ...prev,
               [index]: false
@@ -146,16 +160,14 @@ const Configuracoes = () => {
           [index]: value
         }));
         let tarefas1 = await LocalStorageService.CarregarTarefasArray()
-        if (tarefas1)
-        {
+        if (tarefas1) {
           if (value) {
-          
-          await RefreshDailyNotifications(tarefas1);
-        }
-        else {
-          await DisableAllDailyNotifications(tarefas1);
-        }
-        await LocalStorageService.SalvarTarefasArray(tarefas1);
+            await RefreshDailyNotifications(tarefas1);
+          }
+          else {
+            await DisableAllDailyNotifications(tarefas1);
+          }
+          await LocalStorageService.SalvarTarefasArray(tarefas1);
         }
         break;
       case "EnableScheduledNotify":

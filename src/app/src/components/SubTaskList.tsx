@@ -38,7 +38,7 @@ export default function SubtaskList({ tarefaPai, subtasks, ModalType, onSelected
                 if (res) subtasks = res;
             }
             setSubTarefas(subtasks || []);
-            console.log("subTarefas de ", tarefaPai?.titulo, ":", subtasks);
+            //console.log("subTarefas de ", tarefaPai?.titulo, ":", subtasks);
         } catch (error) {
             console.log("[ListaTarefas] ATENÇÃO: Ocorreu um erro ao carregar as subtarefas: " + error);
         } finally {

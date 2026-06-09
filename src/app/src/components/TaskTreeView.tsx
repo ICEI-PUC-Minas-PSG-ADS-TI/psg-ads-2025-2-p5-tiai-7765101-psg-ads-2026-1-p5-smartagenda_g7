@@ -136,9 +136,9 @@ export default function TaskTreeView({ tarefa, modalMode }: Props) {
           array = array.concat(res);
           setZoom((1/array.length) + 0.7); // Zoom automático baseado na quantidade de nós, para tentar manter a árvore visível (ajustar fórmula depois)
         }
-        console.log("taskMap OG array: ", array.length);
+        //console.log("taskMap OG array: ", array.length);
         let mapped = ToTaskMap(array);
-        console.log(mapped.size);
+        //console.log("mapped size: ", mapped.size);
         setTaskmap(mapped);
       }
     };
