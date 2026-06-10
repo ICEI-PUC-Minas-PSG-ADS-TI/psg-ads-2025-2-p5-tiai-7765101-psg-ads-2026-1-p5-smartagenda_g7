@@ -31,7 +31,7 @@ export interface Message {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // Não há verificações de conexão, só utilize LOCAL para forçar o uso da IA Local.
-export function useAIChat(local?: Boolean) {
+export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
     const Provider = useRef<AIprovider | null>(null);
 
     const [messages, setMessages] = useState<Message[]>([
@@ -42,6 +42,28 @@ export function useAIChat(local?: Boolean) {
         }
     ]);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const loadMessages = async () => {
+            if (!conversacaoId) {
+                setMessages([{ id: '1', text: INITIAL_TEXT, sender: 'assistant' }]);
+                return;
+            }
+            const interacoes = await IAInteracaoService.ListarInteracoes(conversacaoId);
+            if (interacoes.length > 0) {
+                interacoes.sort((a,b) => a.dataInteracao - b.dataInteracao);
+                const loadedMessages = interacoes.map(i => ({
+                    id: i.id,
+                    text: i.tipo === 'pergunta' ? i.prompt : i.resposta,
+                    sender: i.tipo === 'pergunta' ? 'user' : 'assistant'
+                })) as Message[];
+                setMessages(loadedMessages);
+            } else {
+                setMessages([{ id: '1', text: INITIAL_TEXT, sender: 'assistant' }]);
+            }
+        };
+        loadMessages();
+    }, [conversacaoId]);
 
     // Armazenando a sessão do chat para reter o histórico
     //const chatSessionRef = useRef<ChatSession | null>(null);
@@ -84,6 +106,7 @@ export function useAIChat(local?: Boolean) {
 
             await IAInteracaoService.SalvarInteracao({
                 id: Date.now().toString(),
+                conversacaoId: conversacaoId || undefined,
 
                 tipo: 'pergunta',
 
@@ -240,6 +263,7 @@ export function useAIChat(local?: Boolean) {
             if (botText) {
                 await IAInteracaoService.SalvarInteracao({
                     id: (Date.now() + 1).toString(),
+                    conversacaoId: conversacaoId || undefined,
 
                     tipo: 'resposta',
 

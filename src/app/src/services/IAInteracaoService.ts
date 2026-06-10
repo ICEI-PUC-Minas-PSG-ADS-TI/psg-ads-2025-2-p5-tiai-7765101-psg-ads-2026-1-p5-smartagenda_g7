@@ -207,6 +207,10 @@ export default class IAInteracaoService {
             const dados = snapshot.docs.map(doc => doc.data() as IAInteracao);
             callback(dados);
         }, error => {
+            if (!auth().currentUser) {
+                console.log('[IAInteracaoService] Listener de interações encerrado devido a logout.');
+                return;
+            }
             console.error('[IAInteracaoService] Erro ao escutar interações:', error);
         });
     }

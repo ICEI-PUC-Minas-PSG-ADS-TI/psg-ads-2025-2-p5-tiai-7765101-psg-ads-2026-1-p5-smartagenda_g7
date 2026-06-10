@@ -12,51 +12,74 @@ import {
     ActivityIndicator
 } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
-import { Sparkles, SquarePen, Search, Menu } from 'lucide-react-native';
+import { Bot, SquarePen, Menu } from 'lucide-react-native';
 import { useAIChat, Message } from '../hooks/useAIChat';
 import { useTheme } from '../theme/ThemeContext';
 import { CarregarConfiguracao } from '../services/LocalStorageService'
-
-interface ConversationMock {
-    id: string;
-    title: string;
-}
+import IAInteracaoService, { IAConversacao } from '../services/IAInteracaoService';
 
 export default function ChatIA() {
     const { theme } = useTheme();
     const [inputText, setInputText] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [conversations, setConversations] = useState<ConversationMock[]>([
-        { id: '1', title: 'Conversa Atual' }
-    ]);
-    const [activeConvId, setActiveConvId] = useState('1');
+    const [conversations, setConversations] = useState<IAConversacao[]>([]);
+    const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
-    const sortedConversations = [...conversations].sort((a, b) => parseInt(b.id) - parseInt(a.id));
-    const filteredConversations = sortedConversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const handleNewConversation = () => {
-        const newConv = { id: Date.now().toString(), title: `Nova Conversa ${conversations.length + 1}` };
-        setConversations([newConv, ...conversations]);
-        setActiveConvId(newConv.id);
-        setIsSidebarOpen(false);
-    };
-
-    const handleDeleteConversation = (id: string) => {
-        const updated = conversations.filter(c => c.id !== id);
-        if (updated.length === 0) {
-            const newConv = { id: Date.now().toString(), title: 'Nova Conversa' };
-            setConversations([newConv]);
-            setActiveConvId(newConv.id);
-        } else {
-            setConversations(updated);
-            if (activeConvId === id) setActiveConvId(updated[0].id);
-        }
-    };
     const [useLocalAI, setUseLocalAI] = useState<boolean>(false);
     const [allowOffline, setAllowOffline] = useState<boolean>(false);
     const netInfo = useNetInfo();
     const isConnected = netInfo.isConnected ?? true;
+
+    useEffect(() => {
+        let unsubscribe = () => { };
+
+        const carregar = async () => {
+            if (isConnected) {
+                unsubscribe = IAInteracaoService.EscutarConversacoesFirebase((dados) => {
+                    setConversations(dados);
+                    if (!activeConvId && dados.length > 0) {
+                        setActiveConvId(dados[0].id);
+                    }
+                });
+            } else {
+                const locais = await IAInteracaoService.CarregarConversacoesLocais();
+                const arrayLocais = Object.values(locais).sort((a, b) => b.dataAtualizacao - a.dataAtualizacao);
+                setConversations(arrayLocais);
+                if (!activeConvId && arrayLocais.length > 0) {
+                    setActiveConvId(arrayLocais[0].id);
+                }
+            }
+        };
+        carregar();
+        return () => unsubscribe();
+    }, [isConnected]);
+
+    const sortedConversations = [...conversations].sort((a, b) => b.dataAtualizacao - a.dataAtualizacao);
+
+    const handleNewConversation = async () => {
+        const id = Date.now().toString();
+        const novaConv: IAConversacao = {
+            id,
+            titulo: `Nova Conversa`,
+            dataCriacao: Date.now(),
+            dataAtualizacao: Date.now()
+        };
+        await IAInteracaoService.SalvarConversacao(novaConv, isConnected);
+        setActiveConvId(id);
+        setIsSidebarOpen(false);
+    };
+
+    const handleDeleteConversation = async (id: string) => {
+        await IAInteracaoService.DeletarConversacao(id, isConnected);
+        if (activeConvId === id) {
+            const restantes = conversations.filter(c => c.id !== id);
+            if (restantes.length > 0) {
+                setActiveConvId(restantes[0].id);
+            } else {
+                setActiveConvId(null);
+            }
+        }
+    };
 
     const getConfig = async () => {
         const config = await CarregarConfiguracao();
@@ -74,7 +97,7 @@ export default function ChatIA() {
         getConfig();
     }, [isConnected]);
 
-    const { messages, sendMessage, isLoading } = useAIChat(useLocalAI);
+    const { messages, sendMessage, isLoading } = useAIChat(useLocalAI, activeConvId);
 
     const handleSend = () => {
         if (!inputText.trim()) return;
@@ -171,10 +194,9 @@ export default function ChatIA() {
                     <View style={styles.sidebarOverlay}>
                         <TouchableOpacity style={styles.sidebarCloseArea} onPress={() => setIsSidebarOpen(false)} />
                         <View style={[styles.sidebar, { backgroundColor: theme.colors.surface }]}>
-
                             <View style={styles.sidebarTop}>
                                 <Text style={[styles.sidebarTitle, { color: theme.colors.text }]}>
-                                    <Sparkles color={theme.colors.primary} size={20} /> SmartAgenda
+                                    <Bot color={theme.colors.primary} size={20} /> SmartAgenda
                                 </Text>
                             </View>
 
@@ -185,25 +207,12 @@ export default function ChatIA() {
                                     </View>
                                     <Text style={[styles.actionText, { color: theme.colors.text }]}>Nova conversa</Text>
                                 </TouchableOpacity>
-
-                                <View style={[styles.searchContainer, { backgroundColor: 'transparent' }]}>
-                                    <View style={{ marginRight: 12 }}>
-                                        <Search color={theme.colors.textSecondary} size={20} />
-                                    </View>
-                                    <TextInput
-                                        style={[styles.searchInput, { color: theme.colors.text }]}
-                                        placeholder="Pesquisar conversas"
-                                        placeholderTextColor={theme.colors.textSecondary}
-                                        value={searchQuery}
-                                        onChangeText={setSearchQuery}
-                                    />
-                                </View>
                             </View>
 
                             <Text style={[styles.recentSectionTitle, { color: theme.colors.textSecondary }]}>Recentes</Text>
 
                             <FlatList
-                                data={filteredConversations}
+                                data={sortedConversations}
                                 keyExtractor={(item) => item.id}
                                 renderItem={({ item }) => (
                                     <TouchableOpacity
@@ -214,7 +223,7 @@ export default function ChatIA() {
                                         onPress={() => { setActiveConvId(item.id); setIsSidebarOpen(false); }}
                                         onLongPress={() => handleDeleteConversation(item.id)}
                                     >
-                                        <Text style={[styles.geminiConvTitle, { color: activeConvId === item.id ? theme.colors.primary : theme.colors.textSecondary }]} numberOfLines={1}>{item.title}</Text>
+                                        <Text style={[styles.geminiConvTitle, { color: activeConvId === item.id ? theme.colors.primary : theme.colors.textSecondary }]} numberOfLines={1}>{item.titulo}</Text>
                                     </TouchableOpacity>
                                 )}
                             />

@@ -354,23 +354,7 @@ const Configuracoes = () => {
             trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
             thumbColor={'white'} style={styles.Slider} />
         </View>
-        {
-
-          <TouchableOpacity
-            style={[styles.option, { borderColor: theme.colors.border }]}
-            onPress={() => navigation.navigate('HistoricoIA')}
-          >
-            <View style={styles.compOption}>
-              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>
-                Histórico da IA
-              </Text>
-
-              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>
-                Ver conversas e interações anteriores
-              </Text>
-            </View>
-          </TouchableOpacity>
-        /*}
+        {/*
         <View style={styles.option}>
           <Text style={styles.Optiontext}>Option</Text>
           <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
