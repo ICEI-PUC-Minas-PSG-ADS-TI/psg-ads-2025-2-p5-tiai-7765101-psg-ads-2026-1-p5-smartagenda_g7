@@ -83,8 +83,49 @@ export default class IAInteracaoService {
                         .delete();
                 }
             }
+
+            // Deletar todas as interações da conversa
+            await this.DeletarMensagensDaConversacao(id, connected);
         } catch (error) {
             console.error('[IAInteracaoService] Erro ao deletar conversação:', error);
+        }
+    }
+
+    static async DeletarMensagensDaConversacao(id: string, connected?: boolean): Promise<void> {
+        try {
+            // Local
+            const interacoes = await this.CarregarInteracoes();
+            let changed = false;
+            for (const key of Object.keys(interacoes)) {
+                if (interacoes[key].conversacaoId === id) {
+                    delete interacoes[key];
+                    changed = true;
+                }
+            }
+            if (changed) {
+                await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(interacoes));
+            }
+
+            // Firebase
+            if (connected) {
+                const user = auth().currentUser;
+                if (user) {
+                    const snapshot = await firestore()
+                        .collection('usuarios')
+                        .doc(user.uid)
+                        .collection('ia_interacoes')
+                        .where('conversacaoId', '==', id)
+                        .get();
+
+                    const batch = firestore().batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                }
+            }
+        } catch (error) {
+            console.error('[IAInteracaoService] Erro ao deletar mensagens em cascata:', error);
         }
     }
 

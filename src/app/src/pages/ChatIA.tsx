@@ -151,6 +151,18 @@ export default function ChatIA() {
 
     const renderMessage = ({ item }: { item: Message }) => {
         const isUser = item.sender === 'user';
+
+        if (messages.length === 1 && !isUser) {
+            return (
+                <View style={styles.welcomeMessageContainer}>
+                    <Bot color={theme.colors.primary} size={48} style={{ marginBottom: 20 }} />
+                    <Text style={[styles.welcomeMessageText, { color: theme.colors.text }]}>
+                        {item.text}
+                    </Text>
+                </View>
+            );
+        }
+
         return (
             <View style={[styles.messageBubble, isUser ?
                 { alignSelf: 'flex-end', backgroundColor: theme.colors.primary, borderBottomRightRadius: 4 } :
@@ -323,10 +335,23 @@ const styles = StyleSheet.create({
         paddingBottom: 24,
     },
     messageBubble: {
-        maxWidth: '80%',
         padding: 12,
-        borderRadius: 16,
+        borderRadius: 12,
         marginBottom: 12,
+        maxWidth: '85%',
+    },
+    welcomeMessageContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+        marginTop: 60,
+    },
+    welcomeMessageText: {
+        fontSize: 24,
+        fontWeight: '500',
+        textAlign: 'center',
+        lineHeight: 34,
     },
     messageText: {
         fontSize: 16,
