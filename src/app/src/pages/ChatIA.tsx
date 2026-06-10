@@ -16,25 +16,58 @@ import { useAIChat, Message } from '../hooks/useAIChat';
 import { useTheme } from '../theme/ThemeContext';
 import { CarregarConfiguracao } from '../services/LocalStorageService'
 
+interface ConversationMock {
+    id: string;
+    title: string;
+}
+
 export default function ChatIA() {
     const { theme } = useTheme();
     const [inputText, setInputText] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [conversations, setConversations] = useState<ConversationMock[]>([
+        { id: '1', title: 'Conversa Atual' }
+    ]);
+    const [activeConvId, setActiveConvId] = useState('1');
+
+    const sortedConversations = [...conversations].sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    const filteredConversations = sortedConversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const handleNewConversation = () => {
+        const newConv = { id: Date.now().toString(), title: `Nova Conversa ${conversations.length + 1}` };
+        setConversations([newConv, ...conversations]);
+        setActiveConvId(newConv.id);
+        setIsSidebarOpen(false);
+    };
+
+    const handleDeleteConversation = (id: string) => {
+        const updated = conversations.filter(c => c.id !== id);
+        if (updated.length === 0) {
+            const newConv = { id: Date.now().toString(), title: 'Nova Conversa' };
+            setConversations([newConv]);
+            setActiveConvId(newConv.id);
+        } else {
+            setConversations(updated);
+            if (activeConvId === id) setActiveConvId(updated[0].id);
+        }
+    };
     const [useLocalAI, setUseLocalAI] = useState<boolean>(false);
     const [allowOffline, setAllowOffline] = useState<boolean>(false);
     const netInfo = useNetInfo();
     const isConnected = netInfo.isConnected ?? true;
 
     const getConfig = async () => {
-            const config = await CarregarConfiguracao();
-            setAllowOffline(config?.EnableLocalAI === true);
+        const config = await CarregarConfiguracao();
+        setAllowOffline(config?.EnableLocalAI === true);
 
-            if (!isConnected) {
-                setUseLocalAI(config?.EnableLocalAI === true);
-            }
-            else {
-                setUseLocalAI(false);
-            }
-        };
+        if (!isConnected) {
+            setUseLocalAI(config?.EnableLocalAI === true);
+        }
+        else {
+            setUseLocalAI(false);
+        }
+    };
 
     useEffect(() => {
         getConfig();
@@ -44,15 +77,13 @@ export default function ChatIA() {
 
     const handleSend = () => {
         if (!inputText.trim()) return;
-        if (netInfo.isConnected)
-        {
+        if (netInfo.isConnected) {
             if (useLocalAI) setUseLocalAI(false);
         }
-        else if (allowOffline)
-        {
+        else if (allowOffline) {
             setUseLocalAI(true);
         }
-        else console.log("You shouldn't see this");
+
         sendMessage(inputText);
         setInputText('');
     };
@@ -77,7 +108,11 @@ export default function ChatIA() {
             >
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>Assistente de Agenda IA</Text>
+                    <TouchableOpacity onPress={() => setIsSidebarOpen(true)} style={styles.menuButton}>
+                        <Text style={{ fontSize: 24, color: theme.colors.primary }}>☰</Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>Assistente IA</Text>
+                    <View style={{ width: 24 }} />
                 </View>
 
                 {/* Lista de Mensagens */}
@@ -129,6 +164,56 @@ export default function ChatIA() {
                         </View>
                     </View>
                 )}
+
+                {/* Menu lateral */}
+                {isSidebarOpen && (
+                    <View style={styles.sidebarOverlay}>
+                        <TouchableOpacity style={styles.sidebarCloseArea} onPress={() => setIsSidebarOpen(false)} />
+                        <View style={[styles.sidebar, { backgroundColor: theme.colors.surface }]}>
+
+                            <View style={styles.sidebarTop}>
+                                <Text style={[styles.sidebarTitle, { color: theme.colors.text }]}>{/*icone*/} SmartAgenda</Text>
+                            </View>
+
+                            <View style={styles.sidebarActions}>
+                                <TouchableOpacity onPress={handleNewConversation} style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}>
+                                    {/*<Text style={{ fontSize: 18, marginRight: 12 }}>icone</Text>*/}
+                                    <Text style={[styles.actionText, { color: theme.colors.text }]}>Nova conversa</Text>
+                                </TouchableOpacity>
+
+                                <View style={[styles.searchContainer, { backgroundColor: 'transparent' }]}>
+                                    {/*<Text style={{ fontSize: 18, marginRight: 12 }}>icone</Text>*/}
+                                    <TextInput
+                                        style={[styles.searchInput, { color: theme.colors.text }]}
+                                        placeholder="Pesquisar conversas"
+                                        placeholderTextColor={theme.colors.textSecondary}
+                                        value={searchQuery}
+                                        onChangeText={setSearchQuery}
+                                    />
+                                </View>
+                            </View>
+
+                            <Text style={[styles.recentSectionTitle, { color: theme.colors.textSecondary }]}>Recentes</Text>
+
+                            <FlatList
+                                data={filteredConversations}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.geminiConvItem,
+                                            activeConvId === item.id ? { backgroundColor: theme.colors.surfaceVariant } : null
+                                        ]}
+                                        onPress={() => { setActiveConvId(item.id); setIsSidebarOpen(false); }}
+                                        onLongPress={() => handleDeleteConversation(item.id)}
+                                    >
+                                        <Text style={[styles.geminiConvTitle, { color: activeConvId === item.id ? theme.colors.primary : theme.colors.textSecondary }]} numberOfLines={1}>{item.title}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        </View>
+                    </View>
+                )}
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -146,7 +231,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         paddingBottom: 15,
         borderBottomWidth: 1,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
     },
     headerTitle: {
         fontSize: 18,
@@ -231,5 +318,82 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         lineHeight: 24,
+    },
+    menuButton: {
+        padding: 4,
+    },
+    sidebarOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        flexDirection: 'row',
+        zIndex: 20,
+    },
+    sidebarCloseArea: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    sidebar: {
+        width: '75%',
+        height: '100%',
+        position: 'absolute',
+        left: 0,
+        elevation: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 0 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    sidebarTop: {
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+    },
+    sidebarTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    sidebarActions: {
+        paddingHorizontal: 16,
+        marginBottom: 20,
+    },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 24,
+        marginBottom: 8,
+    },
+    actionText: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 4,
+        paddingHorizontal: 16,
+        borderRadius: 24,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        paddingVertical: 8,
+    },
+    recentSectionTitle: {
+        paddingHorizontal: 24,
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        marginTop: 10,
+    },
+    geminiConvItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 24,
+        marginHorizontal: 8,
+        marginBottom: 2,
+    },
+    geminiConvTitle: {
+        fontSize: 15,
     },
 });
