@@ -12,6 +12,7 @@ import {
     ActivityIndicator
 } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
+import { Sparkles, SquarePen, Search, Menu } from 'lucide-react-native';
 import { useAIChat, Message } from '../hooks/useAIChat';
 import { useTheme } from '../theme/ThemeContext';
 import { CarregarConfiguracao } from '../services/LocalStorageService'
@@ -109,10 +110,10 @@ export default function ChatIA() {
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
                     <TouchableOpacity onPress={() => setIsSidebarOpen(true)} style={styles.menuButton}>
-                        <Text style={{ fontSize: 24, color: theme.colors.primary }}>☰</Text>
+                        <Menu color={theme.colors.primary} size={28} />
                     </TouchableOpacity>
                     <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>Assistente IA</Text>
-                    <View style={{ width: 24 }} />
+                    <View style={{ width: 28 }} />
                 </View>
 
                 {/* Lista de Mensagens */}
@@ -172,17 +173,23 @@ export default function ChatIA() {
                         <View style={[styles.sidebar, { backgroundColor: theme.colors.surface }]}>
 
                             <View style={styles.sidebarTop}>
-                                <Text style={[styles.sidebarTitle, { color: theme.colors.text }]}>{/*icone*/} SmartAgenda</Text>
+                                <Text style={[styles.sidebarTitle, { color: theme.colors.text }]}>
+                                    <Sparkles color={theme.colors.primary} size={20} /> SmartAgenda
+                                </Text>
                             </View>
 
                             <View style={styles.sidebarActions}>
                                 <TouchableOpacity onPress={handleNewConversation} style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}>
-                                    {/*<Text style={{ fontSize: 18, marginRight: 12 }}>icone</Text>*/}
+                                    <View style={{ marginRight: 12 }}>
+                                        <SquarePen color={theme.colors.text} size={20} />
+                                    </View>
                                     <Text style={[styles.actionText, { color: theme.colors.text }]}>Nova conversa</Text>
                                 </TouchableOpacity>
 
                                 <View style={[styles.searchContainer, { backgroundColor: 'transparent' }]}>
-                                    {/*<Text style={{ fontSize: 18, marginRight: 12 }}>icone</Text>*/}
+                                    <View style={{ marginRight: 12 }}>
+                                        <Search color={theme.colors.textSecondary} size={20} />
+                                    </View>
                                     <TextInput
                                         style={[styles.searchInput, { color: theme.colors.text }]}
                                         placeholder="Pesquisar conversas"
