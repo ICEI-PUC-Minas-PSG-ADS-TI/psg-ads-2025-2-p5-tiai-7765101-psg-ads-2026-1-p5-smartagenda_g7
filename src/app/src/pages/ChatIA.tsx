@@ -9,10 +9,12 @@ import {
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
-    ActivityIndicator
+    ActivityIndicator,
+    Alert,
+    Modal
 } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
-import { Bot, SquarePen, Menu } from 'lucide-react-native';
+import { Bot, SquarePen, Menu, MoreVertical } from 'lucide-react-native';
 import { useAIChat, Message } from '../hooks/useAIChat';
 import { useTheme } from '../theme/ThemeContext';
 import { CarregarConfiguracao } from '../services/LocalStorageService'
@@ -24,6 +26,10 @@ export default function ChatIA() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [conversations, setConversations] = useState<IAConversacao[]>([]);
     const [activeConvId, setActiveConvId] = useState<string | null>(null);
+
+    const [renameModalVisible, setRenameModalVisible] = useState(false);
+    const [conversationToRename, setConversationToRename] = useState<IAConversacao | null>(null);
+    const [newTitle, setNewTitle] = useState('');
 
     const [useLocalAI, setUseLocalAI] = useState<boolean>(false);
     const [allowOffline, setAllowOffline] = useState<boolean>(false);
@@ -79,6 +85,37 @@ export default function ChatIA() {
                 setActiveConvId(null);
             }
         }
+    };
+
+    const handleOptions = (conv: IAConversacao) => {
+        Alert.alert(
+            "Opções da Conversa",
+            conv.titulo,
+            [
+                { text: "Renomear", onPress: () => {
+                    setConversationToRename(conv);
+                    setNewTitle(conv.titulo);
+                    setRenameModalVisible(true);
+                }},
+                { text: "Excluir", onPress: () => handleDeleteConversation(conv.id), style: "destructive" },
+                { text: "Cancelar", style: "cancel" }
+            ]
+        );
+    };
+
+    const handleRenameSubmit = async () => {
+        if (!conversationToRename || !newTitle.trim()) return;
+        
+        const updatedConv = {
+            ...conversationToRename,
+            titulo: newTitle.trim(),
+            dataAtualizacao: Date.now()
+        };
+        
+        await IAInteracaoService.SalvarConversacao(updatedConv, isConnected);
+        
+        setRenameModalVisible(false);
+        setConversationToRename(null);
     };
 
     const getConfig = async () => {
@@ -215,21 +252,47 @@ export default function ChatIA() {
                                 data={sortedConversations}
                                 keyExtractor={(item) => item.id}
                                 renderItem={({ item }) => (
-                                    <TouchableOpacity
+                                    <TouchableOpacity 
                                         style={[
-                                            styles.geminiConvItem,
-                                            activeConvId === item.id ? { backgroundColor: theme.colors.surfaceVariant } : null
+                                            styles.geminiConvItem, 
+                                            activeConvId === item.id ? { backgroundColor: theme.colors.surfaceVariant } : null,
+                                            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
                                         ]}
                                         onPress={() => { setActiveConvId(item.id); setIsSidebarOpen(false); }}
-                                        onLongPress={() => handleDeleteConversation(item.id)}
                                     >
-                                        <Text style={[styles.geminiConvTitle, { color: activeConvId === item.id ? theme.colors.primary : theme.colors.textSecondary }]} numberOfLines={1}>{item.titulo}</Text>
+                                        <Text style={[styles.geminiConvTitle, { flex: 1, color: activeConvId === item.id ? theme.colors.primary : theme.colors.textSecondary }]} numberOfLines={1}>{item.titulo}</Text>
+                                        <TouchableOpacity onPress={() => handleOptions(item)} style={{ padding: 4 }}>
+                                            <MoreVertical color={theme.colors.textSecondary} size={20} />
+                                        </TouchableOpacity>
                                     </TouchableOpacity>
                                 )}
                             />
                         </View>
                     </View>
                 )}
+
+                {/* Rename Modal */}
+                <Modal visible={renameModalVisible} transparent={true} animationType="fade">
+                    <View style={styles.overlayBlur}>
+                        <View style={[styles.renameBox, { backgroundColor: theme.colors.surface }]}>
+                            <Text style={[styles.renameTitle, { color: theme.colors.text }]}>Renomear Conversa</Text>
+                            <TextInput
+                                style={[styles.renameInput, { backgroundColor: theme.colors.surfaceVariant, color: theme.colors.text }]}
+                                value={newTitle}
+                                onChangeText={setNewTitle}
+                                autoFocus
+                            />
+                            <View style={styles.renameActions}>
+                                <TouchableOpacity onPress={() => setRenameModalVisible(false)} style={styles.renameCancelButton}>
+                                    <Text style={{ color: theme.colors.textSecondary }}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={handleRenameSubmit} style={[styles.renameSaveButton, { backgroundColor: theme.colors.primary }]}>
+                                    <Text style={{ color: '#FFF' }}>Salvar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -411,5 +474,33 @@ const styles = StyleSheet.create({
     },
     geminiConvTitle: {
         fontSize: 15,
+    },
+    renameBox: {
+        width: '80%',
+        padding: 24,
+        borderRadius: 16,
+    },
+    renameTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    renameInput: {
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 20,
+    },
+    renameActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    renameCancelButton: {
+        padding: 10,
+        marginRight: 10,
+    },
+    renameSaveButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
     },
 });
