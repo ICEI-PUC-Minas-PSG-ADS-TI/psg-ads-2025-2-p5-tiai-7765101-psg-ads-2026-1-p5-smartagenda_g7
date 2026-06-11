@@ -14,8 +14,9 @@ import {
     Modal
 } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
-import { Bot, SquarePen, Menu, MoreVertical } from 'lucide-react-native';
+import { Bot, SquarePen, Menu, MoreVertical, Search } from 'lucide-react-native';
 import { useAIChat, Message } from '../hooks/useAIChat';
+import ChatSearchModal from './ChatSearchModal';
 import { useTheme } from '../theme/ThemeContext';
 import { CarregarConfiguracao } from '../services/LocalStorageService'
 import IAInteracaoService, { IAConversacao } from '../services/IAInteracaoService';
@@ -26,6 +27,7 @@ export default function ChatIA() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [conversations, setConversations] = useState<IAConversacao[]>([]);
     const [activeConvId, setActiveConvId] = useState<string | null>(null);
+    const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
 
     const [renameModalVisible, setRenameModalVisible] = useState(false);
     const [conversationToRename, setConversationToRename] = useState<IAConversacao | null>(null);
@@ -92,11 +94,13 @@ export default function ChatIA() {
             "Opções da Conversa",
             conv.titulo,
             [
-                { text: "Renomear", onPress: () => {
-                    setConversationToRename(conv);
-                    setNewTitle(conv.titulo);
-                    setRenameModalVisible(true);
-                }},
+                {
+                    text: "Renomear", onPress: () => {
+                        setConversationToRename(conv);
+                        setNewTitle(conv.titulo);
+                        setRenameModalVisible(true);
+                    }
+                },
                 { text: "Excluir", onPress: () => handleDeleteConversation(conv.id), style: "destructive" },
                 { text: "Cancelar", style: "cancel" }
             ]
@@ -105,15 +109,15 @@ export default function ChatIA() {
 
     const handleRenameSubmit = async () => {
         if (!conversationToRename || !newTitle.trim()) return;
-        
+
         const updatedConv = {
             ...conversationToRename,
             titulo: newTitle.trim(),
             dataAtualizacao: Date.now()
         };
-        
+
         await IAInteracaoService.SalvarConversacao(updatedConv, isConnected);
-        
+
         setRenameModalVisible(false);
         setConversationToRename(null);
     };
@@ -256,6 +260,13 @@ export default function ChatIA() {
                                     </View>
                                     <Text style={[styles.actionText, { color: theme.colors.text }]}>Nova conversa</Text>
                                 </TouchableOpacity>
+
+                                <TouchableOpacity onPress={() => setIsSearchModalVisible(true)} style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}>
+                                    <View style={{ marginRight: 12 }}>
+                                        <Search color={theme.colors.text} size={20} />
+                                    </View>
+                                    <Text style={[styles.actionText, { color: theme.colors.text }]}>Pesquisar em conversas</Text>
+                                </TouchableOpacity>
                             </View>
 
                             <Text style={[styles.recentSectionTitle, { color: theme.colors.textSecondary }]}>Recentes</Text>
@@ -264,9 +275,9 @@ export default function ChatIA() {
                                 data={sortedConversations}
                                 keyExtractor={(item) => item.id}
                                 renderItem={({ item }) => (
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[
-                                            styles.geminiConvItem, 
+                                            styles.geminiConvItem,
                                             activeConvId === item.id ? { backgroundColor: theme.colors.surfaceVariant } : null,
                                             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
                                         ]}
@@ -305,6 +316,17 @@ export default function ChatIA() {
                         </View>
                     </View>
                 </Modal>
+
+                {/* Modal de Pesquisa */}
+                <ChatSearchModal
+                    visible={isSearchModalVisible}
+                    onClose={() => setIsSearchModalVisible(false)}
+                    onSelectMessage={(convId, msgId) => {
+                        setIsSearchModalVisible(false);
+                        setActiveConvId(convId);
+                        setIsSidebarOpen(false);
+                    }}
+                />
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
