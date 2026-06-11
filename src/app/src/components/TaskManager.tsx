@@ -20,6 +20,10 @@ import SubTaskList from './SubTaskList.tsx';
 import { TrySalvarTarefa, TrySalvar } from '../services/SaveControlService.ts';
 import TaskTreeView from './TaskTreeView.tsx';
 import { get } from 'react-native/Libraries/NativeComponent/NativeComponentRegistry';
+import { useTheme } from '../theme/ThemeContext';
+import KebabOptionsMenu from './KebabOptionsMenu';
+import ImportTasksModal from './ImportTasksModal';
+import { ArrowLeft } from 'lucide-react-native';
 
 type Props = {
     tarefa?: Tarefa | null;
@@ -31,6 +35,8 @@ type Props = {
 };
 
 export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsavedChanges, blockRefresh }: Props) {
+    const { theme } = useTheme();
+
     const CreateTarefaControlled = useCallback(async () => {
         let id = await GetUniqueID();
 
@@ -43,12 +49,10 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     }, []);
 
     const isCreating = newTask || false;
-    //const [unsavedChanges, setUnsavedChanges] = useState(isCreating);
     const unsavedChanges = useRef(isCreating);
     useEffect(() => {
         onUnsavedChanges?.(unsavedChanges.current);
     }, [unsavedChanges.current, onUnsavedChanges]);
-    //const unsavedSubtaskChanges = useRef(false);
 
     const [task, setTask] = useState<Tarefa | null>(
         tarefa ?? null
@@ -89,7 +93,6 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         }
 
         if (parent) {
-            //console.log("parented here");
             if (tarefa)
                 getParentChain(tarefa, "").then((fullChain) => { setDepthDisplay(fullChain); });
             else
@@ -101,10 +104,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                     setParent(p);
                 }
             });
-            //getParentChain(tarefa, "").then((fullChain) => { setDepthDisplay(fullChain); });
         }
-
-        //else console.log("no parents?");
     }, [tarefa, parent]);
 
     useEffect(() => {
@@ -121,7 +121,6 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     const getallsubtasks = async () => {
         if (!task) return;
         let subtasks = await GetSubtarefas(task);
-        //console.log("updated with ", subtasks?.length, " subtasks");
         if (subtasks && subtasks.length > 0) setSubtasks(subtasks);
     }
 
@@ -142,10 +141,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         setCategoriesString(baseTask.categorias ? baseTask.categorias.join(', ') : '');
 
         if (baseTask.subtarefas && baseTask.subtarefas.length > 0) {
-            //if (Subtasks.length != baseTask.subtarefas.length) {
-
-                getallsubtasks();
-            //}
+            getallsubtasks();
         }
 
     }, [task]);
@@ -161,7 +157,6 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     }
 
     const newSubtask = useCallback(() => {
-        //if (!task) return;
         const createSubtask = async () => {
             let subtask = await CreateTarefaControlled();
             subtask.parentId = task!.id;
@@ -186,13 +181,11 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         let newtask: Tarefa | undefined;
 
         let tarefas = await CarregarTarefas();
-        console.log(tarefas);
         let updatedparent = tarefas ? tarefas[task!.id] : null;
 
         let updated = updatedparent ? await GetSubtarefas(updatedparent) : await GetSubtarefas(task!);
         setSubtasks(updated || []);
-        if (forcerefresh) {//if (!selectedSubtask || !subtask) {
-            //console.log("----- UPDATED SUBTASKS? (specific) ", updated?.length);
+        if (forcerefresh) {
             let updatedStatus: Tarefa['estado'] = 'EmProgresso';
             if (updated) {
                 if (updated.every(t => t.estado === 'Finalizado'))
@@ -220,8 +213,6 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
             setTask(newtask);
             console.log("new subtask count: ", newtask?.subtarefas?.length);
             if (newtask) await TrySalvarTarefa(newtask);
-            //tryClose();
-
         }
         else {
             /*console.log('ahoy');
@@ -239,56 +230,6 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         console.log("old subtask count: ", task?.subtarefas?.length, " | new subtask count: ", updatedparent?.subtarefas?.length);
         setSubtaskCreationMode(false);
         setSelectedSubtask(null);
-
-        //if (parent) tryClose();
-        /*
-
-        unsavedSubtaskChanges.current = false;
-
-        console.log("saving subtask");
-
-        const current = Subtasks;
-
-        let updatedSubtasks: Tarefa[];
-
-        const existingIndex = current.findIndex(t => t.id === subtask.id);
-
-        if (existingIndex >= 0) {
-            updatedSubtasks = [...current];
-            updatedSubtasks[existingIndex] = subtask;
-        } else {
-            updatedSubtasks = [...current, subtask];
-        }
-
-        console.log("----- UPDATED SUBTASKS? ", updatedSubtasks.length);
-
-        setSubtasks(updatedSubtasks);
-
-        const prevTask = task;
-
-        if (prevTask) {
-
-            let updatedStatus: Tarefa['estado'] = 'EmProgresso';
-
-            if (updatedSubtasks.every(t => t.estado === 'Finalizado'))
-                updatedStatus = 'Finalizado';
-            else if (updatedSubtasks.every(t => t.estado === 'NaoIniciado'))
-                updatedStatus = 'NaoIniciado';
-
-            newtask = {
-                ...prevTask,
-                estado: updatedStatus,
-                data_finalizado: updatedStatus === 'Finalizado' ? Date.now() : undefined,
-                subtarefas: updatedSubtasks.map(t => t.id)
-            };
-            console.log("1new subtask count: ", newtask?.subtarefas?.length);
-
-
-            setTask(newtask);
-        }
-        console.log("2new subtask count: ", newtask?.subtarefas?.length);
-        if (newtask) await TrySalvarTarefa(newtask);*/
-        //tryClose();
     }, [setSelectedSubtask, task]);
 
     const updateField = useCallback((field: keyof Tarefa, value: any) => {
@@ -365,23 +306,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         }
     }, [task, onClose]);
 
-    /*const importTasksJSON = useCallback(async (tarefas: Tarefa[]) => {
-        if (tarefas) {
-            unsavedChanges.current = false;
-            for (const t of tarefas) {
-                await TrySalvarTarefa(t);
-            }
-            let selected = tarefas.find((t) => !t.isSubtarefa);
-            //if (selected) setTask(selected);
-
-            if (onClose && selected) {
-                onClose(selected);
-            }
-        }
-        else { }
-    }, []);*/
-
-    const tryClose = async (IsSaving?: boolean) => { // NOT for cancelling
+    const tryClose = async (IsSaving?: boolean) => {
         console.log("exiting task, unsaved changes:" + unsavedChanges.current);
         let errorField = '';
         if (!task?.titulo) errorField = 'Título';
@@ -446,7 +371,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                 }
 
                 unsavedChanges.current = false;
-                console.log(`SAVING BOTH RIGHT NOW ${updated.parentId} -- `, parent?.subtarefas?.length); // theres something fucking this up
+                console.log(`SAVING BOTH RIGHT NOW ${updated.parentId} -- `, parent?.subtarefas?.length);
                 if (parent) {
                     await TrySalvarTarefa(updated);
                     await TrySalvarTarefa(parent);
@@ -459,7 +384,6 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                 }
             }
             else {
-                console.log("no task?????????");
                 if (onClose) {
                     onClose();
                 }
@@ -481,22 +405,22 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
 
     let LowerContent;
 
-    //O conteúdo abaixo dos campos preenchiveis, exceto o botão de salvar.
+    //O conteúdo abaixo dos campos preenchiveis, exceto o botão de salvar
     if (isCreating) {
         LowerContent = (<View></View>);
     }
     else {
         let addsubtask = (
             <TouchableOpacity
-                style={[styles.buttonSmall, styles.highlightColor]}
+                style={[styles.buttonSmall, { backgroundColor: theme.colors.primary }]}
                 onPress={newSubtask}
             >
-                <Text style={styles.label}>Adicionar Sub-tarefa</Text>
+                <Text style={[styles.label, { color: '#FFFFFF' }]}>Adicionar Sub-tarefa</Text>
             </TouchableOpacity>
         );
         LowerContent = (
             <View>
-                <Text style={styles.statusLabel}>
+                <Text style={[styles.statusLabel, { color: theme.colors.text }]}>
                     Estado Atual: [
                     {task?.estado === 'NaoIniciado'
                         ? 'Não Iniciado'
@@ -508,7 +432,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
 
                 {Subtasks.length > 0 ? (
                     <View>
-                        <Text style={styles.secondaryText}>
+                        <Text style={[styles.secondaryText, { color: theme.colors.textSecondary }]}>
                             Sub-Tarefas: ({Subtasks.length})
                         </Text>
                         <View >
@@ -520,11 +444,11 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                 ) : task?.estado === 'Finalizado' ? (
                     <View>
                         {addsubtask}
-                        <Text style={styles.secondaryText}>
+                        <Text style={[styles.secondaryText, { color: theme.colors.textSecondary }]}>
                             Finalizada em {textDates.data_finalizado}
                         </Text>
                         <TouchableOpacity
-                            style={[styles.buttonSmall, styles.highlightColor3]}
+                            style={[styles.buttonSmall, { backgroundColor: theme.colors.primary }]}
                             onPress={() =>
                                 changeState(
                                     'EmProgresso',
@@ -533,14 +457,14 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                                 )
                             }
                         >
-                            <Text style={styles.label}>Reabrir Tarefa</Text>
+                            <Text style={[styles.label, { color: '#FFFFFF' }]}>Reabrir Tarefa</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
                     <View>
                         {addsubtask}
                         <TouchableOpacity
-                            style={[styles.buttonSmall, styles.highlightColor]}
+                            style={[styles.buttonSmall, { backgroundColor: theme.colors.primary }]}
                             onPress={() =>
                                 changeState(
                                     'Finalizado',
@@ -549,7 +473,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                                 )
                             }
                         >
-                            <Text style={styles.label}>Finalizar Tarefa</Text>
+                            <Text style={[styles.label, { color: '#FFFFFF' }]}>Finalizar Tarefa</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -561,16 +485,25 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     else return (
         <Modal transparent={true} animationType="slide" onRequestClose={() => tryClose()}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={[styles.container, styles.coloredBackground]}>
-                    <Text style={styles.secondaryText}>{depthDisplay}</Text>
-                    {!isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
-                    <Text style={styles.title}> {isCreating ?
-                        (depthDisplay ? 'Criar Sub-Tarefa' : 'Criar Tarefa') :
-                        (depthDisplay ? 'Editar Sub-Tarefa' : 'Editar Tarefa')}
-                    </Text>
+                <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                    <View style={styles.headerContainer}>
+                        <TouchableOpacity onPress={() => tryClose()} style={styles.headerBackButton}>
+                            <ArrowLeft color={theme.colors.text} size={28} />
+                        </TouchableOpacity>
+
+                        <Text style={[styles.title, { color: theme.colors.text }]}>
+                            {isCreating ?
+                                (depthDisplay ? 'Criar Sub-Tarefa' : 'Criar Tarefa') :
+                                (depthDisplay ? 'Editar Sub-Tarefa' : 'Editar Tarefa')}
+                        </Text>
+
+                        <View style={styles.headerRightAction}>
+                            {!isCreating && (<KebabOptionsMenu onOptionPressed={handleKebabMenu} />)}
+                        </View>
+                    </View>
+                    {depthDisplay ? <Text style={[styles.secondaryText, { color: theme.colors.textSecondary, textAlign: 'center', marginTop: -15, marginBottom: 20 }]}>{depthDisplay}</Text> : null}
 
                     {/*isCreating && <ImportTasksModal onImport={importTasksJSON}></ImportTasksModal>*/}
-
                     {/*<TouchableOpacity onPress={() => CreateTarefaJSON("ye")}><Text>TEST BUTTON</Text></TouchableOpacity>*/}
                     {selectedSubtask && (
                         <TaskManager tarefa={selectedSubtask} onClose={() => saveSubtask(true)} newTask={subtaskCreationMode} Parent={task} />
@@ -578,71 +511,67 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
 
                     <View style={styles.formContainer}>
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Título:</Text>
+                            <Text style={[styles.label, { color: theme.colors.text }]}>Título:</Text>
                             <TextInput
                                 placeholder="Ex: Reunião de Alinhamento"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={theme.colors.textSecondary}
                                 value={task?.titulo}
                                 inputMode="text"
                                 onChangeText={text => updateField('titulo', text)}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border }]}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Descrição Geral:</Text>
+                            <Text style={[styles.label, { color: theme.colors.text }]}>Descrição Geral:</Text>
                             <TextInput
                                 placeholder="Detalhes adicionais da tarefa..."
-                                placeholderTextColor="#999"
+                                placeholderTextColor={theme.colors.textSecondary}
                                 value={task?.descricao_geral}
                                 inputMode="text"
                                 onChangeText={text => updateField('descricao_geral', text)}
-                                style={[styles.input, { height: Math.max(40, descriptionHeight) }]}
+                                style={[styles.input, { height: Math.max(40, descriptionHeight), backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border }]}
                                 multiline
                                 onContentSizeChange={(e) => setDescriptionHeight(e.nativeEvent.contentSize.height)}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Data de Vencimento:</Text>
+                            <Text style={[styles.label, { color: theme.colors.text }]}>Data de Vencimento:</Text>
                             <TextInput
                                 placeholder="DD/MM/AAAA HH:MM:SS"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={theme.colors.textSecondary}
                                 value={textDates.data_vencimento}
                                 inputMode="text"
                                 onChangeText={text => tryUpdateDate('data_vencimento', text)}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border }]}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Categorias (separadas por vírgula):</Text>
+                            <Text style={[styles.label, { color: theme.colors.text }]}>Categorias (separadas por vírgula):</Text>
                             <TextInput
                                 placeholder="Ex: Trabalho, Faculdade"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={theme.colors.textSecondary}
                                 value={categoriesString}
                                 inputMode="text"
                                 onChangeText={text => {
                                     setCategoriesString(text);
                                     tryUpdateCategories(text);
                                 }}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border }]}
                             />
                         </View>
 
                         {LowerContent}
 
                         <TouchableOpacity
-                            style={[styles.button, styles.saveColor]}
+                            style={[styles.button, { backgroundColor: theme.colors.success }]}
                             onPress={() => tryClose(true)}
                         >
-                            <Text style={styles.label}>{isCreating ? 'Salvar Nova Tarefa' : 'Salvar Alterações'}</Text>
+                            <Text style={[styles.label, { color: '#FFFFFF' }]}>{isCreating ? 'Salvar Nova Tarefa' : 'Salvar Alterações'}</Text>
                         </TouchableOpacity>
                     </View>
-
-                    {/*
-                <TouchableOpacity style={[styles.button, styles.highlightColor2]} onPress={() => setOpenTreeView(true)}><Text style={styles.label}>Visualização de Árvore</Text></TouchableOpacity>
-                */}
                 </View>
 
                 {!isCreating && (
@@ -656,114 +585,25 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
     );
 }
 
-type KebabProps = {
-    onOptionPressed?: (option: string) => void;
-};
-
-function KebabOptionsMenu({ onOptionPressed }: KebabProps) {
-    const [visible, setVisible] = useState(false);
-
-    const tryDelete = () => {
-        Alert.alert('Excluir Tarefa?', 'Tem certeza que deseja excluir essa tarefa, e TODAS suas sub-tarefas?',
-            [{ text: 'Cancelar', style: 'cancel' },
-            { text: 'Sim, excluir tarefa e todas as sub-tarefas', onPress: () => onOptionPressed?.("Delete") }]
-        )
-        //setVisible(false);
-    }
-
-    const TreeView = () => {
-        setVisible(false);
-        onOptionPressed?.("TreeView");
-    }
-
-    return (
-        <View style={styles.kebabcontainer}>
-            <TouchableOpacity onPress={() => setVisible(true)}>
-                <Text style={styles.kebabdots}>⋮</Text>
-            </TouchableOpacity>
-
-            <Modal
-                transparent
-                animationType="fade"
-                visible={visible}
-                onRequestClose={() => setVisible(false)}
-            >
-                <TouchableOpacity
-                    style={styles.kebaboverlay}
-                    onPress={() => setVisible(false)}
-                >
-                    <View style={styles.kebabmenu}>
-                        <TouchableOpacity onPress={tryDelete}>
-                            <Text style={styles.kebaboption}>Excluir Tarefa</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={TreeView}>
-                            <Text style={styles.kebaboption}>Exbição de Árvore</Text>
-                        </TouchableOpacity>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
-        </View>
-    );
-}
-
-type ImportModalProps = {
-    onImport?: (tasks: Tarefa[]) => void;
-};
-
-function ImportTasksModal({ onImport }: ImportModalProps) {
-    const [visible, setVisible] = useState(false);
-    const [text, setText] = useState('');
-
-    const importTasks = useCallback(async () => {
-        console.log(text);
-        if (!text) { Alert.alert("Insira uma estrutura JSON no campo"); return; }
-        let res = await CreateTarefaJSON(text);
-        if (!res || res.length <= 0) {
-            console.log("Couldn't import tasks by json :(");
-            Alert.alert("Não foi possível importar as tarefas pelo JSON, verifique os LOGS");
-            return;
-        }
-        console.log("Imported ", res.length, " tasks");
-        onImport?.(res);
-        setVisible(false);
-    }, [text]);
-
-    return (
-        <View>
-            <TouchableOpacity style={[styles.buttonSmall, styles.highlightColor3]} onPress={() => setVisible(true)}><Text style={styles.label}>Importar Tarefas por JSON</Text></TouchableOpacity>
-
-            <Modal
-                visible={visible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => setVisible(false)}
-            >
-                <View style={styles.container}>
-                    <View>
-                        <Text style={styles.title}>Importar Tarefas por JSON</Text>
-
-                        <TextInput
-                            style={styles.biginput}
-                            multiline
-                            placeholder={`{ "tarefas": [] }`}
-                            value={text}
-                            onChangeText={setText}
-                        />
-
-                        <TouchableOpacity style={[styles.buttonSmall, styles.highlightColor3]} onPress={importTasks} ><Text style={styles.label}>Importar Tarefa(s)</Text></TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-        </View>
-    );
-}
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#121212',
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    headerBackButton: {
+        padding: 5,
+        width: 40,
+    },
+    headerRightAction: {
+        width: 40,
+        alignItems: 'flex-end',
     },
     formContainer: {
         marginHorizontal: 24,
@@ -772,56 +612,32 @@ const styles = StyleSheet.create({
     inputContainer: {
         marginVertical: 5
     },
-    coloredBackground: {
-        backgroundColor: '#2e0a57'
-    },
-    highlightColor: {
-        backgroundColor: '#8b42d4'
-    },
-    highlightColor2: {
-        backgroundColor: '#994ae8'
-    },
-    highlightColor3: {
-        backgroundColor: '#6f419e'
-    },
-    saveColor: {
-        backgroundColor: '#43ac6d'
-    },
     title: {
-        fontSize: 30,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
         textAlign: 'center',
-        color: '#FFFFFF'
+        flex: 1,
     },
     input: {
-        color: '#000000',
-        borderColor: '#000000',
         borderWidth: 2,
         justifyContent: 'center',
         padding: 10,
-        backgroundColor: '#E1E1E1',
         borderRadius: 10
     },
     biginput: {
-        color: '#000000',
-        borderColor: '#000000',
         borderWidth: 2,
         justifyContent: 'center',
-        backgroundColor: '#E1E1E1',
         borderRadius: 10,
         padding: 10,
         minHeight: 300,
         maxHeight: 600
     },
     label: {
-        color: '#FFFFFF',
         marginStart: 7,
         fontSize: 16,
         marginBottom: 5
     },
     statusLabel: {
-        color: '#FFFFFF',
         marginStart: 7,
         fontSize: 16,
         marginTop: 15,
@@ -829,7 +645,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
     secondaryText: {
-        color: '#baa5cf',
         marginStart: 10,
         marginBottom: 10
     },
@@ -846,33 +661,5 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 8,
         alignItems: 'center'
-    },
-    kebabcontainer: {
-        padding: 20,
-        alignItems: 'flex-end',
-    },
-    kebabdots: {
-        fontSize: 40,
-        padding: 10,
-        color: '#FFFFFF'
-    },
-    kebaboverlay: {
-        flex: 1,
-        justifyContent: 'flex-start',
-        alignItems: 'flex-end',
-        paddingTop: 60,
-        paddingRight: 20,
-        backgroundColor: 'rgba(0,0,0,0.2)',
-    },
-    kebabmenu: {
-        backgroundColor: 'white',
-        borderRadius: 8,
-        paddingVertical: 10,
-        width: 150,
-        elevation: 5,
-    },
-    kebaboption: {
-        padding: 10,
-        fontSize: 16,
-    },
+    }
 });

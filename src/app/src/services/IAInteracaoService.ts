@@ -267,8 +267,8 @@ export default class IAInteracaoService {
             if (isConnected) {
                 const user = auth().currentUser;
                 if (!user) return [];
-                
-                // Fetch all Firebase interacoes (can't easily full-text search without 3rd party index)
+
+                // Pegar todas as ia_interacoes
                 const snapshot = await firestore()
                     .collection('usuarios')
                     .doc(user.uid)
@@ -277,7 +277,7 @@ export default class IAInteracaoService {
                     .get();
                 interacoes = snapshot.docs.map(doc => doc.data() as IAInteracao);
 
-                // Fetch conversacoes for titles
+                // Pegar as conversas IA
                 const convSnapshot = await firestore()
                     .collection('usuarios')
                     .doc(user.uid)
