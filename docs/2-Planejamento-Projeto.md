@@ -40,7 +40,6 @@ O projeto será realizado em **4 Sprints**, com entregas contínuas de código e
 - 1ª funcionalidade completa funcionando
 - Dados sendo salvos no banco
 
-⚠️ Se não salvar no banco, não pontua.
 
 ---
 
@@ -196,9 +195,10 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 
 | Responsável | Papel | Tarefa | Início | Prazo | Status |
 |-------------|--------|--------|--------|--------|--------|
-|             |        | Correção de bugs | 22/05 | 05/06 | ❌ |
-|             |        | Finalizar relatórios e dashboards | 01/06 | 15/06 | ❌ |
-|             |        | Preencher Relatório APC | 10/06 | 20/06 | ❌ |
-|             |        | Testes finais e consolidar README | 15/06 | 25/06 | ❌ |
+| Nitai | Tech Lead       | Sistema de Notificações | 08/06 | 11/06 | ✔️ |
+| Nitai | Tech Lead       | Ícone do App | 11/06 | 11/06 | ✔️ |
+| Isaque | Facilitador Agil | Repasse de Integração visual | 09/06 | 11/06 | ✔️ |
+| Isaque | Facilitador Agil | Funcionalidade de gerenciamento de conversas de IA | 09/06 | 11/06 | ✔️ |
+|             |        | Vídeo do app | 15/06 | 11/06 | ❌ |
 
 ---
