@@ -8,7 +8,6 @@ import ListaTarefas from './pages/ListaTarefas';
 import Calendario from './pages/Calendario';
 import Configuracoes from './pages/Configuracoes';
 import ChatIA from './pages/ChatIA';
-import HistoricoIA from './pages/HistoricoIA';
 
 const Tab = createBottomTabNavigator();
 
@@ -71,17 +70,6 @@ const Routes = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="HistoricoIA"
-        component={HistoricoIA}
-        options={{
-          href: null,
-          tabBarItemStyle: {
-            display: 'none',
-          },
-        }}
-      />
-
     </Tab.Navigator>
   );
 };

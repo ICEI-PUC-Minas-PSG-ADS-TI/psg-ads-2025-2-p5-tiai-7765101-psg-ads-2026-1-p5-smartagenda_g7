@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, StatusBar, ScrollView, Modal, TouchableOpacity, Switch, Alert } from 'react-native';
 
 import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
@@ -161,8 +161,6 @@ const Configuracoes = () => {
           }
           else return;
         }
-        //console.log("Emitting from config");
-        //DeviceEventEmitter.emit('tarefasUpdated');
         break;
       case "EnableDayOfTheWeekNotify":
         setSettings(prev => ({
@@ -296,7 +294,7 @@ const Configuracoes = () => {
   if (logging) return (
     <SafeAreaProvider>
       <StatusBar barStyle={theme.type === 'dark' ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {showCadastro ? (
           <CadastroScreen
             onSuccess={() => { Toggle("UseBackup", true); setLogging(false); }}
@@ -310,12 +308,12 @@ const Configuracoes = () => {
             onBack={() => setLogging(false)}
           />
         )}
-      </View>
+      </SafeAreaView>
     </SafeAreaProvider>
   )
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Configurações</Text>
 
       {NotificationScreenActive && (
@@ -381,33 +379,8 @@ const Configuracoes = () => {
             trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
             thumbColor={'white'} style={styles.Slider} />
         </View>
-        {
-
-          <TouchableOpacity
-            style={[styles.option, { borderColor: theme.colors.border }]}
-            onPress={() => navigation.navigate('HistoricoIA')}
-          >
-            <View style={styles.compOption}>
-              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>
-                Histórico da IA
-              </Text>
-
-              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>
-                Ver conversas e interações anteriores
-              </Text>
-            </View>
-          </TouchableOpacity>
-        /*}
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Option</Text>
-          <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
-        </View>
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Option</Text>
-          <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
-        </View>*/}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
