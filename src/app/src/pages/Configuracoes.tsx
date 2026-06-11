@@ -14,7 +14,8 @@ import {
   RefreshNotifications,
   RefreshScheduledNotifications,
   RefreshDayOfTheWeekNotifications,
-  DisableAllDayOfTheWeekNotifications
+  DisableAllDayOfTheWeekNotifications,
+  ForceCancelAllNotifications
 } from '../services/NotificationService';
 import { CleanupSubtaskReferences } from '../services/TarefaService';
 
@@ -110,6 +111,8 @@ const Configuracoes = () => {
           }
           catch { }
           let res = await CompareAndCheck(newTasks, oldtasks);
+          if (res === newTasks) await ForceCancelAllNotifications();
+
 
           if (!res) res = [];
 
@@ -141,6 +144,7 @@ const Configuracoes = () => {
               if (t) await LocalStorageService.SalvarTarefas(t);
             }
             else { // limpar dados
+              await ForceCancelAllNotifications();
               await LocalStorageService.ClearLocalData();
               await LocalStorageService.ClearCacheData();
               await Signout();

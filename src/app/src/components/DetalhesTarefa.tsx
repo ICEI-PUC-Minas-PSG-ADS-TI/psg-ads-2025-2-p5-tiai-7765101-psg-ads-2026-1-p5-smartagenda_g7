@@ -1,13 +1,14 @@
 // Todos os Detalhes das Tarefas. Podendo ser usado como Modal ou Página
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal } from 'react-native';
 import { Tarefa } from '../types/tarefa.ts';
 import { TrySalvarTarefa } from '../services/SaveControlService.ts';
 import StorageAPI, { TryGetTarefa } from '../services/LocalStorageService.ts';
 import { SyncState, GetSubtarefas } from '../services/TarefaService.ts';
 import { useTheme } from '../theme/ThemeContext';
 import {TarefaListSafe} from '../components/TarefaList.tsx';
+import TaskTreeView from './TaskTreeView.tsx';
 
 type Props = {
     Tarefa: Tarefa;
@@ -21,7 +22,7 @@ export default function TarefaDetalhes({ Tarefa, onClose, onEdit, onComplete }: 
 
     const [tarefa, setTarefa] = useState<Tarefa>(Tarefa);
     const [Subtasks, setSubtasks] = useState<Tarefa[]>([]);
-    const [SelectedSubtask, setSelectedSubtask] = useState<Tarefa | null>(null);
+    const [openTreeView, setOpenTreeView] = useState(false);
 
     useEffect(() => {
         const getallsubtasks = async () => {
@@ -99,6 +100,10 @@ export default function TarefaDetalhes({ Tarefa, onClose, onEdit, onComplete }: 
         <View style={styles.overlay}>
             <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
 
+                <Modal visible={openTreeView} transparent={true} animationType="slide" onRequestClose={() => { setOpenTreeView(false); RefreshCurrent() }}>
+                    <TaskTreeView tarefa={tarefa} />
+                </Modal>
+
                 {/* Cabeçalho do Modal */}
                 <View style={styles.header}>
                     <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Detalhes da Tarefa</Text>
@@ -162,6 +167,9 @@ export default function TarefaDetalhes({ Tarefa, onClose, onEdit, onComplete }: 
 
                     <TouchableOpacity style={[styles.btnEditar, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.border }]} onPress={() => onEdit(tarefa)}>
                         <Text style={[styles.btnEditarText, { color: theme.colors.text }]}>✏️ Editar Tarefa</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.btnEditar, { backgroundColor: theme.colors.primary, borderColor: theme.colors.border }]} onPress={() => setOpenTreeView(true)}>
+                        <Text style={[styles.btnEditarText, { color: theme.colors.text }]}>🌲 Visualizar em Árvore</Text>
                     </TouchableOpacity>
                 </View>
 

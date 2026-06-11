@@ -311,6 +311,11 @@ export async function ClearLocalData() {
         if (existsGuest) {
             await RNFS.writeFile(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`, '');
         }
+
+        const cfg = await CarregarConfiguracao();
+        cfg.ActiveDailyNotifications = undefined;
+        cfg.ActiveDayOfTheWeekNotifications = undefined;
+        await SalvarConfiguracao(cfg);
     }
     catch (err) {
         console.log("Erro ao limpar dados locais: " + err);

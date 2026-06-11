@@ -19,10 +19,8 @@ import 'react-native-get-random-values';
 import SubTaskList from './SubTaskList.tsx';
 import { TrySalvarTarefa, TrySalvar } from '../services/SaveControlService.ts';
 import TaskTreeView from './TaskTreeView.tsx';
-import { get } from 'react-native/Libraries/NativeComponent/NativeComponentRegistry';
 import { useTheme } from '../theme/ThemeContext';
 import KebabOptionsMenu from './KebabOptionsMenu';
-import ImportTasksModal from './ImportTasksModal';
 import { ArrowLeft } from 'lucide-react-native';
 
 type Props = {

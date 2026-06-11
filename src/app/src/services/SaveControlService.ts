@@ -4,6 +4,7 @@ import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas, GetFinalizadas } from '../services/TarefaService';
 import StorageAPI from '../services/LocalStorageService';
 import { buscarTarefasFirestore, salvarTarefaFirestore, sincronizarTarefas, deletarTarefaFirestore, IsAuth, GetCurrentUser } from '../services/FirestoreService';
+import { ForceCancelAllNotifications } from './NotificationService.ts';
 
 
 /**
@@ -107,6 +108,8 @@ export async function TryCarregarTarefasArray(unfiltered?: boolean): Promise<Tar
         res = await CompareAndCheck(tarefasFirebase, tarefasLocais);
 
         if (res) {
+            if (res === tarefasFirebase) await ForceCancelAllNotifications();
+
             // sincronizar dados
             const tarefasMap: Record<string, Tarefa> = {};
             res.forEach(t => { tarefasMap[t.id] = t; });
