@@ -47,9 +47,10 @@ export default function ChatIA() {
             if (isConnected) {
                 unsubscribe = IAInteracaoService.EscutarConversacoesFirebase((dados) => {
                     setConversations(dados);
-                    if (!activeConvId && dados.length > 0) {
-                        setActiveConvId(dados[0].id);
-                    }
+                    setActiveConvId(prev => {
+                        if (!prev && dados.length > 0) return dados[0].id;
+                        return prev;
+                    });
                 });
             } else {
                 const locais = await IAInteracaoService.CarregarConversacoesLocais();

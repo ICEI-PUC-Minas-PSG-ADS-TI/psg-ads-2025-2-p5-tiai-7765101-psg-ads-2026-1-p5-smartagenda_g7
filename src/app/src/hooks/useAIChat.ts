@@ -42,6 +42,8 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
         }
     ]);
     const [isLoading, setIsLoading] = useState(false);
+    const netInfo = useNetInfo();
+    const isConnected = netInfo.isConnected ?? true;
 
     useEffect(() => {
         const loadMessages = async () => {
@@ -49,7 +51,14 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
                 setMessages([{ id: '1', text: INITIAL_TEXT, sender: 'assistant' }]);
                 return;
             }
-            const interacoes = await IAInteracaoService.ListarInteracoes(conversacaoId);
+            let interacoes: IAInteracao[] = [];
+            if (isConnected && !local) {
+                interacoes = await IAInteracaoService.BuscarInteracoesFirebase(conversacaoId);
+            }
+            if (!interacoes || interacoes.length === 0) {
+                interacoes = await IAInteracaoService.ListarInteracoes(conversacaoId);
+            }
+
             if (interacoes.length > 0) {
                 interacoes.sort((a,b) => a.dataInteracao - b.dataInteracao);
                 const loadedMessages = interacoes.map(i => ({
@@ -63,7 +72,7 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
             }
         };
         loadMessages();
-    }, [conversacaoId]);
+    }, [conversacaoId, isConnected, local]);
 
     // Armazenando a sessão do chat para reter o histórico
     //const chatSessionRef = useRef<ChatSession | null>(null);
