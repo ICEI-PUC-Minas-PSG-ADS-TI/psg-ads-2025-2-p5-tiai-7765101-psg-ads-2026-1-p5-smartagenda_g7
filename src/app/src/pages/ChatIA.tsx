@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     View,
     Text,
@@ -28,6 +28,8 @@ export default function ChatIA() {
     const [conversations, setConversations] = useState<IAConversacao[]>([]);
     const [activeConvId, setActiveConvId] = useState<string | null>(null);
     const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+    const [targetMessageId, setTargetMessageId] = useState<string | null>(null);
+    const flatListRef = useRef<FlatList>(null);
 
     const [renameModalVisible, setRenameModalVisible] = useState(false);
     const [conversationToRename, setConversationToRename] = useState<IAConversacao | null>(null);
@@ -140,6 +142,18 @@ export default function ChatIA() {
 
     const { messages, sendMessage, isLoading } = useAIChat(useLocalAI, activeConvId);
 
+    useEffect(() => {
+        if (targetMessageId && messages.length > 0 && flatListRef.current) {
+            const index = messages.findIndex(m => m.id === targetMessageId);
+            if (index !== -1) {
+                setTimeout(() => {
+                    flatListRef.current?.scrollToIndex({ index, animated: true });
+                    setTimeout(() => setTargetMessageId(null), 2000);
+                }, 500);
+            }
+        }
+    }, [messages, targetMessageId]);
+
     const handleSend = () => {
         if (!inputText.trim()) return;
         if (netInfo.isConnected) {
@@ -155,6 +169,7 @@ export default function ChatIA() {
 
     const renderMessage = ({ item }: { item: Message }) => {
         const isUser = item.sender === 'user';
+        const isTarget = item.id === targetMessageId;
 
         if (messages.length === 1 && !isUser) {
             return (
@@ -170,7 +185,9 @@ export default function ChatIA() {
         return (
             <View style={[styles.messageBubble, isUser ?
                 { alignSelf: 'flex-end', backgroundColor: theme.colors.primary, borderBottomRightRadius: 4 } :
-                { alignSelf: 'flex-start', backgroundColor: theme.colors.surfaceVariant, borderBottomLeftRadius: 4 }]}>
+                { alignSelf: 'flex-start', backgroundColor: theme.colors.surfaceVariant, borderBottomLeftRadius: 4 },
+            isTarget ? { borderWidth: 2, borderColor: '#4d00b1ff', backgroundColor: isUser ? theme.colors.primary : theme.colors.surface } : null
+            ]}>
 
                 <Text style={[styles.messageText, { color: isUser ? '#FFFFFF' : theme.colors.text }]}>{item.text}</Text>
             </View>
@@ -194,11 +211,18 @@ export default function ChatIA() {
 
                 {/* Lista de Mensagens */}
                 <FlatList
+                    ref={flatListRef}
                     data={messages}
                     keyExtractor={(item) => item.id}
                     renderItem={renderMessage}
                     contentContainerStyle={styles.messageList}
                     showsVerticalScrollIndicator={false}
+                    onScrollToIndexFailed={info => {
+                        const wait = new Promise(resolve => setTimeout(resolve, 500));
+                        wait.then(() => {
+                            flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+                        });
+                    }}
                 />
 
                 {/* Loading Indicator */}
@@ -325,6 +349,7 @@ export default function ChatIA() {
                         setIsSearchModalVisible(false);
                         setActiveConvId(convId);
                         setIsSidebarOpen(false);
+                        setTargetMessageId(msgId);
                     }}
                 />
             </KeyboardAvoidingView>

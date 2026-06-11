@@ -255,4 +255,57 @@ export default class IAInteracaoService {
             console.error('[IAInteracaoService] Erro ao escutar interações:', error);
         });
     }
+
+    static async PesquisarHistorico(texto: string, isConnected: boolean): Promise<(IAInteracao & { conversacaoTitulo: string })[]> {
+        if (!texto || texto.trim().length === 0) return [];
+        const termo = texto.toLowerCase();
+
+        try {
+            let interacoes: IAInteracao[] = [];
+            let conversacoes: Record<string, IAConversacao> = {};
+
+            if (isConnected) {
+                const user = auth().currentUser;
+                if (!user) return [];
+                
+                // Fetch all Firebase interacoes (can't easily full-text search without 3rd party index)
+                const snapshot = await firestore()
+                    .collection('usuarios')
+                    .doc(user.uid)
+                    .collection('ia_interacoes')
+                    .orderBy('dataInteracao', 'desc')
+                    .get();
+                interacoes = snapshot.docs.map(doc => doc.data() as IAInteracao);
+
+                // Fetch conversacoes for titles
+                const convSnapshot = await firestore()
+                    .collection('usuarios')
+                    .doc(user.uid)
+                    .collection('ia_conversacoes')
+                    .get();
+                convSnapshot.docs.forEach(doc => {
+                    const c = doc.data() as IAConversacao;
+                    conversacoes[c.id] = c;
+                });
+            } else {
+                const interacoesDict = await this.CarregarInteracoes();
+                interacoes = Object.values(interacoesDict).sort((a, b) => b.dataInteracao - a.dataInteracao);
+                conversacoes = await this.CarregarConversacoesLocais();
+            }
+
+            const resultados = interacoes.filter(i => {
+                const text = i.tipo === 'pergunta' ? i.prompt : i.resposta;
+                return text && text.toLowerCase().includes(termo);
+            });
+
+            return resultados.map(i => ({
+                ...i,
+                conversacaoTitulo: (i.conversacaoId && conversacoes[i.conversacaoId]) ? conversacoes[i.conversacaoId].titulo : 'Conversa Desconhecida'
+            }));
+
+        } catch (error) {
+            console.error('[IAInteracaoService] Erro ao pesquisar historico:', error);
+            return [];
+        }
+    }
 }
