@@ -40,7 +40,8 @@ async function Notify(title: string, body: string) {
             title: title,
             body: body,
             android: {
-                channelId: channelId
+                channelId: channelId,
+                smallIcon: 'ic_stat_check_box'
             }
         });//*/
     }
@@ -62,7 +63,8 @@ async function Schedule(title: string, body: string, Timestamp: TriggerType.TIME
             title: title,
             body: body,
             android: {
-                channelId: channelId
+                channelId: channelId,
+                smallIcon: 'ic_stat_check_box'
             },
             data: {
                 ...(tarefaid && { taskId: tarefaid })
@@ -89,7 +91,8 @@ export async function ScheduleDayOfTheWeek(title: string, body: string, InitialT
             title: title,
             body: body,
             android: {
-                channelId: channelId
+                channelId: channelId,
+                smallIcon: 'ic_stat_check_box'
             }
         },
         trigger
@@ -113,7 +116,8 @@ export async function ScheduleDaily(title: string, body: string, InitialTimestam
             title: title,
             body: body,
             android: {
-                channelId: channelId
+                channelId: channelId,
+                smallIcon: 'ic_stat_check_box'
             }
         },
         trigger
