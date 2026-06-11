@@ -118,6 +118,7 @@ export async function CarregarTarefas(): Promise<Record<string, Tarefa> | null> 
 export async function SalvarConfiguracao(cfg: USettings) {
     try {
         await AS.setItem("userSettings", JSON.stringify(cfg));
+        //console.log('Save: ', cfg);
         await SalvarConfiguracaoLocal(cfg);
     } catch (err) {
         console.log("Erro ao salvar tarefas no Async Storage: " + err);
@@ -127,11 +128,14 @@ export async function SalvarConfiguracao(cfg: USettings) {
 export async function CarregarConfiguracao(): Promise<USettings> {
     try {
         let data = await AS.getItem("userSettings");
+        //console.log('Load: ',data);
         if (data) return JSON.parse(data);
+        
 
         let fallbackdata = await CarregarConfiguracaoLocal();
         if (fallbackdata) {
             await AS.setItem("userSettings", JSON.stringify(fallbackdata));
+            console.log(fallbackdata);
             return fallbackdata;
         }
         else {
@@ -139,9 +143,6 @@ export async function CarregarConfiguracao(): Promise<USettings> {
             let r:USettings = { EnableDailyNotify: false, EnableScheduledNotify: true};
             return r;
         }
-
-        
-        return {};
     } catch (err) {
         console.log("Erro ao carregar configurações no Async Storage: " + err);
         return {};

@@ -10,15 +10,16 @@ import { useTheme } from '../theme/ThemeContext';
 import {TarefaListSafe} from '../components/TarefaList.tsx';
 
 type Props = {
-    tarefa: Tarefa;
+    Tarefa: Tarefa;
     onClose: () => void; // Para fechar o modal e voltar à lista
     onEdit: (tarefa: Tarefa) => void; // Para abrir o TaskManager
     onComplete: (tarefa: Tarefa) => void; // Para salvar o novo estado
 }
 
-export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: Props) {
+export default function TarefaDetalhes({ Tarefa, onClose, onEdit, onComplete }: Props) {
     const { theme } = useTheme();
 
+    const [tarefa, setTarefa] = useState<Tarefa>(Tarefa);
     const [Subtasks, setSubtasks] = useState<Tarefa[]>([]);
     const [SelectedSubtask, setSelectedSubtask] = useState<Tarefa | null>(null);
 
@@ -29,7 +30,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
             if (subtasks && subtasks.length > 0) setSubtasks(subtasks);
         }
         getallsubtasks();
-    }, []);
+    }, [tarefa]);
 
     const onCompleteInner = async (task: Tarefa) => {
         let updated = { ...task };
@@ -55,10 +56,10 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
             await SyncState(parent);
 
             await TrySalvarTarefa(updated);
-            await TrySalvarTarefa(parent, true);
+            await TrySalvarTarefa(parent, false);
         }
         else {
-            await TrySalvarTarefa(updated, true);
+            await TrySalvarTarefa(updated, false);
         }
 
         onComplete(updated);
@@ -82,13 +83,17 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
         );
     };
 
-    const dataVencimento = tarefa.data_vencimento
-        ? new Date(tarefa.data_vencimento).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })
-        : 'Sem prazo estipulado';
+    const RefreshCurrent = async () => {
+        let toupdate = await TryGetTarefa(tarefa.id);
+        setTarefa(toupdate || tarefa);
+        let subtasks = await GetSubtarefas(toupdate || tarefa);
+        setSubtasks(subtasks || []);
+    }
 
-    const dataCriacao = new Date(tarefa.data_criado).toLocaleDateString();
-
-    const isFinalizada = tarefa.estado === "Finalizado";
+    const GetDaysLeft = () => {
+        const now = Date.now();
+        return '(' + Math.ceil((tarefa.data_vencimento - now) / (1000 * 60 * 60 * 24)) + " dias restantes)";
+    }
 
     return (
         <View style={styles.overlay}>
@@ -105,16 +110,27 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
                 <ScrollView style={styles.content}>
                     {/* Status Badge */}
                     <View style={styles.statusContainer}>
-                        <Text style={[styles.statusBadge, isFinalizada ? styles.statusFinalizado : { backgroundColor: `${theme.colors.primary}33`, color: theme.colors.primary }]}>
-                            {isFinalizada ? 'CONCLUÍDA' : (tarefa.estado === 'EmProgresso' ? 'EM PROGRESSO' : 'A FAZER')}
+                        <Text style={[styles.statusBadge, tarefa.estado === "Finalizado" ? styles.statusFinalizado : { backgroundColor: `${theme.colors.primary}33`, color: theme.colors.primary }]}>
+                            {tarefa.estado === "Finalizado" ? 'CONCLUÍDA' : (tarefa.estado === 'EmProgresso' ? 'EM PROGRESSO' : 'A FAZER')}
                         </Text>
                     </View>
 
                     <Text style={[styles.titulo, { color: theme.colors.text }]}>{tarefa.titulo}</Text>
 
-                    <View style={[styles.dateBox, { backgroundColor: theme.colors.surfaceVariant, borderLeftColor: theme.colors.primary }]}>
-                        <Text style={[styles.dateLabel, { color: theme.colors.textSecondary }]}>🗓 Vence em:</Text>
-                        <Text style={[styles.dateValue, { color: theme.colors.text }]}>{dataVencimento}</Text>
+                    <View style={[styles.dateBox, { backgroundColor: theme.colors.surfaceVariant, borderLeftColor: tarefa.estado === "Finalizado" ? theme.colors.success : theme.colors.primary}]}>
+                        {tarefa.estado === "Finalizado" ? (
+                            <View>
+                                <Text style={[styles.dateLabel, { color: theme.colors.textSecondary }]}>🗓 Finalizado em:</Text>
+                        <Text style={[styles.dateValue, { color: theme.colors.text }]}>{new Date(tarefa.data_finalizado!).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })}</Text>
+                            </View>
+                        ):(
+                            <View>
+                                <Text style={[styles.dateLabel, { color: theme.colors.textSecondary }]}>🗓 Vence em:</Text>
+                            <Text style={[styles.dateValue, { color: theme.colors.text }]}>{new Date(tarefa.data_vencimento).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })}</Text>
+                            <Text style={[styles.dateValue, {color: theme.colors.textSecondary}]}> {GetDaysLeft()} </Text>
+                            </View>
+                        )}
+                        
                     </View>
 
                     <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Descrição</Text>
@@ -122,7 +138,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
                         {tarefa.descricao_geral ? tarefa.descricao_geral : 'Nenhuma descrição fornecida para esta tarefa.'}
                     </Text>
 
-                    <Text style={[styles.footerInfo, { color: theme.colors.textSecondary }]}>Criada em {dataCriacao}</Text>
+                    <Text style={[styles.footerInfo, { color: theme.colors.textSecondary }]}>Criada em {new Date(tarefa.data_criado).toLocaleDateString()}</Text>
 
                     {Subtasks.length > 0 && (
                         <View>
@@ -130,7 +146,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
                                 Sub-Tarefas: ({Subtasks.length})
                             </Text>
                             <View >
-                                <TarefaListSafe parent={tarefa} tarefas={Subtasks} onRefresh={() => {}} subtaskStyling={true} />
+                                <TarefaListSafe parent={tarefa} tarefas={Subtasks} onRefresh={() => {RefreshCurrent()}} subtaskStyling={true} />
                             </View>
                         </View>
                     )}
@@ -138,7 +154,7 @@ export default function TarefaDetalhes({ tarefa, onClose, onEdit, onComplete }: 
 
                 {/* Botões de Ação */}
                 <View style={styles.actionContainer}>
-                    {!isFinalizada && (
+                    {tarefa.estado !== "Finalizado" && (
                         <TouchableOpacity style={[styles.btnConcluir, { backgroundColor: theme.colors.success }]} onPress={handleConcluir}>
                             <Text style={styles.btnConcluirText}>✔ Marcar como Concluída</Text>
                         </TouchableOpacity>

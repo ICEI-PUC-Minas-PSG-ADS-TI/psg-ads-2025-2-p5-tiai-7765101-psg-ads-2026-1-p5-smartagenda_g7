@@ -164,6 +164,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
         //if (!task) return;
         const createSubtask = async () => {
             let subtask = await CreateTarefaControlled();
+            subtask.categorias = tarefa?.categorias;
             subtask.parentId = task!.id;
             setSelectedSubtask(subtask);
             setSubtaskCreationMode(true);
@@ -409,6 +410,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
             else {
                 unsavedChanges.current = false;
                 handleCancelExit();
+                return;
             }
 
         }
@@ -428,6 +430,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
             if (task) {
                 let updated = task;
                 if (parent) {
+                    console.log("Parent isn't absent")
                     updated.parentId = parent.id;
                     if (parent.subtarefas) {
                         let included = false;
@@ -446,7 +449,7 @@ export default function TaskManager({ tarefa, onClose, Parent, newTask, onUnsave
                 }
 
                 unsavedChanges.current = false;
-                console.log(`SAVING BOTH RIGHT NOW ${updated.parentId} -- `, parent?.subtarefas?.length); // theres something fucking this up
+                console.log(`SAVING BOTH RIGHT NOW (parent id: ${updated.parentId}) -- subtask count: `, parent?.subtarefas?.length); // theres something fucking this up
                 if (parent) {
                     await TrySalvarTarefa(updated);
                     await TrySalvarTarefa(parent);
