@@ -119,7 +119,7 @@ Dashboard </Text>
   <View style={styles.grid}>
 
     <Card
-      titulo="Total"
+      titulo="Tarefas Totais"
       valor={total}
       theme={theme}
     />
