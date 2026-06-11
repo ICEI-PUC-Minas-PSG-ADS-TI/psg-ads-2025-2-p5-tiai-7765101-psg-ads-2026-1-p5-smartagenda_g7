@@ -83,17 +83,6 @@ const Routes = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="HistoricoIA"
-        component={HistoricoIA}
-        options={{
-          href: null,
-          tabBarItemStyle: {
-            display: 'none',
-          },
-        }}
-      />
-
     </Tab.Navigator>
   );
 };

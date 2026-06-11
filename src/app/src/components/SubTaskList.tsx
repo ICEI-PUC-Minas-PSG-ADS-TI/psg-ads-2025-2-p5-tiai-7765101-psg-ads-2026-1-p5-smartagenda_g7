@@ -2,14 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, FlatList, Modal, StyleSheet, StatusBar, ActivityIndicator, Alert } from 'react-native';
 
 // Componentes
-import TaskManager from './TaskManager.tsx';
 import TarefaDetalhes from './DetalhesTarefa.tsx';
 import SubTarefaMinimal from './SubTarefaMinimal.tsx';
+import { useTaskModals } from './TarefaList.tsx';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
 import { OrdenarTarefas, GetSubtarefas } from '../services/TarefaService.ts';
 import { TryCarregarTarefasArray, TrySalvarTarefa } from '../services/SaveControlService.ts';
+
 
 type Props = {
     tarefaPai?: Tarefa;
@@ -22,9 +23,6 @@ type Props = {
 export default function SubtaskList({ tarefaPai, subtasks, ModalType, onSelected, onUpdateSubtask }: Props) {
     const [subTarefas, setSubTarefas] = useState<Tarefa[]>([]);
     const [carregando, setCarregando] = useState(true);
-    const [modalMode, setModalMode] = useState<'details' | 'edit'>(ModalType || 'details');
-    const unsavedChanges = useRef(false);
-    const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
 
     const carregarTarefas = useCallback(async () => {
         try {
@@ -38,7 +36,7 @@ export default function SubtaskList({ tarefaPai, subtasks, ModalType, onSelected
                 if (res) subtasks = res;
             }
             setSubTarefas(subtasks || []);
-            console.log("subTarefas de ", tarefaPai?.titulo, ":", subtasks);
+            //console.log("subTarefas de ", tarefaPai?.titulo, ":", subtasks);
         } catch (error) {
             console.log("[ListaTarefas] ATENÇÃO: Ocorreu um erro ao carregar as subtarefas: " + error);
         } finally {
@@ -52,73 +50,7 @@ export default function SubtaskList({ tarefaPai, subtasks, ModalType, onSelected
 
     const handleOpenModal = useCallback((tarefa: Tarefa) => {
         onSelected?.(tarefa);
-        return;
-        setSelectedTask(tarefa);
-        setModalMode(ModalType || 'details');
     }, [ModalType]);
-
-    const handleOpenEdit = useCallback((tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setModalMode('edit');
-    }, []);
-
-    const handleCloseModal = useCallback(() => {
-        if (modalMode === 'edit' && unsavedChanges.current) {
-            Alert.alert(
-                'Tem certeza que deseja cancelar a edição da tarefa?',
-                `Todas as alterações não salvas serão perdidas.`,
-                [
-                    { text: 'Não', style: 'cancel' },
-                    {
-                        text: 'Sim, sair sem salvar', onPress: () => {
-                            unsavedChanges.current = false;
-                            setSelectedTask(null);
-                        }
-                    }
-                ]
-            );
-            return;
-        }
-        unsavedChanges.current = false;
-        setSelectedTask(null);
-        if (ModalType && ModalType === 'edit') {
-            setModalMode('edit');
-        }
-        else setModalMode('details');
-    }, [modalMode, unsavedChanges.current]);
-
-    const handleSaveTask = useCallback(async (refresh?: boolean) => {
-        if (refresh) {
-            try {
-                const atualizadas = await TryCarregarTarefasArray();
-                if (atualizadas.length > 0) {
-                    
-                    const filtradas = atualizadas.filter(t =>
-                        tarefaPai?.subtarefas?.includes(t.id)
-                    );
-                    //console.log("[suntasklist] a serem atualizadas: ", filtradas.length);
-                    let ordered = OrdenarTarefas(filtradas);
-                    //console.log("[suntasklist] ordenadas: ", ordered.length);
-                    setSubTarefas(ordered);
-                }
-                else { console.log("ATENÇÃO: Lista de tarefas vazia após tentativa de salvamento."); }
-            } catch (error) { console.log("ERRO ao salvar tarefa: " + error); }
-            if (onUpdateSubtask) onUpdateSubtask();
-        }
-        else {
-            if (onUpdateSubtask) onUpdateSubtask(); // call for refresh
-        }
-        unsavedChanges.current = false;
-        handleCloseModal();
-    }, [handleCloseModal, onUpdateSubtask]);
-
-    /*const tarefasFiltradas = useMemo(() => {
-        return tarefas.filter(t => {
-            if (filtroAtivo === 'Pendentes') return t.estado === 'NaoIniciado' || t.estado === 'EmProgresso';
-            if (filtroAtivo === 'Concluídas') return t.estado === 'Finalizado';
-            return true;
-        });
-    }, [tarefas, filtroAtivo]);*/
 
     if (carregando) {
         return (
@@ -133,16 +65,7 @@ export default function SubtaskList({ tarefaPai, subtasks, ModalType, onSelected
         return (
             <View style={styles.container}>
                 <StatusBar barStyle="light-content" backgroundColor="#121212" />
-
-                <Modal visible={selectedTask !== null} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
-                    {modalMode === 'details' && selectedTask && (
-                        <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={() =>handleSaveTask()} />
-                    )}
-                </Modal>
-                {selectedTask !== null && modalMode === 'edit' && (
-                        <TaskManager tarefa={selectedTask} onClose={handleSaveTask} onUnsavedChanges={(e) => unsavedChanges.current = e} Parent={tarefaPai} />
-                    )}
-
+                
                 <FlatList
                     data={subTarefas}
                     renderItem={({ item }) => <SubTarefaMinimal tarefa={item} onPress={handleOpenModal} />}

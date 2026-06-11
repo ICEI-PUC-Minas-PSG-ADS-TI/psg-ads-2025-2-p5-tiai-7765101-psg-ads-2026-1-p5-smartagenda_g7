@@ -80,7 +80,7 @@ export const useTaskModals = (onRefresh?: () => void) => {
         <View>
             <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
                 {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
+                    <TarefaDetalhes Tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
                 )}
             </Modal>
             {modalMode === 'edit' && selectedTask && (

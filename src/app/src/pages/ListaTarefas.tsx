@@ -14,6 +14,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
 import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
+import { RefreshNotifications } from '../services/NotificationService.ts';
 
 export default function ListaTarefas() {
     const { theme } = useTheme();
@@ -26,7 +27,7 @@ export default function ListaTarefas() {
     const [isCreating, setIsCreating] = useState(false);
     const unsavedChanges = useRef(false);
 
-    const carregarTarefas = useCallback(async () => {
+    const carregarTarefas = async () => {
         try {
             setCarregando(true);
             console.log("Carregando tarefas...");
@@ -36,6 +37,8 @@ export default function ListaTarefas() {
                 setTarefas([]);
             }
             else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
+            //console.log(tarefasCarregadas);
+            await RefreshNotifications();
             console.log("Tarefas carregadas: ", tarefasCarregadas.length);
 
         } catch (error) {
@@ -44,11 +47,11 @@ export default function ListaTarefas() {
         } finally {
             setCarregando(false);
         }
-    }, []);
+    }
 
-    useEffect(() => {
+    /*useEffect(() => {
         carregarTarefas();
-    }, [])
+    }, [])//*/
 
     useEffect(() => {
         //console.log("'tarefasUpdated' listener added");  

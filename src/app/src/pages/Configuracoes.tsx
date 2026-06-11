@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, StatusBar, ScrollView, Modal, TouchableOpacity, Switch, Alert } from 'react-native';
 
 import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
 import LocalStorageService, { SalvarConfiguracao } from '../services/LocalStorageService';
 import { TrySalvar, CompareAndCheck } from '../services/SaveControlService';
 import { initLocalModel, IsDownloaded, UninstallModel } from '../services/LocalGenAIService';
-import { Notify, Schedule } from '../services/NotificationService';
-import { DisableAllDailyNotifications, DisableAllScheduledNotifications, RefreshDailyNotifications, RefreshScheduledNotifications } from '../services/TarefaService';
+import {
+  DisableAllDailyNotifications,
+  DisableAllScheduledNotifications,
+  RefreshDailyNotifications,
+  RefreshNotifications,
+  RefreshScheduledNotifications,
+  RefreshDayOfTheWeekNotifications,
+  DisableAllDayOfTheWeekNotifications,
+  ForceCancelAllNotifications
+} from '../services/NotificationService';
+import { CleanupSubtaskReferences } from '../services/TarefaService';
 
 import CadastroScreen from './Cadastro';
 import LoginScreen from './Login';
+import WeeklyNotificationEditor from '../components/NotificationManager';
 import { LogIn, LogOut } from "lucide-react-native";
 import { Tarefa } from '../types/tarefa';
 import { USettings } from '../types/usettings';
@@ -24,6 +34,7 @@ const Configuracoes = () => {
   const [settings, setSettings] = useState<USettings>({});
   const [logging, setLogging] = useState(false);
   const [loadingText, setLoadingText] = useState("");
+  const [NotificationScreenActive, setNotificationScreenActive] = useState(false);
 
   const navigation = useNavigation<any>();
 
@@ -100,6 +111,8 @@ const Configuracoes = () => {
           }
           catch { }
           let res = await CompareAndCheck(newTasks, oldtasks);
+          if (res === newTasks) await ForceCancelAllNotifications();
+
 
           if (!res) res = [];
 
@@ -112,23 +125,38 @@ const Configuracoes = () => {
           let resmap = Object.fromEntries(
             res.map(t => [t.id, t])
           ) as Record<string, Tarefa>;
+          resmap = await CleanupSubtaskReferences(resmap);
           LocalStorageService.SalvarTarefas(resmap);
-          await TrySalvar(true);
+          //console.log(resmap);
+          try {
+            await TrySalvar(true);
+          } finally {
+            await RefreshNotifications();
+          }
+
         }
         else {
-          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
+          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais poderão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
             console.log("Sucessful logoff");
             if (await handleLogout()) { // manter dados
-              await LocalStorageService.CarregarTarefas();
+              let t = await LocalStorageService.CarregarTarefas();
+              await Signout();
+              if (t) await LocalStorageService.SalvarTarefas(t);
             }
             else { // limpar dados
+              await ForceCancelAllNotifications();
               await LocalStorageService.ClearLocalData();
               await LocalStorageService.ClearCacheData();
+              await Signout();
             }
-            await Signout();
             //GetCurrentUser().signOut();
 
-            await TrySalvar(true);
+            try {
+              await TrySalvar(true);
+            } finally {
+              await RefreshNotifications();
+            }
+
             setSettings(prev => ({
               ...prev,
               [index]: false
@@ -137,25 +165,29 @@ const Configuracoes = () => {
           }
           else return;
         }
-        //console.log("Emitting from config");
-        //DeviceEventEmitter.emit('tarefasUpdated');
+        break;
+      case "EnableDayOfTheWeekNotify":
+        setSettings(prev => ({
+          ...prev,
+          [index]: value
+        }));
+        if (value && settings.DayOfTheWeekNotificationSets && Object.keys(settings.DayOfTheWeekNotificationSets).length > 0) {
+          //await RefreshDayOfTheWeekNotifications();
+        }
+        else {
+          await DisableAllDayOfTheWeekNotifications();
+        }
         break;
       case "EnableDailyNotify":
         setSettings(prev => ({
           ...prev,
           [index]: value
         }));
-        let tarefas1 = await LocalStorageService.CarregarTarefasArray()
-        if (tarefas1)
-        {
-          if (value) {
-          
-          await RefreshDailyNotifications(tarefas1);
+        if (value) {
+          //await RefreshDailyNotifications();
         }
         else {
-          await DisableAllDailyNotifications(tarefas1);
-        }
-        await LocalStorageService.SalvarTarefasArray(tarefas1);
+          await DisableAllDailyNotifications();
         }
         break;
       case "EnableScheduledNotify":
@@ -166,7 +198,7 @@ const Configuracoes = () => {
         let tarefas2 = await LocalStorageService.CarregarTarefasArray()
         if (tarefas2) {
           if (value) {
-            await RefreshScheduledNotifications(tarefas2);
+            //await RefreshScheduledNotifications(tarefas2);
           }
           else {
             await DisableAllScheduledNotifications(tarefas2);
@@ -184,7 +216,12 @@ const Configuracoes = () => {
 
     const loadSettings = async () => {
       let localsettings = await LocalStorageService.CarregarConfiguracao();
-      if (localsettings) setSettings(localsettings);
+      if (localsettings) {
+        if (localsettings.EnableDailyNotify === undefined) localsettings.EnableDailyNotify = false;
+        if (localsettings.EnableDayOfTheWeekNotify === undefined) localsettings.EnableDayOfTheWeekNotify = false;
+        if (localsettings.EnableScheduledNotify === undefined) localsettings.EnableScheduledNotify = true;
+        setSettings(localsettings);
+      }
     }
 
     loadSettings();
@@ -261,7 +298,7 @@ const Configuracoes = () => {
   if (logging) return (
     <SafeAreaProvider>
       <StatusBar barStyle={theme.type === 'dark' ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {showCadastro ? (
           <CadastroScreen
             onSuccess={() => { Toggle("UseBackup", true); setLogging(false); }}
@@ -275,13 +312,17 @@ const Configuracoes = () => {
             onBack={() => setLogging(false)}
           />
         )}
-      </View>
+      </SafeAreaView>
     </SafeAreaProvider>
   )
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Configurações</Text>
+
+      {NotificationScreenActive && (
+        <WeeklyNotificationEditor onToggle={Toggle} settings={settings} onExit={(s) => { setNotificationScreenActive(false); RefreshNotifications() }}></WeeklyNotificationEditor>
+      )}
 
       <Modal visible={loadingText !== ""} transparent={true} animationType="slide" onRequestClose={() => { }}>
         <View style={[styles.modal]}>
@@ -318,20 +359,20 @@ const Configuracoes = () => {
             thumbColor={'white'} style={styles.Slider} />
         </View>
         */}
-        <View style={[styles.option, { borderColor: theme.colors.border }]}>
-          <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar Notificações Marcadas</Text>
-          <Switch value={settings.EnableScheduledNotify ?? true}
-            onValueChange={async (v) => await Toggle("EnableScheduledNotify", v)}
-            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
-            thumbColor={'white'} style={styles.Slider} />
-        </View>
-        <View style={[styles.option, { borderColor: theme.colors.border }]}>
-          <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar Notificações Diárias</Text>
-          <Switch value={settings.EnableDailyNotify ?? false}
-            onValueChange={async (v) => await Toggle("EnableDailyNotify", v)}
-            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
-            thumbColor={'white'} style={styles.Slider} />
-        </View>
+        <TouchableOpacity
+          style={[styles.option, { borderColor: theme.colors.border }]}
+          onPress={() => setNotificationScreenActive(true)}
+        >
+          <View style={styles.compOption}>
+            <Text style={[styles.Optiontext, { color: theme.colors.text }]}>
+              Notificações
+            </Text>
+            <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>
+              Gerenciar notificações diárias, semanais e baseadas em tarefas
+              </Text>
+          </View>
+        </TouchableOpacity>
+
         <View style={[styles.option, { borderColor: theme.colors.border }]}>
           <View style={styles.compOption}>
             <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Tema Escuro</Text>
@@ -342,33 +383,8 @@ const Configuracoes = () => {
             trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
             thumbColor={'white'} style={styles.Slider} />
         </View>
-        {
-
-          <TouchableOpacity
-            style={[styles.option, { borderColor: theme.colors.border }]}
-            onPress={() => navigation.navigate('HistoricoIA')}
-          >
-            <View style={styles.compOption}>
-              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>
-                Histórico da IA
-              </Text>
-
-              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>
-                Ver conversas e interações anteriores
-              </Text>
-            </View>
-          </TouchableOpacity>
-        /*}
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Option</Text>
-          <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
-        </View>
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Option</Text>
-          <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
-        </View>*/}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -9,6 +9,6 @@ export type Tarefa = {
     data_finalizado?: number; // Ditto acima. Só deve ser preenchido quando a tarefa for finalizada.
     subtarefas?: string[]; // IDs das subtarefas, caso existam. O formato de cada tarefa é o mesmo.
     parentId?: string; // ID da tarefa pai, caso seja uma subtarefa. O formato é o mesmo de uma tarefa normal.
-    notificacoesIds?: Record<string, string>; // SOMENTE LOCAL, para manter controle sobre as notificações da tarefa
+    notificacoesIds?: string[]; // SOMENTE LOCAL, para manter controle sobre as notificações da tarefa
 }
 
