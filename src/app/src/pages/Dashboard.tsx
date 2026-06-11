@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,  useCallback
+ } from 'react';
 import {
 ScrollView,
 View,
@@ -7,6 +8,8 @@ StyleSheet,
 TouchableOpacity,
 Alert
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 import StorageAPI from '../services/LocalStorageService';
 import { Tarefa } from '../types/tarefa';
@@ -19,9 +22,11 @@ const { theme } = useTheme();
 
 const [tarefas, setTarefas] = useState<Tarefa[]>([]);
 
-useEffect(() => {
-carregarDados();
-}, []);
+useFocusEffect(
+  useCallback(() => {
+    carregarDados();
+  }, [])
+);
 
 async function carregarDados() {
 const tarefasObj = await StorageAPI.CarregarTarefas();
