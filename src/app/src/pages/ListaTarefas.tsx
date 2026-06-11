@@ -8,13 +8,16 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import TarefaList from '../components/TarefaList';
 import TaskManager from '../components/TaskManager';
 import TarefaFilter, { FiltroEstado, aplicarFiltros } from '../components/TarefaFilter';
+import { useTheme } from '../theme/ThemeContext';
 
 // Serviços e Tipos
 import { Tarefa } from '../types/tarefa.ts';
 import { FilterSubTarefasArray, OrdenarTarefas } from '../services/TarefaService';
 import { TrySalvarTarefa, TryCarregarTarefasArray } from '../services/SaveControlService';
+import { RefreshNotifications } from '../services/NotificationService.ts';
 
 export default function ListaTarefas() {
+    const { theme } = useTheme();
     const [tarefas, setTarefas] = useState<Tarefa[]>([]);
     const [selectedState, setSelectedState] = useState<FiltroEstado>('Todas');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -24,7 +27,7 @@ export default function ListaTarefas() {
     const [isCreating, setIsCreating] = useState(false);
     const unsavedChanges = useRef(false);
 
-    const carregarTarefas = useCallback(async () => {
+    const carregarTarefas = async () => {
         try {
             setCarregando(true);
             console.log("Carregando tarefas...");
@@ -34,6 +37,8 @@ export default function ListaTarefas() {
                 setTarefas([]);
             }
             else setTarefas(OrdenarTarefas(await FilterSubTarefasArray(tarefasCarregadas, true)));
+            //console.log(tarefasCarregadas);
+            await RefreshNotifications();
             console.log("Tarefas carregadas: ", tarefasCarregadas.length);
 
         } catch (error) {
@@ -42,11 +47,11 @@ export default function ListaTarefas() {
         } finally {
             setCarregando(false);
         }
-    }, []);
+    }
 
-    useEffect(() => {
+    /*useEffect(() => {
         carregarTarefas();
-    }, [])
+    }, [])//*/
 
     useEffect(() => {
         //console.log("'tarefasUpdated' listener added");  
@@ -98,16 +103,16 @@ export default function ListaTarefas() {
 
     if (carregando) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#9F7CFA" />
-                <Text style={styles.loadingText}>Carregando tarefas...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={[styles.loadingText, { color: theme.colors.primary }]}>Carregando tarefas...</Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#121212" />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={theme.type === 'dark' ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
 
             {isCreating && (
                 <TaskManager tarefa={null} onClose={() =>handleSaveTask()} newTask={isCreating} onUnsavedChanges={(e) => unsavedChanges.current = e} />
@@ -118,9 +123,9 @@ export default function ListaTarefas() {
                 onRefresh={carregarTarefas}
                 ListHeaderComponent={
                     <View style={styles.headerContainer}>
-                        <View style={styles.header}>
-                            <Text style={styles.headerTitle}>Minhas Tarefas</Text>
-                            <Text style={styles.headerSubtitle}>
+                        <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Minhas Tarefas</Text>
+                            <Text style={[styles.headerSubtitle, { color: theme.colors.primary }]}>
                                 {tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? 'tarefa listada' : 'tarefas listadas'}
                             </Text>
                         </View>
@@ -156,11 +161,11 @@ export default function ListaTarefas() {
             </TouchableOpacity>*/}
 
             {/* Botão de criar tarefa */}
-            <TouchableOpacity style={styles.fab} onPress={handleCreateNew} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={handleCreateNew} activeOpacity={0.8}>
                 <Icon
                     name="add"
                     size={28}
-                    color="#ffffffff"
+                    color="#ffffff"
                     style={styles.fabIcon}
                 />
             </TouchableOpacity>
@@ -171,16 +176,13 @@ export default function ListaTarefas() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212'
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#121212'
     },
     loadingText: {
-        color: '#9F7CFA',
         marginTop: 16
     },
     headerContainer: {
@@ -191,25 +193,20 @@ const styles = StyleSheet.create({
         paddingTop: 40,
         paddingHorizontal: 24,
         paddingBottom: 15,
-        backgroundColor: '#1E1E1E',
         borderBottomWidth: 1,
-        borderBottomColor: '#2D2D2D'
     },
     headerTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#FFFFFF'
     },
     headerSubtitle: {
         fontSize: 14,
-        color: '#9F7CFA',
         marginTop: 4,
     },
     fab: {
         position: 'absolute',
         bottom: 30,
         right: 30,
-        backgroundColor: '#9F7CFA',
         width: 60,
         height: 60,
         borderRadius: 30,
@@ -219,7 +216,6 @@ const styles = StyleSheet.create({
     },
     fabIcon: {
         fontSize: 32,
-        color: '#FFFFFF',
         lineHeight: 34
     },
     logoutFab: {

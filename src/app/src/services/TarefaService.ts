@@ -1,7 +1,7 @@
 // Funções relacionadas às Tarefas
 
 import type { Tarefa } from '../types/tarefa';
-import StorageAPI, { SalvarTarefas } from './LocalStorageService';
+import StorageAPI from './LocalStorageService';
 import { v4 as uuidv4 } from 'uuid'; // para geração de ID
 import { TrySalvarTarefa } from './SaveControlService';
 
@@ -85,12 +85,20 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
     let id;
     if (typeof obj.id === "string" && obj.id.trim() !== "")
         id = obj.id;
-    else return undefined; // esse ID não é real, mas ainda é importante para conectar as subtarefas, vou ver ainda se dá pra passar
+    else if (obj.subtarefas && obj.subtarefas.length > 0) {
+        let i = 0;
+        for (let o of obj.subtarefas) {
+            i += o;
+        }
+        id = `${i}`
+    }
+    else id = "1";
+    //return undefined; // esse ID não é real, mas ainda é importante para conectar as subtarefas, vou ver ainda se dá pra passar
 
     const titulo =
         typeof obj.titulo === "string"
             ? obj.titulo
-            : "Sem título";
+            : "Tarefa";
 
     // O estado é computado, não é necessário
     /*const estado =
@@ -115,10 +123,13 @@ async function CreateTarefaJSONSingle(t: object): Promise<Tarefa | undefined> {
             ? new Date(obj.data_criado).getTime()
             : Date.now();
 
-    const data_vencimento =
-        typeof obj.data_vencimento === "string"
-            ? new Date(obj.data_vencimento).getTime()
-            : Date.now();
+    let finalVal = typeof obj.data_vencimento === "string" ? (new Date(obj.data_vencimento).getTime())
+        : (typeof obj.vence_dias_de_hoje === "number" ? Date.now() + (obj.vence_dias_de_hoje * 86400000)
+            : (typeof obj.vence_data_DDMMYYYY === "string" ? LocaleStringToTimestamp(obj.vence_data_DDMMYYY)
+                : Date.now() + (7 * 86400000)))
+    if (!finalVal) finalVal = Date.now() + (7 * 86400000)
+
+    const data_vencimento = finalVal;
 
     const data_finalizado =
         typeof obj.data_finalizado === "string"
@@ -242,6 +253,7 @@ function TryFindParent(tarefa: Tarefa, tarefasRecord: Record<string, Tarefa>): T
  */
 export async function SyncState(parent: Tarefa): Promise<Tarefa> {
     //if (!parent.subtarefas || parent.subtarefas.length === 0) return parent;
+    console.log("syncing state");
     let subtasks = await GetSubtarefas(parent);
     if (!subtasks || subtasks.length === 0) return parent;
 
@@ -265,7 +277,7 @@ export async function SyncState(parent: Tarefa): Promise<Tarefa> {
         }
     }
 
-    console.log("updated state for ", parent.titulo, ": ", parent.estado);
+    //console.log("updated state for ", parent.titulo, ": ", parent.estado);
 
     return parent;
 }
@@ -305,7 +317,7 @@ export async function GetSubtarefas(tarefa: Tarefa): Promise<Tarefa[] | null> {
         else console.log(`Subtarefa com id ${subId} não encontrada para a tarefa ${tarefa.id}`);
     }
 
-    console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
+    //console.log("[TAREFASERVICE] Subtarefas encontradas para a tarefa ", tarefa.titulo, ":", subtarefas);
     return subtarefas;
 }
 
@@ -368,9 +380,9 @@ export async function FilterSubTarefasArray(tarefas: Tarefa[], onlyMaintasks: bo
 }
 
 /**
- * Filtra todas as tarefas para retornar apenas as tarefas principais (isSubtarefa = false) ou apenas as subtarefas (isSubtarefa = true), dependendo do valor de onlyMaintasks. Retorna null se ocorrer algum erro durante o processo.
+ * Filtra todas as tarefas para retornar apenas as tarefas principais/raiz ou apenas as subtarefas, dependendo do valor de onlyMaintasks. Retorna null se ocorrer algum erro durante o processo.
  * @param tarefas array das tarefas
- * @param onlyMaintasks true = returna somente principais, false = retorna somente subtarefas
+ * @param onlyMaintasks true = returna somente principais/raiz, false = retorna somente subtarefas
  * @returns Dicionário das tarefas filtradas, indexado por ID.
  */
 export async function FilterSubTarefas(tarefas: Tarefa[], onlyMaintasks: boolean): Promise<Record<string, Tarefa>> {
@@ -401,6 +413,31 @@ export async function FilterSubTarefas(tarefas: Tarefa[], onlyMaintasks: boolean
 export async function FilterSubTarefasDicionario(tarefas: Record<string, Tarefa>, onlyMaintasks: boolean): Promise<Record<string, Tarefa>> {
     let tolist = Object.values(tarefas);
     return await FilterSubTarefas(tolist, onlyMaintasks);
+}
+
+export async function CleanupSubtaskReferences(tarefas: Record<string, Tarefa>): Promise<Record<string, Tarefa>> {
+    for (const v of Object.values(tarefas)) {
+        if (v.subtarefas) {
+            v.subtarefas = v.subtarefas.filter((s) => {
+                const exists = s in tarefas;
+
+                if (!exists) {
+                    console.log(
+                        `[CLEANUPSUBTASKREFERENCES] Removed subtask with id '${s}' from task '${v.titulo}', as it was not found.`
+                    );
+                }
+
+                return exists;
+            }
+            );
+        }
+        if (v.parentId !== undefined && !(v.parentId in tarefas)) {
+            console.log("[CLEANUPSUBTASKREFERENCES] Removed parent with id '", v.parentId, " from task ", v.titulo, ", as it was not found.");
+            v.parentId = undefined;
+        }
+    }
+
+    return tarefas;
 }
 
 // eventualmente provavelmente não será necessário, com menus para selecionar a data e hora
@@ -443,6 +480,24 @@ export function OrdenarTarefas(lista: Tarefa[]): Tarefa[] {
 export function GetFinalizadas(tarefas: Tarefa[]): Tarefa[] {
     return tarefas.filter(t => t.estado === "Finalizado");
 }
+
+/**
+ * Retorna somente as tarefas que não possuem sub-tarefas
+ */
+export async function GetFolhas(tarefas: Tarefa[]): Promise<Tarefa[]> {
+    let res: Tarefa[] = [];
+    //console.log(tarefas);
+    for (const t of tarefas) {
+        if (t.subtarefas && t.subtarefas.length > 0) {
+            let sub = await GetSubtarefas(t)
+            if (sub) res.concat(await GetFolhas(sub))
+            else console.error("couldn't get subtarefas of ", t.titulo);
+        }
+        else res.push(t);
+    }
+    return res;
+}
+
 
 function GetDummyJSON1(): string {
     let date = Date.now();

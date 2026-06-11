@@ -8,8 +8,7 @@ import ListaTarefas from './pages/ListaTarefas';
 import Calendario from './pages/Calendario';
 import Configuracoes from './pages/Configuracoes';
 import ChatIA from './pages/ChatIA';
-import HistoricoIA from './pages/HistoricoIA';
-
+import Dashboard from './pages/Dashboard';
 const Tab = createBottomTabNavigator();
 
 const Routes = () => {
@@ -61,6 +60,18 @@ const Routes = () => {
           ),
         }}
       />
+
+      <Tab.Screen
+  name="Dashboard"
+  component={Dashboard}
+  options={{
+    tabBarLabel: 'Dashboard',
+    tabBarIcon: ({ color }) => (
+      <ListTodo color={color} size={24} />
+    ),
+  }}
+/>
+
       <Tab.Screen
         name="Configurações"
         component={Configuracoes}
@@ -71,17 +82,6 @@ const Routes = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="HistoricoIA"
-        component={HistoricoIA}
-        options={{
-          href: null,
-          tabBarItemStyle: {
-            display: 'none',
-          },
-        }}
-      />
-
     </Tab.Navigator>
   );
 };

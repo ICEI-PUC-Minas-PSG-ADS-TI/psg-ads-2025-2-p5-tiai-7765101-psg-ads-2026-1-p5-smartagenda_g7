@@ -69,6 +69,7 @@ export async function Signout() {
 }
 
 export async function salvarTarefaFirestore(tarefa: Tarefa): Promise<void> {
+  //console.log("ahoy");
   try {
     // Mapeamento exato dos dados locais para os tipos do Firestore
     const dadosFirestore = {
@@ -175,17 +176,22 @@ export async function sincronizarTarefas(tarefasLocais: Record<string, Tarefa>):
 
     const promises = [];
 
-    // Sincronizar: envia para o Firebase as tarefas locais que não estão lá
+    // Trocado para salvar TODAS as tarefas, não só as novas
+    for (const [id, tarefa] of Object.entries(tarefasLocais))
+    {
+      promises.push(salvarTarefaFirestore(tarefa));
+    }
+    /*// Sincronizar: envia para o Firebase as tarefas locais que não estão lá
     for (const [id, tarefa] of Object.entries(tarefasLocais)) {
       if (!tarefasFirestoreMap.has(id)) {
         promises.push(salvarTarefaFirestore(tarefa));
       }
-    }
+    }*/
 
     // Dispara todas as requisições de salvamento em paralelo (muito mais rápido)
     if (promises.length > 0) {
       await Promise.all(promises);
-      console.log(`[FirestoreService] Sincronização concluída: ${promises.length} tarefas enviadas.`);
+      //console.log(`[FirestoreService] Sincronização concluída: ${promises.length} tarefas enviadas.`);
     }
 
   } catch (error) {

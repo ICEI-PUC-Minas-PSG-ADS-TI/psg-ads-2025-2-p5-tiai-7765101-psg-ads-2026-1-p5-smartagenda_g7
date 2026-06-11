@@ -1,11 +1,16 @@
 // Informações simples da tarefa, para ser exibido em lista ou calendário
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text as TextRN, StyleSheet, TouchableOpacity } from 'react-native';
+import Svg, { Line, Rect, Text as TextSVG, G } from 'react-native-svg';
 import { Tarefa } from '../types/tarefa.ts';
+import { get } from 'react-native/Libraries/NativeComponent/NativeComponentRegistry';
+import { useTheme } from '../theme/ThemeContext.tsx';
 
 type Props = {
     tarefa: Tarefa;
     onPress?: (tarefa: Tarefa) => void;
+    basewidth?: number;
+    baseheight?: number;
 };
 
 /**
@@ -14,6 +19,7 @@ type Props = {
  * @param onPress Função a ser chamada ao clicar na tarefa. Normalmente usada para abrir os detalhes da tarefa. Retorna a própria tarefa.
  */
 export default function SubTarefaMinimal({ tarefa, onPress }: Props) {
+    const { theme } = useTheme();
 
     const onPressMiddleMan = () => {
         if (onPress) onPress(tarefa);
@@ -23,12 +29,12 @@ export default function SubTarefaMinimal({ tarefa, onPress }: Props) {
     const getEstadoConfig = (estado: string) => {
         switch (estado) {
             case 'EmProgresso':
-                return { bg: 'rgba(159, 124, 250, 0.2)', text: '#9F7CFA', label: 'Em Progresso' };
+                return { bg: 'rgba(159, 124, 250, 0.2)', text: theme.colors.primary, label: 'Em Progresso' };
             case 'Finalizado':
-                return { bg: 'rgba(76, 175, 80, 0.2)', text: '#4CAF50', label: 'Concluída' };
+                return { bg: 'rgba(76, 175, 80, 0.2)', text: theme.colors.success, label: 'Concluída' };
             case 'NaoIniciado':
             default:
-                return { bg: '#2D2D2D', text: '#A59EC0', label: 'A Fazer' };
+                return { bg: '#2D2D2D', text: theme.colors.textSecondary, label: 'A Fazer' };
         }
     };
 
@@ -37,23 +43,70 @@ export default function SubTarefaMinimal({ tarefa, onPress }: Props) {
     return (
         <TouchableOpacity onPress={onPressMiddleMan} activeOpacity={0.7}>
             <View style={[styles.card, tarefa.estado === 'Finalizado' && styles.cardFinalizado]}>
-                
+
                 {/* Título e Status */}
                 <View style={styles.header}>
-                    <Text 
-                        style={[styles.title, tarefa.estado === 'Finalizado' && styles.textStrikethrough]} 
+                    <TextRN
+                        style={[styles.title, tarefa.estado === 'Finalizado' && styles.textStrikethrough]}
                         numberOfLines={1}>
                         {tarefa.titulo}
-                    </Text>
-                    
+                    </TextRN>
+
                     <View style={[styles.badge, { backgroundColor: estadoConfig.bg }]}>
-                        <Text style={[styles.badgeText, { color: estadoConfig.text }]}>
+                        <TextRN style={[styles.badgeText, { color: estadoConfig.text }]}>
                             {estadoConfig.label}
-                        </Text>
+                        </TextRN>
                     </View>
                 </View>
             </View>
-        </TouchableOpacity> 
+        </TouchableOpacity>
+    );
+}
+
+export function SubTarefaMinimalSVG({ tarefa, onPress, basewidth, baseheight }: Props) {
+    const { theme } = useTheme();
+
+    const width = basewidth ?? 120;
+    const height = baseheight ?? 50;
+
+    const onPressMiddleMan = () => {
+        if (onPress) onPress(tarefa);
+    };
+
+    // Função auxiliar para definir as cores e o texto da etiqueta (badge) baseada no estado
+    const getStyle = (Type: string) => {
+        switch (Type) {
+            case 'StateColor':
+                switch (tarefa.estado) {
+                    case 'EmProgresso':
+                        return theme.colors.primary;
+                    case 'Finalizado':
+                        return theme.colors.success;
+                    default:
+                        return theme.colors.textSecondary;
+                }
+            default:
+                return;
+        }
+
+    };
+
+    //const estadoConfig = getEstadoConfig(tarefa.estado);
+
+    return (
+        <>
+            <G onPress={onPressMiddleMan}>
+                <Rect width={width} height={height} rx={8} ry={8} fill="#1E1E1E" stroke={getStyle('StateColor')} strokeWidth={2} />
+
+                {/* Título e Status */}
+                <G style={styles.header}>
+                    <TextSVG
+                        x={width/2} y={height*0.6} fill={getStyle('StateColor')} textAnchor="middle" alignmentBaseline="middle">
+                        {tarefa.titulo}
+                    </TextSVG>
+                </G>
+            </G>
+        </>
     );
 }
 
@@ -65,7 +118,7 @@ const styles = StyleSheet.create({
         marginBottom: 6,
         borderWidth: 1,
         borderColor: '#2D2D2D',
-        elevation: 2, 
+        elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 export type FiltroEstado = 'Todas' | 'Pendentes' | 'Concluídas';
 
@@ -18,6 +19,7 @@ const TarefaFilter: React.FC<TarefaFilterProps> = ({
   onSelectState,
   onToggleCategory,
 }) => {
+  const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -29,10 +31,10 @@ const TarefaFilter: React.FC<TarefaFilterProps> = ({
           return (
             <TouchableOpacity
               key={estado}
-              style={[styles.filterChip, isActive && styles.filterChipActive]}
+              style={[styles.filterChip, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.border }, isActive && { backgroundColor: `${theme.colors.primary}33`, borderColor: theme.colors.primary }]}
               onPress={() => onSelectState(estado)}
             >
-              <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{estado}</Text>
+              <Text style={[styles.filterText, { color: theme.colors.textSecondary }, isActive && { color: theme.colors.primary, fontWeight: 'bold' }]}>{estado}</Text>
             </TouchableOpacity>
           );
         })}
@@ -41,14 +43,14 @@ const TarefaFilter: React.FC<TarefaFilterProps> = ({
       {/* Filtros de Categorias (se houver categorias disponíveis) */}
       {categoriasDisponiveis.length > 0 && (
         <View style={styles.categoriesSection}>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
           <TouchableOpacity
             style={styles.sectionHeader}
             onPress={() => setIsExpanded(!isExpanded)}
             activeOpacity={0.7}
           >
-            <Text style={styles.sectionLabel}>Categorias</Text>
-            <Text style={styles.sectionIcon}>{isExpanded ? '▲' : '▼'}</Text>
+            <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>Categorias</Text>
+            <Text style={[styles.sectionIcon, { color: theme.colors.textSecondary }]}>{isExpanded ? '▲' : '▼'}</Text>
           </TouchableOpacity>
 
           {isExpanded && (
@@ -58,10 +60,10 @@ const TarefaFilter: React.FC<TarefaFilterProps> = ({
                 return (
                   <TouchableOpacity
                     key={categoria}
-                    style={[styles.filterChip, isActive && styles.filterChipActive]}
+                    style={[styles.filterChip, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.border }, isActive && { backgroundColor: `${theme.colors.primary}33`, borderColor: theme.colors.primary }]}
                     onPress={() => onToggleCategory(categoria)}
                   >
-                    <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{categoria}</Text>
+                    <Text style={[styles.filterText, { color: theme.colors.textSecondary }, isActive && { color: theme.colors.primary, fontWeight: 'bold' }]}>{categoria}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -106,7 +108,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#3D3D3D',
     marginVertical: 4,
   },
   sectionHeader: {
@@ -116,13 +117,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionLabel: {
-    color: '#A59EC0',
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   sectionIcon: {
-    color: '#A59EC0',
     fontSize: 10,
   },
   wrapContainer: {
@@ -134,22 +133,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#2D2D2D',
     borderWidth: 1,
-    borderColor: '#3D3D3D',
-  },
-  filterChipActive: {
-    backgroundColor: 'rgba(159, 124, 250, 0.2)',
-    borderColor: '#9F7CFA',
   },
   filterText: {
-    color: '#A59EC0',
     fontSize: 14,
     fontWeight: '500',
-  },
-  filterTextActive: {
-    color: '#9F7CFA',
-    fontWeight: 'bold',
   },
 });
 

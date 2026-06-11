@@ -6,6 +6,7 @@ import StorageAPI from '../services/LocalStorageService';
 import TarefaFilter, { aplicarFiltros } from '../components/TarefaFilter';
 import { useTaskModals } from '../components/TarefaList';
 import TarefaMinimal from '../components/TarefaMinimal';
+import { useTheme } from '../theme/ThemeContext';
 
 // Configuração para pt-br
 LocaleConfig.locales['pt-br'] = {
@@ -26,29 +27,10 @@ const getTodayLocalString = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-const agendaTheme = {
-  reservationsBackgroundColor: '#121212',
-  backgroundColor: '#121212',
-  calendarBackground: '#1E1E1E',
-  textSectionTitleColor: '#b6c1cd',
-  selectedDayBackgroundColor: '#BB86FC',
-  selectedDayTextColor: '#ffffff',
-  todayTextColor: '#BB86FC',
-  dayTextColor: '#d9e1e8',
-  textDisabledColor: '#555555',
-  dotColor: '#BB86FC',
-  selectedDotColor: '#ffffff',
-  arrowColor: '#FFFFFF',
-  disabledArrowColor: '#fafafaff',
-  monthTextColor: 'white',
-  indicatorColor: 'white',
-  agendaDayTextColor: '#A59EC0',
-  agendaDayNumColor: '#A59EC0',
-  agendaTodayColor: '#BB86FC',
-  agendaKnobColor: '#BB86FC'
-};
+// agendaTheme is now inside ThemeContext
 
 const Calendario = () => {
+  const { theme } = useTheme();
   const [allTasks, setAllTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(getTodayLocalString());
 
@@ -115,7 +97,7 @@ const Calendario = () => {
     marks[selectedDate] = {
       ...(marks[selectedDate] || {}),
       selected: true,
-      selectedColor: '#BB86FC'
+      selectedColor: theme.colors.primary
     };
     return marks;
   }, [filteredTasks, selectedDate]);
@@ -148,8 +130,8 @@ const Calendario = () => {
   }, [filteredTasks]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Calendário</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Calendário</Text>
 
       <View style={styles.headerContainer}>
         <TarefaFilter
@@ -164,7 +146,7 @@ const Calendario = () => {
       <Agenda
         items={items}
         selected={selectedDate}
-        key={JSON.stringify(items).length} // isso aqui faz atualizar sempre, mas é bem lento
+        key={`${theme.type}_${JSON.stringify(items).length}`} // força remount ao trocar tema e ao atualizar items
         onDayPress={(day) => setSelectedDate(day.dateString)}
         rowHasChanged={(r1, r2) => {
           if (!r1 || !r2) return true;
@@ -180,16 +162,16 @@ const Calendario = () => {
         }}
         renderEmptyDate={() => (
           <View style={styles.emptyDateContainer}>
-            <View style={styles.emptyDateLine} />
+            <View style={[styles.emptyDateLine, { backgroundColor: theme.colors.border }]} />
           </View>
         )}
         renderEmptyData={() => (
           <View style={styles.emptyDataContainer}>
-            <Text style={styles.emptyDataText}>Nenhum compromisso por aqui. Deixe a IA planejar algo para você?</Text>
+            <Text style={[styles.emptyDataText, { color: theme.colors.textSecondary }]}>Nenhum compromisso por aqui. Deixe a IA planejar algo para você?</Text>
           </View>
         )}
         markedDates={markedDates}
-        theme={agendaTheme}
+        theme={theme.colors.agenda}
       />
       {modals}
     </View>
@@ -199,13 +181,11 @@ const Calendario = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     paddingTop: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
     marginBottom: 10,
     marginTop: 20,
     textAlign: 'center',
@@ -223,7 +203,6 @@ const styles = StyleSheet.create({
   },
   emptyDateLine: {
     height: 1,
-    backgroundColor: '#2D2D2D',
     marginLeft: 10,
     marginRight: 10,
   },
@@ -234,7 +213,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyDataText: {
-    color: '#A59EC0',
     fontSize: 16,
     textAlign: 'center',
   }

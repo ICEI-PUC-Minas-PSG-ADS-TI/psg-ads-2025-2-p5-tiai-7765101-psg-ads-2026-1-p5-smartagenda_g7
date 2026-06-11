@@ -10,9 +10,12 @@ import CadastroScreen from './pages/Cadastro';
 import StorageAPI, { CarregarConfiguracao } from './services/LocalStorageService';
 import { onUserAuthenticated } from './services/UserService';
 import SaveControlService from './services/SaveControlService';
+import { ThemeProvider, useTheme } from './theme/ThemeContext';
+import { Init } from './services/NotificationService';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+function AppContent() {
+  const { theme, themeType } = useTheme();
+  const isDarkMode = themeType === 'dark';
   const [user, setUser] = useState(null);
   const [showCadastro, setShowCadastro] = useState(false);
   const [showLogin, setShowLogin] = useState(false); // Initially false, so app opens normally
@@ -23,6 +26,11 @@ function App() {
     const getcfg = async () => {
       return await CarregarConfiguracao();
     }
+    const initNotifications = async () => {
+      await Init();
+    }
+    initNotifications();
+
     let cfg = getcfg();
     if (cfg.UseBackup) {
       try {
@@ -47,7 +55,32 @@ function App() {
       }
       loadlocal();
     }
-
+    if (cfg.EnableDailyNotify !== undefined) {
+      const setdailynoty = async (value) => {
+        if (value) {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await RefreshDailyNotifications(tarefas);
+        }
+        else {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await DisableAllDailyNotifications(tarefas);
+        }
+      }
+      setdailynoty(cfg.EnableDailyNotify)
+    }
+    if (cfg.EnableScheduledNotify !== undefined) {
+      const setschedulednoty = async (value) => {
+        if (value) {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await RefreshScheduledNotifications(tarefas);
+        }
+        else {
+          let tarefas = await LocalStorageService.CarregarTarefasArray()
+          if (tarefas) await DisableAllScheduledNotifications(tarefas);
+        }
+      }
+      setschedulednoty(cfg.EnableScheduledNotify)
+    }
 
     // Listener para abrir a tela de login a partir de outros componentes
     const eventListener = DeviceEventEmitter.addListener('showLogin', () => {
@@ -64,8 +97,8 @@ function App() {
   if (showCadastro) {
     return (
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <CadastroScreen
             onSuccess={() => setShowCadastro(false)}
             onBackToLogin={() => {
@@ -82,8 +115,8 @@ function App() {
   if (showLogin) {
     return (
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <LoginScreen
             onSuccess={() => {
               console.log('Logado com sucesso!');
@@ -104,8 +137,8 @@ function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <View style={styles.container}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <Routes />
         </View>
       </NavigationContainer>
@@ -116,8 +149,13 @@ function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212'
   }
 });
 
-export default App;
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}

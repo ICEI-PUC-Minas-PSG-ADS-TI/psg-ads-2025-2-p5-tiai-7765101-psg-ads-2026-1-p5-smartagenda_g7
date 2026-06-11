@@ -1,5 +1,6 @@
 // Serviço para Salvamento em memória temporária E salvamento em arquivo local
 import type { Tarefa } from '../types/tarefa';
+import type { USettings } from '../types/usettings';
 import AS from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
 import { GetCurrentUser } from './FirestoreService';
@@ -39,8 +40,20 @@ export async function Iniciar() {
 
 export async function SalvarTarefas(tarefas: Record<string, Tarefa>) {
     try {
+        //console.log(getStorageKey());
         await AS.setItem(getStorageKey(), JSON.stringify(tarefas));
         await SalvarTarefasLocal(tarefas);
+        //console.log("[SALVARTAREFAS]Tarefas salvas: ", Object.keys(tarefas).length);
+    } catch (err) {
+        console.log("Erro ao salvar tarefas no Async Storage: " + err);
+    }
+}
+
+export async function SalvarTarefasArray(tarefas: Tarefa[]) {
+    try {
+        let res = Object.fromEntries(tarefas.map((t) => [t.id, t]))
+        await AS.setItem(getStorageKey(), JSON.stringify(res));
+        await SalvarTarefasLocal(res);
         //console.log("[SALVARTAREFAS]Tarefas salvas: ", Object.keys(tarefas).length);
     } catch (err) {
         console.log("Erro ao salvar tarefas no Async Storage: " + err);
@@ -102,29 +115,54 @@ export async function CarregarTarefas(): Promise<Record<string, Tarefa> | null> 
     }
 }
 
-export async function SalvarConfiguracao(cfg: any) {
+export async function SalvarConfiguracao(cfg: USettings) {
     try {
         await AS.setItem("userSettings", JSON.stringify(cfg));
+        //console.log('Save: ', cfg);
         await SalvarConfiguracaoLocal(cfg);
     } catch (err) {
         console.log("Erro ao salvar tarefas no Async Storage: " + err);
     }
 }
 
-export async function CarregarConfiguracao(): Promise<any> {
+export async function CarregarConfiguracao(): Promise<USettings> {
     try {
         let data = await AS.getItem("userSettings");
+        //console.log('Load: ',data);
         if (data) return JSON.parse(data);
+        
 
         let fallbackdata = await CarregarConfiguracaoLocal();
         if (fallbackdata) {
             await AS.setItem("userSettings", JSON.stringify(fallbackdata));
+            console.log(fallbackdata);
             return fallbackdata;
         }
-
-        return null;
+        else {
+            console.log("Configuração não encontrada, carregando dados padrões");
+            let r:USettings = { EnableDailyNotify: false, EnableScheduledNotify: true};
+            return r;
+        }
     } catch (err) {
         console.log("Erro ao carregar configurações no Async Storage: " + err);
+        return {};
+    }
+}
+
+export async function SalvarTema(themeType: string) {
+    try {
+        await AS.setItem("userTheme", themeType);
+    } catch (err) {
+        console.log("Erro ao salvar tema no Async Storage: " + err);
+    }
+}
+
+export async function CarregarTema(): Promise<string | null> {
+    try {
+        let theme = await AS.getItem("userTheme");
+        return theme;
+    } catch (err) {
+        console.log("Erro ao carregar tema no Async Storage: " + err);
         return null;
     }
 }
@@ -200,6 +238,15 @@ export async function SalvarTarefasLocal(tarefas: Record<string, Tarefa>) {
     }
 }
 
+/*export async function SalvarTarefasLocalGuest(tarefas: Record<string, Tarefa>) {
+    try {
+        let json = JSON.stringify(tarefas);
+        await RNFS.writeFile(get, json);
+    } catch (err) {
+        console.log("Erro ao salvar tarefas localmente no File Service: " + err);
+    }
+}*/
+
 /**
  * Carrega as tarefas salvas localmente no dispositivo, e as retorna
  */
@@ -232,7 +279,7 @@ export async function CarregarTarefasLocalGuest(): Promise<Record<string, Tarefa
     }
 }
 
-export async function SalvarConfiguracaoLocal(config: any) {
+export async function SalvarConfiguracaoLocal(config: USettings) {
     try {
         let json = JSON.stringify(config);
         await RNFS.writeFile(configpath, json);
@@ -241,7 +288,7 @@ export async function SalvarConfiguracaoLocal(config: any) {
     }
 }
 
-export async function CarregarConfiguracaoLocal(): Promise<any> {
+export async function CarregarConfiguracaoLocal(): Promise<USettings | null> {
     try {
         const exists = await RNFS.exists(configpath);
         if (!exists) return null;
@@ -264,6 +311,11 @@ export async function ClearLocalData() {
         if (existsGuest) {
             await RNFS.writeFile(`${RNFS.DocumentDirectoryPath}/tarefas_guest.json`, '');
         }
+
+        const cfg = await CarregarConfiguracao();
+        cfg.ActiveDailyNotifications = undefined;
+        cfg.ActiveDayOfTheWeekNotifications = undefined;
+        await SalvarConfiguracao(cfg);
     }
     catch (err) {
         console.log("Erro ao limpar dados locais: " + err);
@@ -278,8 +330,10 @@ export default {
     CarregarTarefasLocalGuest,
     CarregarTarefasArray,
     SalvarTarefas,
+    SalvarTarefasArray,
     SalvarTarefa,
     SalvarTarefasLocal,
+    //SalvarTarefasLocalGuest,
     DeletarTarefa,
     Iniciar,
     CarregarConfiguracao,
@@ -288,5 +342,7 @@ export default {
     SalvarConfiguracaoLocal,
     ClearLocalData,
     ClearCacheData,
-    TarefaExists
+    TarefaExists,
+    SalvarTema,
+    CarregarTema
 }

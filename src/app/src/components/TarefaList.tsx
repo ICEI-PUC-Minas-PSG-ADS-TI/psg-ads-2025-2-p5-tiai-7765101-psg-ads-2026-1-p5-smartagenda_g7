@@ -1,16 +1,19 @@
 import { Tarefa } from '../types/tarefa';
 import TarefaDetalhes from './DetalhesTarefa';
 import TaskManager from './TaskManager';
-import { TrySalvarTarefa } from '../services/SaveControlService';
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, Modal, Alert } from 'react-native';
 import TarefaMinimal from './TarefaMinimal';
+import { useTheme } from '../theme/ThemeContext';
+import SubTarefaMinimal from './SubTarefaMinimal';
 
 interface TarefaListProps {
     tarefas: Tarefa[];
     emptyMessage?: string;
     onRefresh?: () => void;
     ListHeaderComponent?: React.ReactElement | null;
+    parent?: Tarefa;
+    subtaskStyling?: boolean;
 }
 
 export type ModalMode = 'none' | 'details' | 'edit';
@@ -19,15 +22,18 @@ export const useTaskModals = (onRefresh?: () => void) => {
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [modalMode, setModalMode] = useState<ModalMode>('none');
     const unsavedChanges = useRef(false);
+    const [blockrefresh, setBlockRefresh] = useState(false);
 
-    const handleOpenDetails = useCallback((tarefa: Tarefa) => {
+    const handleOpenDetails = useCallback((tarefa: Tarefa, blockRefresh?: boolean) => {
         setSelectedTask(tarefa);
         setModalMode('details');
+        setBlockRefresh(!!blockRefresh);
     }, []);
 
-    const handleOpenEdit = useCallback((tarefa: Tarefa) => {
+    const handleOpenEdit = useCallback((tarefa: Tarefa, blockRefresh?: boolean) => {
         setSelectedTask(tarefa);
         setModalMode('edit');
+        setBlockRefresh(!!blockRefresh);
     }, []);
 
     const handleCloseModal = useCallback(() => {
@@ -42,6 +48,7 @@ export const useTaskModals = (onRefresh?: () => void) => {
                             unsavedChanges.current = false;
                             setSelectedTask(null);
                             setModalMode('none');
+                            setBlockRefresh(false);
                         }
                     }
                 ]
@@ -51,6 +58,7 @@ export const useTaskModals = (onRefresh?: () => void) => {
         unsavedChanges.current = false;
         setSelectedTask(null);
         setModalMode('none');
+        setBlockRefresh(false);
     }, [modalMode]);
 
     const handleSaveTask = useCallback(async (result?: Tarefa) => {
@@ -65,17 +73,18 @@ export const useTaskModals = (onRefresh?: () => void) => {
         unsavedChanges.current = false;
         setSelectedTask(null);
         setModalMode('none');
+        setBlockRefresh(false);
     }, [onRefresh]);
 
     const modals = (
         <View>
             <Modal visible={modalMode !== 'none'} transparent={true} animationType="slide" onRequestClose={handleCloseModal}>
                 {modalMode === 'details' && selectedTask && (
-                    <TarefaDetalhes tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
+                    <TarefaDetalhes Tarefa={selectedTask} onClose={handleCloseModal} onEdit={handleOpenEdit} onComplete={handleSaveTask} />
                 )}
             </Modal>
             {modalMode === 'edit' && selectedTask && (
-                <TaskManager tarefa={selectedTask} onClose={() =>handleSaveTask()}/>
+                <TaskManager tarefa={selectedTask} onClose={() => handleSaveTask()} blockRefresh={blockrefresh} />
             )}
         </View>
     );
@@ -87,23 +96,53 @@ export const useTaskModals = (onRefresh?: () => void) => {
     };
 };
 
-const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent }) => {
+const TarefaList: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent, parent, subtaskStyling }) => {
     const { handleOpenDetails, modals } = useTaskModals(onRefresh);
+    const { theme } = useTheme();
+
+    const renderitem = ({ item }: { item: Tarefa }) => {
+        return subtaskStyling ? (<SubTarefaMinimal tarefa={item} onPress={handleOpenDetails} />) : <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />
+    };
 
     return (
         <>
             <FlatList
                 data={tarefas}
-                renderItem={({ item }) => <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />}
+                renderItem={({ item }) => renderitem({ item })}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContainer}
                 ListHeaderComponent={ListHeaderComponent}
                 ListEmptyComponent={() => (
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
+                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>{emptyMessage || 'Nada por aqui ainda.'}</Text>
                     </View>
                 )}
             />
+            {modals}
+        </>
+    );
+};
+
+export const TarefaListSafe: React.FC<TarefaListProps> = ({ tarefas, emptyMessage, onRefresh, ListHeaderComponent, subtaskStyling }) => {
+    const { handleOpenDetails, modals } = useTaskModals(onRefresh);
+
+    const rendercontent = ({ item }: { item: Tarefa }) => {
+        return subtaskStyling ? (<SubTarefaMinimal tarefa={item} onPress={handleOpenDetails} />) : <TarefaMinimal tarefa={item} onPress={handleOpenDetails} />
+    };
+
+    const renderedItems =
+        tarefas && tarefas.length > 0
+            ? (tarefas.map(t => (
+                <React.Fragment key={t.id}>
+                    {rendercontent({ item: t })}
+                </React.Fragment>
+            )))
+            : <Text>{emptyMessage || 'Nada por aqui ainda.'}</Text>;
+
+    return (
+        <>
+            {ListHeaderComponent}
+            {renderedItems}
             {modals}
         </>
     );
@@ -120,7 +159,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     emptyText: {
-        color: '#FFFFFF',
         fontSize: 18,
         fontWeight: 'bold'
     }

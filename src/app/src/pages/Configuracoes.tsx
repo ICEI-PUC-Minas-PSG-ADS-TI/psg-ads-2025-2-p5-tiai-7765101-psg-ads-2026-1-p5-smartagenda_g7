@@ -1,50 +1,100 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, Switch, Alert, DeviceEventEmitter } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, StatusBar, ScrollView, Modal, TouchableOpacity, Switch, Alert } from 'react-native';
+
 import { buscarTarefasFirestore, GetCurrentUser, Signout } from '../services/FirestoreService';
-import LocalStorageService, { CarregarTarefas, CarregarTarefasArray } from '../services/LocalStorageService';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import LocalStorageService, { SalvarConfiguracao } from '../services/LocalStorageService';
+import { TrySalvar, CompareAndCheck } from '../services/SaveControlService';
+import { initLocalModel, IsDownloaded, UninstallModel } from '../services/LocalGenAIService';
+import {
+  DisableAllDailyNotifications,
+  DisableAllScheduledNotifications,
+  RefreshDailyNotifications,
+  RefreshNotifications,
+  RefreshScheduledNotifications,
+  RefreshDayOfTheWeekNotifications,
+  DisableAllDayOfTheWeekNotifications,
+  ForceCancelAllNotifications
+} from '../services/NotificationService';
+import { CleanupSubtaskReferences } from '../services/TarefaService';
+
 import CadastroScreen from './Cadastro';
 import LoginScreen from './Login';
+import WeeklyNotificationEditor from '../components/NotificationManager';
 import { LogIn, LogOut } from "lucide-react-native";
-import { TryCarregarTarefasArray, TrySalvar, TrySalvarTarefa } from '../services/SaveControlService';
 import { Tarefa } from '../types/tarefa';
-import { CompareAndCheck } from '../services/SaveControlService';
+import { USettings } from '../types/usettings';
+import { useTheme } from '../theme/ThemeContext';
 
-
-type USettings = {
-  EnableLocalAI?: boolean,
-  UseBackup?: boolean
-}
 
 const Configuracoes = () => {
+  const { theme, themeType, toggleTheme } = useTheme();
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<USettings>({});
   const [logging, setLogging] = useState(false);
+  const [loadingText, setLoadingText] = useState("");
+  const [NotificationScreenActive, setNotificationScreenActive] = useState(false);
 
   const navigation = useNavigation<any>();
 
   async function Toggle(index: string, value: boolean) {
     switch (index) {
-      case "EnableLocalAI": //falta verificar se já está instalado e a quantidade exata a ser instalada
-        if (value) Alert.alert("Habilitar IA local", "A IA local offline é consideravelmente mais lenta do que em Cloud, e será necessário baixar uma carga de ~1,5gb em seu dispositivo. Deseja habilitar?",
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-              text: 'Habilitar', onPress: () => {
-                setSettings(prev => ({
-                  ...prev,
-                  [index]: value
-                }));
-              }
+      case "EnableLocalAI":
+        if (value) {
+          const onlywhendownloaded = async () => {
+            const isdownloaded = await IsDownloaded();
+            if (isdownloaded) {
+              setSettings(prev => ({
+                ...prev,
+                ["EnableLocalAI"]: true
+              }));
             }
-          ]
-        );
+            else {
+              Alert.alert("Habilitar IA local", [
+                "A IA local offline é uma função experimental.",
+                "",
+                "• O desempenho é CONSIDERAVELMENTE mais lento que o modo Cloud.",
+                "• Algumas funções são limitadas em sua complexidade.",
+                "• Será necessário baixar uma carga de aproximadamente 2 GB no dispositivo.",
+                "",
+                "Deseja continuar?"
+              ].join("\n"),
+                [
+                  { text: 'Cancelar', style: 'cancel' },
+                  {
+                    text: 'Habilitar e Baixar Modelo', onPress: () => {
+                      DownloadLocalAI();
+                    }
+                  }
+                ]
+              );
+            }
+          }
+          onlywhendownloaded();
+        }
         else {
           setSettings(prev => ({
             ...prev,
             [index]: value
           }));
+
+          const onlywhendownloaded2 = async () => {
+            const isdownloaded = await IsDownloaded();
+            if (isdownloaded) {
+              Alert.alert("Desisntalar modelo", "Deseja adicionalmente desinstalar a carga de ~2gb de seu dispositivo?",
+                [
+                  { text: 'Desativar SEM DESISNTALAR', style: 'cancel' },
+                  {
+                    text: 'Desativar E DESISNTALAR O MODELO', onPress: async () => {
+                      await UninstallModel();
+                    }
+                  }
+                ]
+              );
+            }
+          }
+          onlywhendownloaded2();
         }
         break;
       case "UseBackup":
@@ -61,6 +111,8 @@ const Configuracoes = () => {
           }
           catch { }
           let res = await CompareAndCheck(newTasks, oldtasks);
+          if (res === newTasks) await ForceCancelAllNotifications();
+
 
           if (!res) res = [];
 
@@ -73,23 +125,38 @@ const Configuracoes = () => {
           let resmap = Object.fromEntries(
             res.map(t => [t.id, t])
           ) as Record<string, Tarefa>;
+          resmap = await CleanupSubtaskReferences(resmap);
           LocalStorageService.SalvarTarefas(resmap);
-          await TrySalvar(true);
+          //console.log(resmap);
+          try {
+            await TrySalvar(true);
+          } finally {
+            await RefreshNotifications();
+          }
+
         }
         else {
-          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais serão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
+          if (await YouSure("Desativar Backup em Cloud", "Deseja realmente desativar o backup em cloud? Todos os dados locais atuais poderão mantidos, mas não serão mais sincronizados com a nuvem, e novos dados não serão salvos na nuvem.")) {
             console.log("Sucessful logoff");
             if (await handleLogout()) { // manter dados
-              await LocalStorageService.CarregarTarefas();
+              let t = await LocalStorageService.CarregarTarefas();
+              await Signout();
+              if (t) await LocalStorageService.SalvarTarefas(t);
             }
             else { // limpar dados
+              await ForceCancelAllNotifications();
               await LocalStorageService.ClearLocalData();
               await LocalStorageService.ClearCacheData();
+              await Signout();
             }
-            await Signout();
             //GetCurrentUser().signOut();
 
-            await TrySalvar(true);
+            try {
+              await TrySalvar(true);
+            } finally {
+              await RefreshNotifications();
+            }
+
             setSettings(prev => ({
               ...prev,
               [index]: false
@@ -98,9 +165,48 @@ const Configuracoes = () => {
           }
           else return;
         }
-        //console.log("Emitting from config");
-        //DeviceEventEmitter.emit('tarefasUpdated');
         break;
+      case "EnableDayOfTheWeekNotify":
+        setSettings(prev => ({
+          ...prev,
+          [index]: value
+        }));
+        if (value && settings.DayOfTheWeekNotificationSets && Object.keys(settings.DayOfTheWeekNotificationSets).length > 0) {
+          //await RefreshDayOfTheWeekNotifications();
+        }
+        else {
+          await DisableAllDayOfTheWeekNotifications();
+        }
+        break;
+      case "EnableDailyNotify":
+        setSettings(prev => ({
+          ...prev,
+          [index]: value
+        }));
+        if (value) {
+          //await RefreshDailyNotifications();
+        }
+        else {
+          await DisableAllDailyNotifications();
+        }
+        break;
+      case "EnableScheduledNotify":
+        setSettings(prev => ({
+          ...prev,
+          [index]: value
+        }));
+        let tarefas2 = await LocalStorageService.CarregarTarefasArray()
+        if (tarefas2) {
+          if (value) {
+            //await RefreshScheduledNotifications(tarefas2);
+          }
+          else {
+            await DisableAllScheduledNotifications(tarefas2);
+          }
+          await LocalStorageService.SalvarTarefasArray(tarefas2);
+        }
+        break;
+
     }
   }
 
@@ -110,11 +216,23 @@ const Configuracoes = () => {
 
     const loadSettings = async () => {
       let localsettings = await LocalStorageService.CarregarConfiguracao();
-      if (localsettings) setSettings(localsettings);
+      if (localsettings) {
+        if (localsettings.EnableDailyNotify === undefined) localsettings.EnableDailyNotify = false;
+        if (localsettings.EnableDayOfTheWeekNotify === undefined) localsettings.EnableDayOfTheWeekNotify = false;
+        if (localsettings.EnableScheduledNotify === undefined) localsettings.EnableScheduledNotify = true;
+        setSettings(localsettings);
+      }
     }
 
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    const salvarcfg = async () => {
+      await SalvarConfiguracao(settings);
+    }
+    salvarcfg();
+  }, [settings])
 
   function YouSure(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
@@ -135,6 +253,23 @@ const Configuracoes = () => {
         ]
       );
     });
+  }
+
+  function DownloadLocalAI() {
+    const dld = async () => {
+      await initLocalModel((m) => {
+        if (m == "Preparing model...") {
+          setLoadingText("");
+          setSettings(prev => ({
+            ...prev,
+            ["EnableLocalAI"]: true
+          }));
+          return;
+        }
+        setLoadingText(m)
+      });
+    }
+    dld();
   }
 
   function handleLogout(): Promise<boolean> {
@@ -162,8 +297,8 @@ const Configuracoes = () => {
 
   if (logging) return (
     <SafeAreaProvider>
-      <StatusBar barStyle={'dark-content'} />
-      <View style={styles.container}>
+      <StatusBar barStyle={theme.type === 'dark' ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {showCadastro ? (
           <CadastroScreen
             onSuccess={() => { Toggle("UseBackup", true); setLogging(false); }}
@@ -177,68 +312,79 @@ const Configuracoes = () => {
             onBack={() => setLogging(false)}
           />
         )}
-      </View>
+      </SafeAreaView>
     </SafeAreaProvider>
   )
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Configurações</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Configurações</Text>
+
+      {NotificationScreenActive && (
+        <WeeklyNotificationEditor onToggle={Toggle} settings={settings} onExit={(s) => { setNotificationScreenActive(false); RefreshNotifications() }}></WeeklyNotificationEditor>
+      )}
+
+      <Modal visible={loadingText !== ""} transparent={true} animationType="slide" onRequestClose={() => { }}>
+        <View style={[styles.modal]}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{loadingText}</Text>
+        </View>
+      </Modal>
 
       <ScrollView>
         {user ? (
-          <TouchableOpacity style={styles.option} onPress={() => Toggle("UseBackup", false)}>
+          <TouchableOpacity style={[styles.option, { borderColor: theme.colors.border }]} onPress={() => Toggle("UseBackup", false)}>
             <View style={styles.compOption}>
-              <Text style={styles.Optiontext}>Desativar Backup em Cloud</Text>
-              <Text style={styles.OptionSubtext}>Desconectar a conta de backup em Cloud</Text>
+              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Desativar Backup em Cloud</Text>
+              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Desconectar a conta de backup em Cloud</Text>
             </View>
-            <LogOut color={'#d1d1d1'} size={24} />
+            <LogOut color={theme.colors.textSecondary} size={24} />
           </TouchableOpacity>
         ) : (
 
-          <TouchableOpacity style={styles.option} onPress={() => setLogging(true)}>
+          <TouchableOpacity style={[styles.option, { borderColor: theme.colors.border }]} onPress={() => setLogging(true)}>
             <View style={styles.compOption}>
-              <Text style={styles.Optiontext}>Backup em Cloud</Text>
-              <Text style={styles.OptionSubtext}>Realizar backup e sincronização entre dispositivos</Text>
+              <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Backup em Cloud</Text>
+              <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Realizar backup e sincronização entre dispositivos</Text>
             </View>
-            <LogIn color={'#d1d1d1'} size={24} />
+            <LogIn color={theme.colors.textSecondary} size={24} />
           </TouchableOpacity>
 
         )}
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Habilitar IA Local Offline</Text>
+        {/* DESATIVADO POR INVIABILIDADE}
+        <View style={[styles.option, { borderColor: theme.colors.border }]}>
+          <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Habilitar IA Local Offline</Text>
           <Switch value={settings?.EnableLocalAI}
             onValueChange={(val) => Toggle("EnableLocalAI", val)}
-            trackColor={{ false: '#555', true: '#4CAF50' }}
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.success }}
             thumbColor={'white'} style={styles.Slider} />
         </View>
-        {
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => navigation.navigate('HistoricoIA')}
-          >
-            <View style={styles.compOption}>
-              <Text style={styles.Optiontext}>
-                Histórico da IA
+        */}
+        <TouchableOpacity
+          style={[styles.option, { borderColor: theme.colors.border }]}
+          onPress={() => setNotificationScreenActive(true)}
+        >
+          <View style={styles.compOption}>
+            <Text style={[styles.Optiontext, { color: theme.colors.text }]}>
+              Notificações
+            </Text>
+            <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>
+              Gerenciar notificações diárias, semanais e baseadas em tarefas
               </Text>
+          </View>
+        </TouchableOpacity>
 
-              <Text style={styles.OptionSubtext}>
-                Ver conversas e interações anteriores
-              </Text>
-            </View>
-          </TouchableOpacity>
-        /*}
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Option</Text>
-          <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
+        <View style={[styles.option, { borderColor: theme.colors.border }]}>
+          <View style={styles.compOption}>
+            <Text style={[styles.Optiontext, { color: theme.colors.text }]}>Tema Escuro</Text>
+            <Text style={[styles.OptionSubtext, { color: theme.colors.textSecondary }]}>Ativar ou desativar o modo escuro</Text>
+          </View>
+          <Switch value={themeType === 'dark'}
+            onValueChange={toggleTheme}
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
+            thumbColor={'white'} style={styles.Slider} />
         </View>
-        <View style={styles.option}>
-          <Text style={styles.Optiontext}>Option</Text>
-          <TouchableOpacity style={styles.Slider}><Text style={styles.text}>xD</Text></TouchableOpacity>
-        </View>*/}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -248,24 +394,19 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#121212',
   },
   title: {
-    color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   text: {
-    color: 'white'
   },
   Optiontext: {
-    color: 'white',
     alignItems: "flex-start",
     width: "70%"
   },
   OptionSubtext: {
-    color: '#d1d1d1',
     alignItems: "flex-start",
   },
   option: {
@@ -273,7 +414,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexWrap: "nowrap",
     width: "100%",
-    borderColor: "grey",
     borderBottomWidth: 1,
     paddingHorizontal: 20,
     paddingVertical: 20
@@ -286,6 +426,19 @@ const styles = StyleSheet.create({
     width: "30%",
     justifyContent: "flex-end",
     alignItems: "flex-end",
+  },
+  modal: {
+    flex: 1,
+    maxHeight: 100,
+    padding: 30,
+    margin: 'auto',
+    backgroundColor: 'black',
+    borderRadius: 10,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    alignContent: 'center',
+    borderColor: 'white',
+    borderWidth: 2
   }
 });
 
