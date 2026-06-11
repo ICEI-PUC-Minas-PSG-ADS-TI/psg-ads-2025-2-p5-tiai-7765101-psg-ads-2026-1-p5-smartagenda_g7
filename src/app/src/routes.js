@@ -8,7 +8,6 @@ import ListaTarefas from './pages/ListaTarefas';
 import Calendario from './pages/Calendario';
 import Configuracoes from './pages/Configuracoes';
 import ChatIA from './pages/ChatIA';
-import HistoricoIA from './pages/HistoricoIA';
 import Dashboard from './pages/Dashboard';
 const Tab = createBottomTabNavigator();
 
