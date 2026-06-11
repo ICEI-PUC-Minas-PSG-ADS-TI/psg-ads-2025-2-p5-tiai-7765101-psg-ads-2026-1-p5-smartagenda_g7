@@ -8,11 +8,11 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ActivityIndicator,
     Alert,
     Modal
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { Bot, SquarePen, Menu, MoreVertical, Search } from 'lucide-react-native';
 import { useAIChat, Message } from '../hooks/useAIChat';

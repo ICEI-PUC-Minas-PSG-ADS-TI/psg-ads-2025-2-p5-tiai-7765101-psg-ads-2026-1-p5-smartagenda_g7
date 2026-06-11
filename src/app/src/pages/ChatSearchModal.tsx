@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     FlatList,
     Modal,
-    SafeAreaView,
     ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Search, CalendarDays, User, Bot } from 'lucide-react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { useTheme } from '../theme/ThemeContext';
