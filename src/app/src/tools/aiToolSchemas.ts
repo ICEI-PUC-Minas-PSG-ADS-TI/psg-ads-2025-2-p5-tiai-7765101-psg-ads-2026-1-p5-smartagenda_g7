@@ -39,7 +39,7 @@ export const gerenciamentoTarefasSchema: FunctionDeclaration = {
                         },
                         data_vencimento: {
                             type: SchemaType.STRING,
-                            description: "Data limite de vencimento da tarefa no formato string ISO 8601 (ex: '2026-05-06T00:00:00Z')."
+                            description: "Data limite de vencimento da tarefa no formato string ISO 8601, se não especificado, no fuso horário UTC-3 (ex: '2026-05-06T00:00:00Z')."
                         },
                         data_finalizado: {
                             type: SchemaType.STRING,
@@ -67,7 +67,16 @@ export const gerenciamentoTarefasSchema: FunctionDeclaration = {
 
 export const listarTarefasSchema: FunctionDeclaration = {
     name: "listar_tarefas",
-    description: "Recupera a lista de todas as tarefas e rotinas cadastradas no sistema. Use esta ferramenta sempre que o usuário perguntar sobre suas tarefas atuais, horários, prazos ou quiser saber como está a sua rotina.",
+    description: "Recupera a lista de todas as tarefas e rotinas cadastradas no sistema, de maneira resumida (somente Id, título, estado e data de vencimento). Use esta ferramenta sempre que o usuário perguntar sobre suas tarefas atuais, horários, prazos ou quiser saber como está a sua rotina, mas somente sobre seu título, estado ou vencimento.",
+    parameters: {
+        type: SchemaType.OBJECT,
+        properties: {}
+    }
+};
+
+export const listarTarefasDetalhadoSchema: FunctionDeclaration = {
+    name: "listar_tarefas_detalhado",
+    description: "Recupera a lista de todas as tarefas e rotinas cadastradas no sistema, mas de maneira completa (com todos os atributos, incluindo descrição geral, categorias, data de criação, data de finalização). Use esta ferramenta sempre que o usuário perguntar sobre suas tarefas atuais, horários, prazos ou quiser saber como está a sua rotina.",
     parameters: {
         type: SchemaType.OBJECT,
         properties: {}
@@ -125,6 +134,7 @@ export const aiTools: Tool[] = [
         functionDeclarations: [
             gerenciamentoTarefasSchema,
             listarTarefasSchema,
+            listarTarefasDetalhadoSchema,
             editarTarefaSchema,
             excluirTarefaSchema
         ]
