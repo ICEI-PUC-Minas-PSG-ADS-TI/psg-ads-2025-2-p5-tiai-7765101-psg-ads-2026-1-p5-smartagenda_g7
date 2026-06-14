@@ -5,7 +5,7 @@ import { aiTools } from '../tools/aiToolSchemas';
 import { CreateTarefaJSON } from '../services/TarefaService';
 import LocalStorageService from '../services/LocalStorageService';
 import SaveControlService from '../services/SaveControlService';
-import IAInteracaoService from '../services/IAInteracaoService';
+import IAInteracaoService, {IAInteracao} from '../services/IAInteracaoService';
 import { GeminiProvider, AIprovider, LocalProvider } from '../services/HybridAIService';
 import { useNetInfo } from '@react-native-community/netinfo';
 
@@ -148,7 +148,7 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
                     try {
                         if (callName === 'gerenciar_tarefas') {
                             const argsJson = JSON.stringify(call.args);
-                            console.log("[useAIChat] Invocando TarefaService (Criar) com:", argsJson);
+                            console.log("[useAIChat] (", callName, ") Invocando TarefaService (Criar) com:", argsJson);
                             const tarefasCriadas = await CreateTarefaJSON(argsJson);
 
                             // Salvando as tarefas criadas ativamente
@@ -165,7 +165,7 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
                             };
                         }
                         else if (callName === 'listar_tarefas') {
-                            console.log("[useAIChat] Invocando LocalStorageService.CarregarTarefasArray()");
+                            console.log("[useAIChat] (", callName, ") Invocando LocalStorageService.CarregarTarefasArray()");
                             const tarefas = await LocalStorageService.CarregarTarefasArray();
 
                             // Extrair apenas o necessário para otimizar o contexto
@@ -181,9 +181,30 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
                                 tarefas: resumo
                             };
                         }
+                        else if (callName === 'listar_tarefas_detalhado') {
+                            console.log("[useAIChat] (", callName, ") Invocando LocalStorageService.CarregarTarefasArray()");
+                            const tarefas = await LocalStorageService.CarregarTarefasArray();
+
+                            // Caso seja necessário as informações fora do resumo, como descrição, data de finalização, categorias
+                            const resumo = (tarefas || []).map(t => ({
+                                id: t.id,
+                                titulo: t.titulo,
+                                estado: t.estado,
+                                vencimento: t.data_vencimento ? new Date(t.data_vencimento).toLocaleString() : 'Sem prazo',
+                                descricao_geral: t.descricao_geral,
+                                data_finalizado: t.data_finalizado,
+                                data_criado: t.data_criado,
+                                categorias: t.categorias
+                            }));
+
+                            functionResponseData = {
+                                status: 'success',
+                                tarefas: resumo
+                            };
+                        }
                         else if (callName === 'editar_tarefa') {
                             const args = call.args as Record<string, any>;
-                            console.log("[useAIChat] Invocando edição com:", args);
+                            console.log("[useAIChat] (", callName, ") Invocando edição com:", args);
                             const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
                             const identificador = args.identificador as string;
                             let tarefa = tarefasLocais[identificador];
@@ -215,7 +236,7 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
                         else if (callName === 'excluir_tarefa') {
                             const args = call.args as Record<string, any>;
                             const identificador = args.identificador as string;
-                            console.log("[useAIChat] Invocando exclusão para identificador:", identificador);
+                            console.log("[useAIChat] (", callName, ") Invocando exclusão para identificador:", identificador);
 
                             const tarefasLocais = await LocalStorageService.CarregarTarefas() || {};
                             let idParaExcluir = identificador;
@@ -267,7 +288,7 @@ export function useAIChat(local?: Boolean, conversacaoId?: string | null) {
 
             } catch (e) {
                 // Se falhar ao extrair o texto, usamos um fallback para não deixar o usuário no vácuo
-                botText = "Pronto! Suas tarefas foram processadas.";
+                botText = "Hmm, não consegui realizar seu pedido 😵‍💫. Tente novamente ", e;
             }
             if (botText) {
                 await IAInteracaoService.SalvarInteracao({

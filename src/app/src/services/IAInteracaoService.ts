@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { GetCurrentUser } from './FirestoreService';
 
 const STORAGE_KEY = 'ia_interacoes';
 const CONVERSACOES_KEY = 'ia_conversacoes_metadata';
@@ -51,7 +52,7 @@ export default class IAInteracaoService {
             await AsyncStorage.setItem(CONVERSACOES_KEY, JSON.stringify(locais));
 
             if (connected) {
-                const user = auth().currentUser;
+                const user = GetCurrentUser();
                 if (user) {
                     await firestore()
                         .collection('usuarios')
@@ -73,7 +74,7 @@ export default class IAInteracaoService {
             await AsyncStorage.setItem(CONVERSACOES_KEY, JSON.stringify(locais));
 
             if (connected) {
-                const user = auth().currentUser;
+                const user = GetCurrentUser();
                 if (user) {
                     await firestore()
                         .collection('usuarios')
@@ -108,7 +109,7 @@ export default class IAInteracaoService {
 
             // Firebase
             if (connected) {
-                const user = auth().currentUser;
+                const user = GetCurrentUser();
                 if (user) {
                     const snapshot = await firestore()
                         .collection('usuarios')
@@ -130,7 +131,7 @@ export default class IAInteracaoService {
     }
 
     static EscutarConversacoesFirebase(callback: (dados: IAConversacao[]) => void) {
-        const user = auth().currentUser;
+        const user = GetCurrentUser();
         if (!user) return () => { };
 
         return firestore()
@@ -168,7 +169,7 @@ export default class IAInteracaoService {
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(interacoes));
 
             if (connected) {
-                const user = auth().currentUser;
+                const user = GetCurrentUser();
                 if (user) {
                     await firestore()
                         .collection('usuarios')
@@ -209,7 +210,7 @@ export default class IAInteracaoService {
 
     static async BuscarInteracoesFirebase(conversacaoId?: string): Promise<IAInteracao[]> {
         try {
-            const user = auth().currentUser;
+            const user = GetCurrentUser();
             if (!user) return [];
 
             let query = firestore()
@@ -231,7 +232,7 @@ export default class IAInteracaoService {
     }
 
     static EscutarInteracoesFirebase(callback: (dados: IAInteracao[]) => void, conversacaoId?: string) {
-        const user = auth().currentUser;
+        const user = GetCurrentUser();
         if (!user) return () => { };
 
         let query = firestore()
@@ -248,7 +249,7 @@ export default class IAInteracaoService {
             const dados = snapshot.docs.map(doc => doc.data() as IAInteracao);
             callback(dados);
         }, error => {
-            if (!auth().currentUser) {
+            if (!GetCurrentUser()) {
                 console.log('[IAInteracaoService] Listener de interações encerrado devido a logout.');
                 return;
             }
