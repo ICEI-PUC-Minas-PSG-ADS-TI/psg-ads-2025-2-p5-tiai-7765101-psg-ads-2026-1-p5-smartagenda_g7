@@ -38,6 +38,8 @@ O objetivo é organizar claramente as funcionalidades, qualidades e limites da s
 | RF-18 | Notificações | O sistema deve disponibilizar notificações que destaquem as 3 tarefas mais urgentes, se houverem | 🔴 ALTA |
 | RF-19 | Notificações | O sistema deve disponibilizar notificações avisem o usuário sobre o vencimento de uma tarefa, de 7, 3 e 2 dias antes do vencimento | 🔴 ALTA |
 | RF-20 | Visualização | O sistema deve disponibilizar um visualizador de árvore para tarefas, exibindo todo o contexto da tarefa com suas subtarefas, sendo cada nó selecionável e editável | 🔴 ALTA |
+| RF-21 | Visualização | O sistema deve disponibilizar um dashboard, informando a quantidade de tarefas, quantidade em cada estado, destacando tarefas atrasadas e próximas de vencimento | 🔴 ALTA |
+| RF-22 | Visualização | O sistema deve disponibilizar a impressão de um relatório baseano no dashboard, informando o que foi realizado e registrado no aplicativo | 🔴 ALTA |
 ---
 
 # 3.2 Histórias de Usuário
@@ -82,6 +84,13 @@ Como usuário, eu quero receber notificações de lembrete sobre minhas tarefas 
 
 ## História 13 (relacionada ao RF-20)
 Como usuário, eu quero ter uma visão geral sobre uma tarefa, em forma de árvore, para entender melhor o contexto geral de progresso na tarefa e suas subtarefas.
+
+## História 14 (relacionada ao RF-21)
+Como usuário, eu quero ter uma visão geral sobre todas as tarefas, em forma de quadro, para entender melhor o contexto geral de progresso em todas as minhas tarefas, e destacar as urgências.
+
+## História 15 (relacionada ao RF-22)
+Como usuário, eu quero poder imprimir um relatório sobre meu progresso em minhas tarefas, para ter controle sobre minha produtividade.
+
 
 # 3.3 Requisitos Não Funcionais
 

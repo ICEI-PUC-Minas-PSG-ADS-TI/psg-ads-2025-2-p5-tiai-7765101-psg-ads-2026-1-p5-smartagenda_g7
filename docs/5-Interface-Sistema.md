@@ -50,12 +50,39 @@ Apresente as imagens reais das telas implementadas, associando-as à funcionalid
 > 💡 **Importante:** Uma mesma funcionalidade (fatia) pode render **várias telas** (ex: tela de listagem, formulário de cadastro e modal de sucesso). **Coloque prints de todas as etapas do fluxo.** <br><br>
 
 **🔴 Sprint 4: Entrega Final**
-* **Funcionalidade:** Polimento visual e telas secundárias.
-* **Descrição:** Telas finais de relatórios, perfis de usuário, tratamento de erros e refinamento de CSS/UX.
-* *(Insira a imagem real da tela aqui - ex: `![Tela Final](images/sprint4_final.png)`)* <br><br>
-> 💡 **Importante:** Uma mesma funcionalidade (fatia) pode render **várias telas** (ex: tela de listagem, formulário de cadastro e modal de sucesso). **Coloque prints de todas as etapas do fluxo.** <br><br>
+* **Funcionalidade:** Lista de Tarefas
+* **Descrição:** Tela onde são listadas todas as tarefas principais (que não são subtarefas) registradas no sistema, sendo interagíveis e filtráveis.
+* <img src="images/sprint4_lista.jpeg" alt="Lista" width="250"/> <img src="images/sprint4_lista_filtros.jpeg" alt="listaFiltros" width="250"/> <img src="images/sprint4_listaLight.jpeg" alt="ListaLight" width="250"/> <br><br>
 
-> 📸 **Dica:** Certifiquem-se de que as imagens tenham boa resolução e mostrem o sistema rodando no navegador. Salvem todas as imagens na pasta `images/` do repositório.
+* **Funcionalidade:** Detalhes de Tarefa
+* **Descrição:** Tela onde são listadas todos os detalhes da tarefa selecionada, sendo possível ser encaminhado para edição de tarefa, visualizador em árvore, ou visualizar os detalhes de uma subtarefa (se houver), além de poder finalizar a tarefa.
+* <img src="images/sprint4_detalhes1.jpeg" alt="Detalhes1" width="250"/> <img src="images/sprint4_detalhes2.jpeg" alt="Detalhes2" width="250"/> <img src="images/sprint4_detalhes3.jpeg" alt="DetalhesFinalizado" width="250"/> <br><br>
+
+* **Funcionalidade:** Gerenciador de Tarefas
+* **Descrição:** Tela onde pode-se editar todos os aspectos das tarefas, além de poder adicionar subtarefas a ela, e exclui-la (botão kebab no canto superior direito).
+* <img src="images/sprint4_manager1.jpeg" alt="Gerenciador1" width="250"/> <img src="images/sprint4_manager2.jpeg" alt="Gerenciador2" width="250"/> <img src="images/sprint4_manager3.jpeg" alt="GerenciadorCompleted" width="250"/> <br><br>
+
+* **Funcionalidade:** Página de Calendário
+* **Descrição:** Tela onde todas as tarefas (principais e subtarefas) são listadas em forma de calendário, cada uma no dia de seu vencimento, sendo interagíveis e filtráveis.
+* <img src="images/sprint4_calendario1.jpeg" alt="Calendário" width="250"/> <img src="images/sprint4_calendario2.jpeg" alt="Caledário2" width="250"/> <br><br>
+
+* **Funcionalidade:** Visualizador em Árvore
+* **Descrição:** Tela que exibe o contexto geral de uma tarefa e suas subtarefas, em forma de árvore, demonstrando somente seu estado, sendo cada nó interagível e a tela navegável por toque e com alteração de nível de zoom.
+* <img src="images/sprint4_treeview.jpeg" alt="dash1" width="250"/> <br><br>
+
+* **Funcionalidade:** Chat de IA
+* **Descrição:** Tela é possível conversar com a IA em nuvem para realizar funções com as tarefas, que são guardadas em um histórico em um menu.
+* <img src="images/sprint4_chatIA1.jpeg" alt="chat1" width="250"/> <img src="images/sprint4_chatIA2.jpeg" alt="Gerenciador2" width="250"/> <img src="images/sprint4_chatIA3.jpeg" alt="chat3" width="250"/> <img src="images/sprint4_chatIA4.jpeg" alt="chat4" width="250"/> <br><br>
+
+* **Funcionalidade:** Dashboard
+* **Descrição:** Tela que exibe o contexto geral de progresso em todas as tarefas registradas, destacando as mais urgentes, e quantificando por estado. Além de disponibilizar a impressão de um relatório desse contexto.
+* <img src="images/sprint4_dashboards1.jpeg" alt="dash1" width="250"/> <img src="images/sprint4_dashboards2.jpeg" alt="dash2" width="250"/> <img src="images/sprint4_relatorio1.png" alt="rel1" width="250"/> <img src="images/sprint4_relatorio2.png" alt="rel2" width="250"/> <img src="images/sprint4_relatorio3.png" alt="rel3" width="250"/> <br><br>
+
+* **Funcionalidade:** Configurações
+* **Descrição:** Tela que exibe opções alternáveis que o usuário pode personalizar. A opção de notificações abre um submenu que permite a personalização das notificações.
+* <img src="images/sprint4_config.jpeg" alt="cfg1" width="250"/> <img src="images/sprint4_config_notifications.jpeg" alt="cfg2" width="250"/> <br><br>
+
+
 
 
 

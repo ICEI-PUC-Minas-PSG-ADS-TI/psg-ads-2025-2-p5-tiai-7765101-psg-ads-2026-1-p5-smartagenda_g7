@@ -199,6 +199,7 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 | Nitai | Tech Lead       | Ícone do App | 11/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Repasse de Integração visual | 09/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Funcionalidade de gerenciamento de conversas de IA | 09/06 | 11/06 | ✔️ |
-|             |        | Vídeo do app | 15/06 | 11/06 | ❌ |
+| Isaque | Facilitador Agil | Vídeo demonstrativo | 09/06 | 11/06 | 📝 |
+| Carol  | Arquiteto de Dados   | Dashboards das tarefas | 11/06 | 11/06 | ✔️ |
 
 ---
