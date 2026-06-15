@@ -177,12 +177,11 @@ Os papéis abaixo são apenas para organização do time.
 |-------------|--------|--------|--------|--------|--------|
 | Nitai | Tech Lead       | Sistema de Notificações | 08/06 | 11/06 | ✔️ |
 | Nitai | Tech Lead       | Ícone do App | 11/06 | 11/06 | ✔️ |
-| Isaque | Facilitador Agil | Repasse de Integração visual | 09/06 | 11/06 | ✔️ |
+| Isaque | Facilitador Agil | Refinamento do design de todas as telas do aplicativo e criação de temas claro e escuro| 09/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Funcionalidade de gerenciamento de conversas de IA | 09/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Funcionalidade de pesquisa em conversas de IA | 09/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Criação do APK | 09/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Vídeo demonstrativo | 09/06 | 11/06 | ✔️ |
-| Isaque | Facilitador Agil | Atualização de design das telas de Criar tarefa/Editar tarefa | 09/06 | 11/06 | ✔️ |
 | Carol  | Arquiteto de Dados   | Dashboards das tarefas | 11/06 | 11/06 | ✔️ |
 
 ---
