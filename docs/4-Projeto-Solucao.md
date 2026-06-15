@@ -1,11 +1,6 @@
 
 # 4. Projeto da Solução
 
-> ⚠️ **Aviso aos Squads (Software House)**
->
-> Esta seção **não deve ser preenchida integralmente antes da codificação**.
-> Trata-se de um **Documento Vivo**, que deverá ser atualizado **incrementalmente a cada Sprint**, refletindo fielmente o código real implementado.
-
 ---
 
 ## 4.1 Arquitetura da Solução (Sprint 1 e 2)
@@ -17,8 +12,6 @@ A arquitetura do SmartAgenda foi projetada sob um paradigma Híbrido e Serverles
  ![Diagrama de arquitetura da solução](./images/Diagrama_Arquitetura_SmartAgenda.png)
 
 ## 4.2 Tecnologias Utilizadas
-
-Descreva as tecnologias, linguagens, frameworks, bibliotecas e serviços escolhidos pelo Squad.
 
 | Dimensão | Tecnologia Escolhida |
 |----------|----------------------|
@@ -37,14 +30,6 @@ Descreva as tecnologias, linguagens, frameworks, bibliotecas e serviços escolhi
 ---
 
 ##  4.3 Wireframes ou Mockups (A partir da Sprint 2)
-
-Apresente os protótipos das telas (Wireframes/Mockups) apenas das funcionalidades que estão sendo implementadas na Sprint atual.
-
-Cada Wireframe ou Mockups devem estar associados a pelo menos:
-
-- Um Requisito Funcional (RF-XX)
-- Uma História de Usuário
-
 
 ### Tela de Gerenciamento de Tarefa (RF-01)
 
