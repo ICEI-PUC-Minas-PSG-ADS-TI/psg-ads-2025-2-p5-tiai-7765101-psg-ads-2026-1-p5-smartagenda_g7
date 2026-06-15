@@ -1,21 +1,5 @@
 # 2. Planejamento do Projeto
 
-Esta seção apresenta como o grupo organizará o trabalho ao longo do semestre.  
-O projeto adota uma metodologia ágil, simulando o ambiente de uma Software House.
-
----
-
-### 🚨 Regra de Ouro: 
-
-> ❗Não existe divisão entre “quem faz documento”, “quem faz Front-end” e “quem faz Back-end”.
-
-<br>Todos os integrantes são **Desenvolvedores Full-Stack** e devem implementar **Fatias Verticais (Vertical Slices)**.
-
-✔️ Cada membro deve entregar a funcionalidade completa:  
-**Banco de Dados → API → Tela**
-
----
-
 # 2.1 Sprints do Projeto
 
 O projeto será realizado em **4 Sprints**, com entregas contínuas de código e documentação.
@@ -79,22 +63,18 @@ Os papéis abaixo são apenas para organização do time.
 
 ---
 
-##  Definição dos Papéis – Sprint 1
+##  Definição dos Papéis
 
 - 👨‍💻 Tech Lead: Nitai
 - 🗄️ Arquiteto de Dados: Carol
 - 🧪 Gerente de Qualidade: Nitai
 - 📋 Facilitador Ágil: Isaque
 
-> Caso os papéis mudem nas próximas Sprints, atualizar neste documento.
-
 ---
 
 # 2.2 Execução e Controle
 
 ## 🗂️ Kanban (OBRIGATÓRIO)
-
-O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO preencher os quadros Kanban de cada Sprint** (apresentados abaixo).
 
 ### Estrutura obrigatória do Board:
 
@@ -199,7 +179,10 @@ O projeto pode utilizar a aba **Projects** do GitHub, porém é **OBRIGATÓRIO p
 | Nitai | Tech Lead       | Ícone do App | 11/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Repasse de Integração visual | 09/06 | 11/06 | ✔️ |
 | Isaque | Facilitador Agil | Funcionalidade de gerenciamento de conversas de IA | 09/06 | 11/06 | ✔️ |
-| Isaque | Facilitador Agil | Vídeo demonstrativo | 09/06 | 11/06 | 📝 |
+| Isaque | Facilitador Agil | Funcionalidade de pesquisa em conversas de IA | 09/06 | 11/06 | ✔️ |
+| Isaque | Facilitador Agil | Criação do APK | 09/06 | 11/06 | ✔️ |
+| Isaque | Facilitador Agil | Vídeo demonstrativo | 09/06 | 11/06 | ✔️ |
+| Isaque | Facilitador Agil | Atualização de design das telas de Criar tarefa/Editar tarefa | 09/06 | 11/06 | ✔️ |
 | Carol  | Arquiteto de Dados   | Dashboards das tarefas | 11/06 | 11/06 | ✔️ |
 
 ---

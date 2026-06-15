@@ -1,7 +1,6 @@
 
 # 6. Conclusão
 
----
 ## 6.1 Síntese dos Resultados
 
 O software pode sim auxiliar a aumentar a produtividade/evitar a procrastinação de quem utiliza (o objetivo principal relacionado a ODS 8.2), especialmente para tarefas mais complexas, que possuem várias subtarefas. Mas a automação ainda pode ser melhorada. <br><br>
