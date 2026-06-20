@@ -12,9 +12,9 @@ ODS Alinhados: 8.2
 
 ## Integrantes
 
-* Isaque Caetano Nascimento
-* Nitai Nandi Rodrigues da Silva
-* Maria Caroline Alves Silva
+* Isaque Caetano Nascimento (isaque.nascimento.dev@gmail.com)
+* Nitai Nandi Rodrigues da Silva (nitainandi1@gmail.com)
+* Maria Caroline Alves Silva (mariaalvescaroline@gmail.com)
 
 ## Orientador
 
